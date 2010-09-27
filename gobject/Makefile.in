@@ -13,6 +13,11 @@
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
 
+OS2_LA_NAME=gobject-2.0
+OS2_DLL_NAME=gobj2
+OS2_DLL_OBJ=$(libgobject_2_0_la_OBJECTS:%.lo=.libs/%.o)
+OS2_DLL_LIBS=-l../glib/.libs/glib-2.0.a -l../gthread/.libs/gthread-2.0.a $(LIBS)
+
 @SET_MAKE@
 
 # GLIB - Library of useful C routines
@@ -590,6 +595,7 @@ BUILT_EXTRA_DIST = \
 gdbdir = $(datadir)/glib-2.0/gdb
 dist_gdb_SCRIPTS = gobject.py
 all: $(BUILT_SOURCES)
+
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
 .SUFFIXES:
@@ -1184,7 +1190,7 @@ check-am: all-am
 	$(MAKE) $(AM_MAKEFLAGS) check-TESTS check-local
 check: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) check-recursive
-all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(SCRIPTS) $(DATA) \
+all-am: Makefile $(LTLIBRARIES) $(OS2_DLL_NAME).dll $(PROGRAMS) $(SCRIPTS) $(DATA) \
 		$(HEADERS)
 install-binPROGRAMS: install-libLTLIBRARIES
 
@@ -1501,3 +1507,13 @@ install-data-hook: libgobject-gdb.py
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
+
+$(OS2_DLL_NAME).dll: lib$(OS2_LA_NAME).la
+	cp .libs/$(OS2_LA_NAME).a .libs/$(OS2_LA_NAME)_s.a
+	echo "LIBRARY $(OS2_DLL_NAME) INITINSTANCE TERMINSTANCE" > $(OS2_DLL_NAME).def
+	echo "DATA MULTIPLE" >> $(OS2_DLL_NAME).def
+	echo "EXPORTS" >> $(OS2_DLL_NAME).def
+	emxexp $(OS2_DLL_OBJ) >> $(OS2_DLL_NAME).def
+	gcc -g -Zbin-files -Zhigh-mem -Zomf -Zdll $(OS2_DLL_NAME).def -o $@ $(OS2_DLL_OBJ) $(OS2_DLL_LIBS) 
+	emximp -o .libs/$(OS2_LA_NAME).a $(OS2_DLL_NAME).def
+	emximp -o .libs/$(OS2_LA_NAME).lib $(OS2_DLL_NAME).def

@@ -48,6 +48,14 @@ G_BEGIN_DECLS
 #define G_SEARCHPATH_SEPARATOR ';'
 #define G_SEARCHPATH_SEPARATOR_S ";"
 
+#elif defined(__KLIBC__)  /* !G_OS_WIN32 */
+
+#define G_DIR_SEPARATOR '/'
+#define G_DIR_SEPARATOR_S "/"
+#define G_IS_DIR_SEPARATOR(c) ((c) == G_DIR_SEPARATOR || (c) == '\\')
+#define G_SEARCHPATH_SEPARATOR ';'
+#define G_SEARCHPATH_SEPARATOR_S ";"
+
 #else  /* !G_OS_WIN32 */
 
 /* Unix */

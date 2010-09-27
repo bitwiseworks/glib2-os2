@@ -623,7 +623,11 @@ main (int   argc,
   if (files)
     files = g_slist_reverse (files);
   else
+#ifndef __KLIBC__
     files = g_slist_prepend (files, "/dev/stdin");
+#else
+    files = g_slist_prepend (files, "con");
+#endif
 
   /* setup auxillary structs */
   scanner = g_scanner_new (&scanner_config_template);

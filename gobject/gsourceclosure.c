@@ -128,9 +128,12 @@ closure_callback_get (gpointer     cb_data,
 
   if (!closure_callback)
     {
+#ifndef __EMX__
       if (source->source_funcs == &g_io_watch_funcs)
 	closure_callback = (GSourceFunc)io_watch_closure_callback;
-      else if (source->source_funcs == &g_timeout_funcs ||
+      else 
+#endif
+         if (source->source_funcs == &g_timeout_funcs ||
 	       source->source_funcs == &g_idle_funcs)
 	closure_callback = source_closure_callback;
     }
@@ -164,7 +167,9 @@ g_source_set_closure (GSource  *source,
   g_return_if_fail (closure != NULL);
 
   if (!source->source_funcs->closure_callback &&
+#ifndef __EMX__
       source->source_funcs != &g_io_watch_funcs &&
+#endif
       source->source_funcs != &g_timeout_funcs &&
       source->source_funcs != &g_idle_funcs)
     {
@@ -184,8 +189,10 @@ g_source_set_closure (GSource  *source,
 	  if (source->source_funcs == &g_idle_funcs ||
 	      source->source_funcs == &g_timeout_funcs)
 	    marshal = source_closure_marshal_BOOLEAN__VOID;
+#ifndef __EMX__
 	  else if (source->source_funcs == &g_io_watch_funcs)
 	    marshal = g_cclosure_marshal_BOOLEAN__FLAGS;
+#endif
 	}
       if (marshal)
 	g_closure_set_marshal (closure, marshal);

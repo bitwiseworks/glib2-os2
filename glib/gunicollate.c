@@ -33,6 +33,10 @@
 #include "glib.h"
 #include "gunicodeprivate.h"
 
+#ifdef __EMX__
+#define wcsxfrm _wcsxfrm_unistd
+#endif
+
 #ifdef _MSC_VER
 /* Workaround for bug in MSVCR80.DLL */
 static gsize

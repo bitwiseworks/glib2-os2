@@ -4557,7 +4557,7 @@ if $ac_preproc_ok; then :
 else
   { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
-as_fn_error $? "C preprocessor \"$CPP\" fails sanity check
+echo as_fn_error $? "C preprocessor \"$CPP\" fails sanity check
 See \`config.log' for more details" "$LINENO" 5; }
 fi
 
@@ -8682,10 +8682,10 @@ $as_echo "$LINGUAS" >&6; }
 
 
 if test "$gt_cv_have_gettext" != "yes" ; then
-  as_fn_error $? "
-*** You must have either have gettext support in your C library, or use the
-*** GNU gettext library. (http://www.gnu.org/software/gettext/gettext.html
-" "$LINENO" 5
+echo #  as_fn_error $? "
+echo #*** You must have either have gettext support in your C library, or use the
+echo #*** GNU gettext library. (http://www.gnu.org/software/gettext/gettext.html
+echo #" "$LINENO" 5
 fi
 
 LIBS="$INTLLIBS $LIBS"
@@ -15558,7 +15558,7 @@ if $ac_preproc_ok; then :
 else
   { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
-as_fn_error $? "C++ preprocessor \"$CXXCPP\" fails sanity check
+echo as_fn_error $? "C++ preprocessor \"$CXXCPP\" fails sanity check
 See \`config.log' for more details" "$LINENO" 5; }
 fi
 
