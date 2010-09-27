@@ -1,0 +1,252 @@
+<!-- ##### SECTION Title ##### -->
+gapplication
+
+<!-- ##### SECTION Short_Description ##### -->
+
+
+<!-- ##### SECTION Long_Description ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION See_Also ##### -->
+<para>
+
+</para>
+
+<!-- ##### SECTION Stability_Level ##### -->
+
+
+<!-- ##### SECTION Image ##### -->
+
+
+<!-- ##### STRUCT GApplication ##### -->
+<para>
+
+</para>
+
+
+<!-- ##### SIGNAL GApplication::action-with-data ##### -->
+<para>
+
+</para>
+
+@gapplication: the object which received the signal.
+@arg1: 
+@arg2: 
+
+<!-- ##### SIGNAL GApplication::prepare-activation ##### -->
+<para>
+
+</para>
+
+@gapplication: the object which received the signal.
+@arg1: 
+@arg2: 
+
+<!-- ##### SIGNAL GApplication::quit-with-data ##### -->
+<para>
+
+</para>
+
+@gapplication: the object which received the signal.
+@arg1: 
+@Returns: 
+
+<!-- ##### ARG GApplication:application-id ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GApplication:argv ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GApplication:default-quit ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GApplication:is-remote ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GApplication:platform-data ##### -->
+<para>
+
+</para>
+
+<!-- ##### ARG GApplication:register ##### -->
+<para>
+
+</para>
+
+<!-- ##### STRUCT GApplicationClass ##### -->
+<para>
+
+</para>
+
+@action_with_data: 
+@quit_with_data: 
+@prepare_activation: 
+@run: 
+
+<!-- ##### FUNCTION g_application_new ##### -->
+<para>
+
+</para>
+
+@appid: 
+@argc: 
+@argv: 
+@Returns: 
+
+
+<!-- ##### FUNCTION g_application_register ##### -->
+<para>
+
+</para>
+
+@application: 
+@Returns: 
+
+
+<!-- ##### FUNCTION g_application_try_new ##### -->
+<para>
+
+</para>
+
+@appid: 
+@argc: 
+@argv: 
+@error: 
+@Returns: 
+
+
+<!-- ##### FUNCTION g_application_unregistered_try_new ##### -->
+<para>
+
+</para>
+
+@appid: 
+@argc: 
+@argv: 
+@error: 
+@Returns: 
+
+
+<!-- ##### FUNCTION g_application_get_instance ##### -->
+<para>
+
+</para>
+
+@void: 
+@Returns: 
+
+
+<!-- ##### FUNCTION g_application_get_id ##### -->
+<para>
+
+</para>
+
+@application: 
+@Returns: 
+
+
+<!-- ##### FUNCTION g_application_add_action ##### -->
+<para>
+
+</para>
+
+@application: 
+@name: 
+@description: 
+
+
+<!-- ##### FUNCTION g_application_remove_action ##### -->
+<para>
+
+</para>
+
+@application: 
+@name: 
+
+
+<!-- ##### FUNCTION g_application_list_actions ##### -->
+<para>
+
+</para>
+
+@application: 
+@Returns: 
+
+
+<!-- ##### FUNCTION g_application_set_action_enabled ##### -->
+<para>
+
+</para>
+
+@application: 
+@name: 
+@enabled: 
+
+
+<!-- ##### FUNCTION g_application_get_action_enabled ##### -->
+<para>
+
+</para>
+
+@application: 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION g_application_get_action_description ##### -->
+<para>
+
+</para>
+
+@application: 
+@name: 
+@Returns: 
+
+
+<!-- ##### FUNCTION g_application_invoke_action ##### -->
+<para>
+
+</para>
+
+@application: 
+@name: 
+@platform_data: 
+
+
+<!-- ##### FUNCTION g_application_run ##### -->
+<para>
+
+</para>
+
+@application: 
+
+
+<!-- ##### FUNCTION g_application_quit_with_data ##### -->
+<para>
+
+</para>
+
+@application: 
+@platform_data: 
+@Returns: 
+
+
+<!-- ##### FUNCTION g_application_is_remote ##### -->
+<para>
+
+</para>
+
+@application: 
+@Returns: 
+
+

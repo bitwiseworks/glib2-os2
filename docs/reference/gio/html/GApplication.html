@@ -1,0 +1,1058 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>GApplication</title>
+<meta name="generator" content="DocBook XSL Stylesheets V1.75.2">
+<link rel="home" href="index.html" title="GIO Reference Manual">
+<link rel="up" href="application.html" title="Application support">
+<link rel="prev" href="GSimpleAction.html" title="GSimpleAction">
+<link rel="next" href="extending.html" title="Extending GIO">
+<meta name="generator" content="GTK-Doc V1.15 (XML mode)">
+<link rel="stylesheet" href="style.css" type="text/css">
+</head>
+<body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
+<table class="navigation" id="top" width="100%" summary="Navigation header" cellpadding="2" cellspacing="2">
+<tr valign="middle">
+<td><a accesskey="p" href="GSimpleAction.html"><img src="left.png" width="24" height="24" border="0" alt="Prev"></a></td>
+<td><a accesskey="u" href="application.html"><img src="up.png" width="24" height="24" border="0" alt="Up"></a></td>
+<td><a accesskey="h" href="index.html"><img src="home.png" width="24" height="24" border="0" alt="Home"></a></td>
+<th width="100%" align="center">GIO Reference Manual</th>
+<td><a accesskey="n" href="extending.html"><img src="right.png" width="24" height="24" border="0" alt="Next"></a></td>
+</tr>
+<tr><td colspan="5" class="shortcuts">
+<a href="#GApplication.synopsis" class="shortcut">Top</a>
+                   | 
+                  <a href="#GApplication.description" class="shortcut">Description</a>
+                   | 
+                  <a href="#GApplication.object-hierarchy" class="shortcut">Object Hierarchy</a>
+                   | 
+                  <a href="#GApplication.implemented-interfaces" class="shortcut">Implemented Interfaces</a>
+                   | 
+                  <a href="#GApplication.properties" class="shortcut">Properties</a>
+                   | 
+                  <a href="#GApplication.signals" class="shortcut">Signals</a>
+</td></tr>
+</table>
+<div class="refentry" title="GApplication">
+<a name="GApplication"></a><div class="titlepage"></div>
+<div class="refnamediv"><table width="100%"><tr>
+<td valign="top">
+<h2><span class="refentrytitle"><a name="GApplication.top_of_page"></a>GApplication</span></h2>
+<p>GApplication — Core application class</p>
+</td>
+<td valign="top" align="right"></td>
+</tr></table></div>
+<div class="refsynopsisdiv" title="Synopsis">
+<a name="GApplication.synopsis"></a><h2>Synopsis</h2>
+<pre class="synopsis">                    <a class="link" href="GApplication.html#GApplication-struct" title="GApplication">GApplication</a>;
+                    <a class="link" href="GApplication.html#GApplicationClass" title="GApplicationClass">GApplicationClass</a>;
+<a class="link" href="GApplication.html" title="GApplication"><span class="returnvalue">GApplication</span></a> *      <a class="link" href="GApplication.html#g-application-new" title="g_application_new ()">g_application_new</a>                   (<em class="parameter"><code>const <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *appid</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> argc</code></em>,
+                                                         <em class="parameter"><code><span class="type">char</span> **argv</code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="GApplication.html#g-application-register" title="g_application_register ()">g_application_register</a>              (<em class="parameter"><code><a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> *application</code></em>);
+<a class="link" href="GApplication.html" title="GApplication"><span class="returnvalue">GApplication</span></a> *      <a class="link" href="GApplication.html#g-application-try-new" title="g_application_try_new ()">g_application_try_new</a>               (<em class="parameter"><code>const <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *appid</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> argc</code></em>,
+                                                         <em class="parameter"><code><span class="type">char</span> **argv</code></em>,
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Error-Reporting.html#GError"><span class="type">GError</span></a> **error</code></em>);
+<a class="link" href="GApplication.html" title="GApplication"><span class="returnvalue">GApplication</span></a> *      <a class="link" href="GApplication.html#g-application-unregistered-try-new" title="g_application_unregistered_try_new ()">g_application_unregistered_try_new</a>  (<em class="parameter"><code>const <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *appid</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> argc</code></em>,
+                                                         <em class="parameter"><code><span class="type">char</span> **argv</code></em>,
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Error-Reporting.html#GError"><span class="type">GError</span></a> **error</code></em>);
+<a class="link" href="GApplication.html" title="GApplication"><span class="returnvalue">GApplication</span></a> *      <a class="link" href="GApplication.html#g-application-get-instance" title="g_application_get_instance ()">g_application_get_instance</a>          (<em class="parameter"><code><span class="type">void</span></code></em>);
+const <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="returnvalue">gchar</span></a> *       <a class="link" href="GApplication.html#g-application-get-id" title="g_application_get_id ()">g_application_get_id</a>                (<em class="parameter"><code><a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> *application</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="GApplication.html#g-application-add-action" title="g_application_add_action ()">g_application_add_action</a>            (<em class="parameter"><code><a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> *application</code></em>,
+                                                         <em class="parameter"><code>const <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *name</code></em>,
+                                                         <em class="parameter"><code>const <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *description</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="GApplication.html#g-application-remove-action" title="g_application_remove_action ()">g_application_remove_action</a>         (<em class="parameter"><code><a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> *application</code></em>,
+                                                         <em class="parameter"><code>const <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *name</code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="returnvalue">gchar</span></a> **            <a class="link" href="GApplication.html#g-application-list-actions" title="g_application_list_actions ()">g_application_list_actions</a>          (<em class="parameter"><code><a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> *application</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="GApplication.html#g-application-set-action-enabled" title="g_application_set_action_enabled ()">g_application_set_action_enabled</a>    (<em class="parameter"><code><a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> *application</code></em>,
+                                                         <em class="parameter"><code>const <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *name</code></em>,
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> enabled</code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="GApplication.html#g-application-get-action-enabled" title="g_application_get_action_enabled ()">g_application_get_action_enabled</a>    (<em class="parameter"><code><a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> *application</code></em>,
+                                                         <em class="parameter"><code>const <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *name</code></em>);
+const <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="returnvalue">gchar</span></a> *       <a class="link" href="GApplication.html#g-application-get-action-description" title="g_application_get_action_description ()">g_application_get_action_description</a>
+                                                        (<em class="parameter"><code><a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> *application</code></em>,
+                                                         <em class="parameter"><code>const <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *name</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="GApplication.html#g-application-invoke-action" title="g_application_invoke_action ()">g_application_invoke_action</a>         (<em class="parameter"><code><a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> *application</code></em>,
+                                                         <em class="parameter"><code>const <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *name</code></em>,
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-GVariant.html#GVariant"><span class="type">GVariant</span></a> *platform_data</code></em>);
+<span class="returnvalue">void</span>                <a class="link" href="GApplication.html#g-application-run" title="g_application_run ()">g_application_run</a>                   (<em class="parameter"><code><a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> *application</code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="GApplication.html#g-application-quit-with-data" title="g_application_quit_with_data ()">g_application_quit_with_data</a>        (<em class="parameter"><code><a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> *application</code></em>,
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-GVariant.html#GVariant"><span class="type">GVariant</span></a> *platform_data</code></em>);
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="GApplication.html#g-application-is-remote" title="g_application_is_remote ()">g_application_is_remote</a>             (<em class="parameter"><code><a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> *application</code></em>);
+</pre>
+</div>
+<div class="refsect1" title="Object Hierarchy">
+<a name="GApplication.object-hierarchy"></a><h2>Object Hierarchy</h2>
+<pre class="synopsis">
+  <a href="http://library.gnome.org/devel/gobject/unstable/gobject-The-Base-Object-Type.html#GObject">GObject</a>
+   +----GApplication
+</pre>
+</div>
+<div class="refsect1" title="Implemented Interfaces">
+<a name="GApplication.implemented-interfaces"></a><h2>Implemented Interfaces</h2>
+<p>
+GApplication implements
+ <a class="link" href="GInitable.html" title="GInitable">GInitable</a>.</p>
+</div>
+<div class="refsect1" title="Properties">
+<a name="GApplication.properties"></a><h2>Properties</h2>
+<pre class="synopsis">
+  "<a class="link" href="GApplication.html#GApplication--application-id" title='The "application-id" property'>application-id</a>"           <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a>*                : Read / Write / Construct Only
+  "<a class="link" href="GApplication.html#GApplication--argv" title='The "argv" property'>argv</a>"                     <a href="http://library.gnome.org/devel/glib/unstable/glib-GVariant.html#GVariant"><span class="type">GVariant</span></a>              : Read / Write / Construct Only
+  "<a class="link" href="GApplication.html#GApplication--default-quit" title='The "default-quit" property'>default-quit</a>"             <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a>              : Read / Write / Construct Only
+  "<a class="link" href="GApplication.html#GApplication--is-remote" title='The "is-remote" property'>is-remote</a>"                <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a>              : Read
+  "<a class="link" href="GApplication.html#GApplication--platform-data" title='The "platform-data" property'>platform-data</a>"            <a href="http://library.gnome.org/devel/glib/unstable/glib-GVariant.html#GVariant"><span class="type">GVariant</span></a>              : Read / Write / Construct Only
+  "<a class="link" href="GApplication.html#GApplication--register" title='The "register" property'>register</a>"                 <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a>              : Read / Write / Construct Only
+</pre>
+</div>
+<div class="refsect1" title="Signals">
+<a name="GApplication.signals"></a><h2>Signals</h2>
+<pre class="synopsis">
+  "<a class="link" href="GApplication.html#GApplication-action-with-data" title='The "action-with-data" signal'>action-with-data</a>"                               : Run First / No Recursion / Has Details
+  "<a class="link" href="GApplication.html#GApplication-prepare-activation" title='The "prepare-activation" signal'>prepare-activation</a>"                             : Run Last
+  "<a class="link" href="GApplication.html#GApplication-quit-with-data" title='The "quit-with-data" signal'>quit-with-data</a>"                                 : Run Last
+</pre>
+</div>
+<div class="refsect1" title="Description">
+<a name="GApplication.description"></a><h2>Description</h2>
+<p>
+A <a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> is the foundation of an application, unique for a
+given application identifier.  The <a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> wraps some
+low-level platform-specific services and is intended to act as the
+foundation for higher-level application classes such as
+<a href="http://library.gnome.org/devel/gtk/unstable/GtkApplication.html"><span class="type">GtkApplication</span></a> or <span class="type">MxApplication</span>.  In general, you should not use
+this class outside of a higher level framework.  By default,
+<code class="function">g_application_register_with_data()</code> will invoke <a href="http://library.gnome.org/devel/glib/unstable/glib-Message-Logging.html#g-error"><code class="function">g_error()</code></a> if it is
+run in a context where it cannot support its core features.  Note
+that <a href="http://library.gnome.org/devel/glib/unstable/glib-Message-Logging.html#g-error"><code class="function">g_error()</code></a> is by default fatal.
+</p>
+<p>
+One of the core features that <a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> provides is process
+uniqueness, in the context of a "session".  The session concept is
+platform-dependent, but corresponds roughly to a graphical desktop
+login.  When your application is launched again, its arguments
+are passed through platform communication to the already running
+program.
+</p>
+<p>
+In addition, <a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> provides support for 'actions', which
+can be presented to the user in a platform-specific way
+(e.g. Windows 7 jump lists). Note that these are just simple
+actions without parameters. For more flexible scriptability,
+implementing a a separate D-Bus interface is recommended, see e.g.
+<a class="xref" href="gdbus-convenience.html" title="Highlevel D-Bus Support"><i>Highlevel D-Bus Support</i></a>.
+</p>
+<p>
+Finally, <a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> acts as a basic lifecycle root; see the
+<a class="link" href="GApplication.html#g-application-run" title="g_application_run ()"><code class="function">g_application_run()</code></a> and <a class="link" href="GApplication.html#g-application-quit-with-data" title="g_application_quit_with_data ()"><code class="function">g_application_quit_with_data()</code></a> methods.
+</p>
+<p>
+Before using <a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a>, you must choose an "application identifier".
+The expected form of an application identifier is very close to that of
+of a <a class="ulink" href="http://dbus.freedesktop.org/doc/dbus-specification.html#message-protocol-names-interface" target="_top">DBus bus name</a>.
+Examples include: "com.example.MyApp" "org.example.internal-apps.Calculator"
+For convenience, the restrictions on application identifiers are reproduced
+here:
+</p>
+<div class="itemizedlist"><ul class="itemizedlist" type="disc">
+<li class="listitem">Application identifiers must contain only the ASCII characters "[A-Z][a-z][0-9]_-" and must not begin with a digit.</li>
+<li class="listitem">Application identifiers must contain at least one '.' (period) character (and thus at least two elements).</li>
+<li class="listitem">Application identifiers must not begin with a '.' (period) character.</li>
+<li class="listitem">Application identifiers must not exceed 255 characters.</li>
+</ul></div>
+<p>
+</p>
+<div class="refsect2" title="D-Bus implementation">
+<a name="id743417"></a><h3>D-Bus implementation</h3>
+<p>
+On UNIX systems using D-Bus, <a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> is implemented by claiming the
+application identifier as a bus name on the session bus. The implementation
+exports an object at the object path that is created by replacing '.' with
+'/' in the application identifier (e.g. the object path for the
+application id 'org.gtk.TestApp' is '/org/gtk/TestApp'). The object
+implements the org.gtk.Application interface.
+</p>
+<pre class="classsynopsis"> <span class="ooclass"><span class="interfacename">org.gtk.Application</span></span> {<br><code class="methodsynopsis">  <span class="void">void </span><span class="methodname">Activate</span>(<span class="methodparam"><span class="modifier">in </span><span class="type">aay </span><span class="parameter">arguments</span></span>,<br>                <span class="methodparam"><span class="modifier">in </span><span class="type">a{sv} </span><span class="parameter">data</span></span>);</code><br><code class="methodsynopsis">  <span class="void">void </span><span class="methodname">InvokeAction</span>(<span class="methodparam"><span class="modifier">in </span><span class="type">s </span><span class="parameter">action</span></span>,<br>                    <span class="methodparam"><span class="modifier">in </span><span class="type">a{sv} </span><span class="parameter">data</span></span>);</code><br><code class="methodsynopsis">  <span class="type">a{s(sb)} </span><span class="methodname">ListActions</span>();</code><br><code class="methodsynopsis">  <span class="void">void </span><span class="methodname">Quit</span>(<span class="methodparam"><span class="modifier">in </span><span class="type">a{sv} </span><span class="parameter">data</span></span>);</code><br><code class="methodsynopsis">  <span class="modifier">Signal </span><span class="void">void </span><span class="methodname">ActionsChanged</span>();</code><br>}</pre>
+<p>
+The <code class="methodname">Activate</code> function is called on the existing
+application instance when a second instance fails to take the bus name.
+<em class="parameter"><code>arguments</code></em> contains the commandline arguments given to the second instance
+and <em class="parameter"><code>data</code></em> contains platform-specific additional data.
+</p>
+<p>
+On all platforms, <em class="parameter"><code>data</code></em> will have a key "cwd" of type signature
+"ay" which contains the working directory of the invoked
+executable; this data is defined to be in the default GLib
+filesystem encoding for the platform.  See <a href="http://library.gnome.org/devel/glib/unstable/glib-Character-Set-Conversion.html#g-filename-to-utf8"><code class="function">g_filename_to_utf8()</code></a>.
+</p>
+<p>
+</p>
+<p>
+The <code class="methodname">InvokeAction</code> function can be called to
+invoke one of the actions exported by the application.  On X11
+platforms, the platform_data argument should have a "timestamp"
+parameter of type "u" with the server time of the initiating event.
+</p>
+<p>
+The <code class="methodname">ListActions</code> function returns a dictionary
+with the exported actions of the application. The keys of the dictionary
+are the action names, and the values are structs containing the description
+for the action and a boolean that represents if the action is enabled or not.
+</p>
+<p>
+The <code class="methodname">Quit</code> function can be called to
+terminate the application. The <em class="parameter"><code>data</code></em> parameter contains
+platform-specific data.  On X11 platforms, the platform_data
+argument should have a "timestamp" parameter of type "u" with the
+server time of the initiating event.
+</p>
+<p>
+The <code class="methodname">ActionsChanged</code> signal is emitted when the
+exported actions change (i.e. an action is added, removed, enabled,
+disabled, or otherwise changed).
+</p>
+<p>
+<a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> is supported since Gio 2.26.
+</p>
+</div>
+</div>
+<div class="refsect1" title="Details">
+<a name="GApplication.details"></a><h2>Details</h2>
+<div class="refsect2" title="GApplication">
+<a name="GApplication-struct"></a><h3>GApplication</h3>
+<pre class="programlisting">typedef struct _GApplication GApplication;</pre>
+<p>
+The <span class="structname">GApplication</span> structure contains private
+data and should only be accessed using the provided API
+</p>
+<p class="since">Since 2.26</p>
+</div>
+<hr>
+<div class="refsect2" title="GApplicationClass">
+<a name="GApplicationClass"></a><h3>GApplicationClass</h3>
+<pre class="programlisting">typedef struct {
+  /* signals */
+  void        (* action_with_data) (GApplication *application,
+				    const gchar  *action_name,
+				    GVariant     *platform_data);
+  gboolean    (* quit_with_data)   (GApplication *application,
+				    GVariant     *platform_data);
+  void        (* prepare_activation)   (GApplication  *application,
+                                        GVariant      *arguments,
+                                        GVariant      *platform_data);
+
+  /* vfuncs */
+  void        (* run)    (GApplication *application);
+} GApplicationClass;
+</pre>
+<p>
+The <span class="structname">GApplicationClass</span> structure contains
+private data only
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="structfield"><code><a name="GApplicationClass.action-with-data"></a>action_with_data</code></em> ()</span></p></td>
+<td>class handler for the <a class="link" href="GApplication.html#GApplication-action-with-data" title='The "action-with-data" signal'><span class="type">"action-with-data"</span></a> signal
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="structfield"><code><a name="GApplicationClass.quit-with-data"></a>quit_with_data</code></em> ()</span></p></td>
+<td>class handler for the <a class="link" href="GApplication.html#GApplication-quit-with-data" title='The "quit-with-data" signal'><span class="type">"quit-with-data"</span></a> signal
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="structfield"><code><a name="GApplicationClass.prepare-activation"></a>prepare_activation</code></em> ()</span></p></td>
+<td>class handler for the <a class="link" href="GApplication.html#GApplication-prepare-activation" title='The "prepare-activation" signal'><span class="type">"prepare-activation"</span></a> signal
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="structfield"><code><a name="GApplicationClass.run"></a>run</code></em> ()</span></p></td>
+<td>virtual function, called by <a class="link" href="GApplication.html#g-application-run" title="g_application_run ()"><code class="function">g_application_run()</code></a>
+</td>
+</tr>
+</tbody>
+</table></div>
+<p class="since">Since 2.26</p>
+</div>
+<hr>
+<div class="refsect2" title="g_application_new ()">
+<a name="g-application-new"></a><h3>g_application_new ()</h3>
+<pre class="programlisting"><a class="link" href="GApplication.html" title="GApplication"><span class="returnvalue">GApplication</span></a> *      g_application_new                   (<em class="parameter"><code>const <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *appid</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> argc</code></em>,
+                                                         <em class="parameter"><code><span class="type">char</span> **argv</code></em>);</pre>
+<p>
+Create a new <a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a>.  This uses a platform-specific
+mechanism to ensure the current process is the unique owner of the
+application (as defined by the <em class="parameter"><code>appid</code></em>). If successful, the
+<a class="link" href="GApplication.html#GApplication--is-remote" title='The "is-remote" property'><span class="type">"is-remote"</span></a> property will be <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a>, and it is safe to
+continue creating other resources such as graphics windows.
+</p>
+<p>
+If the given <em class="parameter"><code>appid</code></em> is already running in another process, the the
+GApplication::activate_with_data signal will be emitted in the
+remote process, with the data from <em class="parameter"><code>argv</code></em> and other
+platform-specific data available.  Subsequently the
+<a class="link" href="GApplication.html#GApplication--default-quit" title='The "default-quit" property'><span class="type">"default-quit"</span></a> property will be evaluated.  If it's
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a>, then the current process will terminate.  If <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a>, then
+the application remains in the <a class="link" href="GApplication.html#GApplication--is-remote" title='The "is-remote" property'><span class="type">"is-remote"</span></a> state, and
+you can e.g. call <a class="link" href="GApplication.html#g-application-invoke-action" title="g_application_invoke_action ()"><code class="function">g_application_invoke_action()</code></a>. Note that proxy
+instances should not call <a class="link" href="GApplication.html#g-application-add-action" title="g_application_add_action ()"><code class="function">g_application_add_action()</code></a>.
+</p>
+<p>
+This function may do synchronous I/O to obtain unique ownership
+of the application id, and will block the calling thread in this
+case.
+</p>
+<p>
+If the environment does not support the basic functionality of
+<a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a>, this function will invoke <a href="http://library.gnome.org/devel/glib/unstable/glib-Message-Logging.html#g-error"><code class="function">g_error()</code></a>, which by
+default is a fatal operation.  This may arise for example on
+UNIX systems using D-Bus when the session bus is not available.
+</p>
+<p>
+As a convenience, this function is defined to call <a href="http://library.gnome.org/devel/gobject/unstable/gobject-Type-Information.html#g-type-init"><code class="function">g_type_init()</code></a> as
+its very first action.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>appid</code></em> :</span></p></td>
+<td>System-dependent application identifier
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>argc</code></em> :</span></p></td>
+<td>Number of arguments in <em class="parameter"><code>argv</code></em>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>argv</code></em> :</span></p></td>
+<td> Argument vector, usually from the <em class="parameter"><code>argv</code></em> parameter of <code class="function">main()</code>. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>][<acronym title="Parameter points to an array of items."><span class="acronym">array</span></acronym> length=argc]</span>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td> An application instance. <span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+<p class="since">Since 2.26</p>
+</div>
+<hr>
+<div class="refsect2" title="g_application_register ()">
+<a name="g-application-register"></a><h3>g_application_register ()</h3>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            g_application_register              (<em class="parameter"><code><a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> *application</code></em>);</pre>
+<p>
+By default, <a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> ensures process uniqueness when
+initialized, but this behavior is controlled by the
+GApplication:register property.  If it was given as <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> at
+construction time, this function allows you to later attempt
+to ensure uniqueness.  Note that the GApplication:default-quit
+property no longer applies at this point; if this function returns
+<a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a>, platform activation will occur, but the current process
+will not be terminated.
+</p>
+<p>
+It is an error to call this function more than once.  It is
+also an error to call this function if the GApplication:register
+property was <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> at construction time.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>application</code></em> :</span></p></td>
+<td>a <a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td> <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if registration was successful
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title="g_application_try_new ()">
+<a name="g-application-try-new"></a><h3>g_application_try_new ()</h3>
+<pre class="programlisting"><a class="link" href="GApplication.html" title="GApplication"><span class="returnvalue">GApplication</span></a> *      g_application_try_new               (<em class="parameter"><code>const <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *appid</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> argc</code></em>,
+                                                         <em class="parameter"><code><span class="type">char</span> **argv</code></em>,
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Error-Reporting.html#GError"><span class="type">GError</span></a> **error</code></em>);</pre>
+<p>
+This function is similar to <a class="link" href="GApplication.html#g-application-new" title="g_application_new ()"><code class="function">g_application_new()</code></a>, but allows for
+more graceful fallback if the environment doesn't support the
+basic <a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> functionality.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>appid</code></em> :</span></p></td>
+<td>System-dependent application identifier
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>argc</code></em> :</span></p></td>
+<td>Number of arguments in <em class="parameter"><code>argv</code></em>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>argv</code></em> :</span></p></td>
+<td> Argument vector, usually from the <em class="parameter"><code>argv</code></em> parameter of <code class="function">main()</code>. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>][<acronym title="Parameter points to an array of items."><span class="acronym">array</span></acronym> length=argc]</span>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>error</code></em> :</span></p></td>
+<td>a <a href="http://library.gnome.org/devel/glib/unstable/glib-Error-Reporting.html#GError"><span class="type">GError</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td> An application instance. <span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+<p class="since">Since 2.26</p>
+</div>
+<hr>
+<div class="refsect2" title="g_application_unregistered_try_new ()">
+<a name="g-application-unregistered-try-new"></a><h3>g_application_unregistered_try_new ()</h3>
+<pre class="programlisting"><a class="link" href="GApplication.html" title="GApplication"><span class="returnvalue">GApplication</span></a> *      g_application_unregistered_try_new  (<em class="parameter"><code>const <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *appid</code></em>,
+                                                         <em class="parameter"><code><span class="type">int</span> argc</code></em>,
+                                                         <em class="parameter"><code><span class="type">char</span> **argv</code></em>,
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Error-Reporting.html#GError"><span class="type">GError</span></a> **error</code></em>);</pre>
+<p>
+This function is similar to <a class="link" href="GApplication.html#g-application-try-new" title="g_application_try_new ()"><code class="function">g_application_try_new()</code></a>, but also
+sets the GApplication:register property to <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a>.  You can later
+call <a class="link" href="GApplication.html#g-application-register" title="g_application_register ()"><code class="function">g_application_register()</code></a> to complete initialization.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>appid</code></em> :</span></p></td>
+<td>System-dependent application identifier
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>argc</code></em> :</span></p></td>
+<td>Number of arguments in <em class="parameter"><code>argv</code></em>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>argv</code></em> :</span></p></td>
+<td> Argument vector, usually from the <em class="parameter"><code>argv</code></em> parameter of <code class="function">main()</code>. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>][<acronym title="Parameter points to an array of items."><span class="acronym">array</span></acronym> length=argc]</span>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>error</code></em> :</span></p></td>
+<td>a <a href="http://library.gnome.org/devel/glib/unstable/glib-Error-Reporting.html#GError"><span class="type">GError</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td> An application instance. <span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+<p class="since">Since 2.26</p>
+</div>
+<hr>
+<div class="refsect2" title="g_application_get_instance ()">
+<a name="g-application-get-instance"></a><h3>g_application_get_instance ()</h3>
+<pre class="programlisting"><a class="link" href="GApplication.html" title="GApplication"><span class="returnvalue">GApplication</span></a> *      g_application_get_instance          (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
+<p>
+In the normal case where there is exactly one <a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> instance
+in this process, return that instance.  If there are multiple, the
+first one created will be returned.  Otherwise, return <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody><tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td> The primary instance of <a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a>,
+  or <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a> if none is set. <span class="annotation">[<acronym title="Don't free data after the code is done."><span class="acronym">transfer none</span></acronym>]</span>
+</td>
+</tr></tbody>
+</table></div>
+<p class="since">Since 2.26</p>
+</div>
+<hr>
+<div class="refsect2" title="g_application_get_id ()">
+<a name="g-application-get-id"></a><h3>g_application_get_id ()</h3>
+<pre class="programlisting">const <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="returnvalue">gchar</span></a> *       g_application_get_id                (<em class="parameter"><code><a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> *application</code></em>);</pre>
+<p>
+Retrieves the platform-specific identifier for the <a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a>.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>application</code></em> :</span></p></td>
+<td>a <a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td> The platform-specific identifier. The returned string
+  is owned by the <a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> instance and it should never be
+  modified or freed
+
+</td>
+</tr>
+</tbody>
+</table></div>
+<p class="since">Since 2.26</p>
+</div>
+<hr>
+<div class="refsect2" title="g_application_add_action ()">
+<a name="g-application-add-action"></a><h3>g_application_add_action ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                g_application_add_action            (<em class="parameter"><code><a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> *application</code></em>,
+                                                         <em class="parameter"><code>const <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *name</code></em>,
+                                                         <em class="parameter"><code>const <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *description</code></em>);</pre>
+<p>
+Adds an action <em class="parameter"><code>name</code></em> to the list of exported actions of <em class="parameter"><code>application</code></em>.
+</p>
+<p>
+It is an error to call this function if <em class="parameter"><code>application</code></em> is a proxy for
+a remote application.
+</p>
+<p>
+You can invoke an action using <a class="link" href="GApplication.html#g-application-invoke-action" title="g_application_invoke_action ()"><code class="function">g_application_invoke_action()</code></a>.
+</p>
+<p>
+The newly added action is enabled by default; you can call
+<a class="link" href="GApplication.html#g-application-set-action-enabled" title="g_application_set_action_enabled ()"><code class="function">g_application_set_action_enabled()</code></a> to disable it.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>application</code></em> :</span></p></td>
+<td>a <a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>name</code></em> :</span></p></td>
+<td>the action name
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>description</code></em> :</span></p></td>
+<td>the action description; can be a translatable
+  string
+</td>
+</tr>
+</tbody>
+</table></div>
+<p class="since">Since 2.26</p>
+</div>
+<hr>
+<div class="refsect2" title="g_application_remove_action ()">
+<a name="g-application-remove-action"></a><h3>g_application_remove_action ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                g_application_remove_action         (<em class="parameter"><code><a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> *application</code></em>,
+                                                         <em class="parameter"><code>const <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *name</code></em>);</pre>
+<p>
+Removes the action <em class="parameter"><code>name</code></em> from the list of exported actions of <em class="parameter"><code>application</code></em>.
+</p>
+<p>
+It is an error to call this function if <em class="parameter"><code>application</code></em> is a proxy for
+a remote application.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>application</code></em> :</span></p></td>
+<td>a <a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>name</code></em> :</span></p></td>
+<td>the name of the action to remove
+</td>
+</tr>
+</tbody>
+</table></div>
+<p class="since">Since 2.26</p>
+</div>
+<hr>
+<div class="refsect2" title="g_application_list_actions ()">
+<a name="g-application-list-actions"></a><h3>g_application_list_actions ()</h3>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="returnvalue">gchar</span></a> **            g_application_list_actions          (<em class="parameter"><code><a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> *application</code></em>);</pre>
+<p>
+Retrieves the list of action names currently exported by <em class="parameter"><code>application</code></em>.
+</p>
+<p>
+It is an error to call this function if <em class="parameter"><code>application</code></em> is a proxy for
+a remote application.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>application</code></em> :</span></p></td>
+<td>a <a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td> a newly allocation, <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>-terminated array
+  of strings containing action names; use <a href="http://library.gnome.org/devel/glib/unstable/glib-String-Utility-Functions.html#g-strfreev"><code class="function">g_strfreev()</code></a> to free the
+  resources used by the returned array. <span class="annotation">[<acronym title="Free data after the code is done."><span class="acronym">transfer full</span></acronym>]</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+<p class="since">Since 2.26</p>
+</div>
+<hr>
+<div class="refsect2" title="g_application_set_action_enabled ()">
+<a name="g-application-set-action-enabled"></a><h3>g_application_set_action_enabled ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                g_application_set_action_enabled    (<em class="parameter"><code><a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> *application</code></em>,
+                                                         <em class="parameter"><code>const <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *name</code></em>,
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a> enabled</code></em>);</pre>
+<p>
+Sets whether the action <em class="parameter"><code>name</code></em> inside <em class="parameter"><code>application</code></em> should be enabled
+or disabled.
+</p>
+<p>
+It is an error to call this function if <em class="parameter"><code>application</code></em> is a proxy for
+a remote application.
+</p>
+<p>
+Invoking a disabled action will not result in the <span class="type">"action"</span>
+signal being emitted.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>application</code></em> :</span></p></td>
+<td>a <a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>name</code></em> :</span></p></td>
+<td>the name of the application
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>enabled</code></em> :</span></p></td>
+<td>whether to enable or disable the action <em class="parameter"><code>name</code></em>
+</td>
+</tr>
+</tbody>
+</table></div>
+<p class="since">Since 2.26</p>
+</div>
+<hr>
+<div class="refsect2" title="g_application_get_action_enabled ()">
+<a name="g-application-get-action-enabled"></a><h3>g_application_get_action_enabled ()</h3>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            g_application_get_action_enabled    (<em class="parameter"><code><a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> *application</code></em>,
+                                                         <em class="parameter"><code>const <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *name</code></em>);</pre>
+<p>
+Retrieves whether the action <em class="parameter"><code>name</code></em> is enabled or not.
+</p>
+<p>
+See <a class="link" href="GApplication.html#g-application-set-action-enabled" title="g_application_set_action_enabled ()"><code class="function">g_application_set_action_enabled()</code></a>.
+</p>
+<p>
+It is an error to call this function if <em class="parameter"><code>application</code></em> is a proxy for
+a remote application.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>application</code></em> :</span></p></td>
+<td>a <a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>name</code></em> :</span></p></td>
+<td>the name of the action
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td> <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the action was enabled, and <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> otherwise
+
+</td>
+</tr>
+</tbody>
+</table></div>
+<p class="since">Since 2.26</p>
+</div>
+<hr>
+<div class="refsect2" title="g_application_get_action_description ()">
+<a name="g-application-get-action-description"></a><h3>g_application_get_action_description ()</h3>
+<pre class="programlisting">const <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="returnvalue">gchar</span></a> *       g_application_get_action_description
+                                                        (<em class="parameter"><code><a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> *application</code></em>,
+                                                         <em class="parameter"><code>const <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *name</code></em>);</pre>
+<p>
+Gets the description of the action <em class="parameter"><code>name</code></em>.
+</p>
+<p>
+It is an error to call this function if <em class="parameter"><code>application</code></em> is a proxy for
+a remote application.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>application</code></em> :</span></p></td>
+<td>a <a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>name</code></em> :</span></p></td>
+<td>Action name
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td> Description for the given action named <em class="parameter"><code>name</code></em>
+
+</td>
+</tr>
+</tbody>
+</table></div>
+<p class="since">Since 2.26</p>
+</div>
+<hr>
+<div class="refsect2" title="g_application_invoke_action ()">
+<a name="g-application-invoke-action"></a><h3>g_application_invoke_action ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                g_application_invoke_action         (<em class="parameter"><code><a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> *application</code></em>,
+                                                         <em class="parameter"><code>const <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a> *name</code></em>,
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-GVariant.html#GVariant"><span class="type">GVariant</span></a> *platform_data</code></em>);</pre>
+<p>
+Invokes the action <em class="parameter"><code>name</code></em> of the passed <a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a>.
+</p>
+<p>
+This function has different behavior depending on whether <em class="parameter"><code>application</code></em>
+is acting as a proxy for another process.  In the normal case where
+the current process is hosting the application, and the specified
+action exists and is enabled, the <span class="type">"action"</span> signal will
+be emitted.
+</p>
+<p>
+If <em class="parameter"><code>application</code></em> is a proxy, then the specified action will be invoked
+in the remote process. It is not necessary to call
+<a class="link" href="GApplication.html#g-application-add-action" title="g_application_add_action ()"><code class="function">g_application_add_action()</code></a> in the current process in order to invoke
+one remotely.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>application</code></em> :</span></p></td>
+<td>a <a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>name</code></em> :</span></p></td>
+<td>the name of the action to invoke
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>platform_data</code></em> :</span></p></td>
+<td> platform-specific event data. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
+</td>
+</tr>
+</tbody>
+</table></div>
+<p class="since">Since 2.26</p>
+</div>
+<hr>
+<div class="refsect2" title="g_application_run ()">
+<a name="g-application-run"></a><h3>g_application_run ()</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                g_application_run                   (<em class="parameter"><code><a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> *application</code></em>);</pre>
+<p>
+Starts the application.
+</p>
+<p>
+The default implementation of this virtual function will simply run
+a main loop.
+</p>
+<p>
+It is an error to call this function if <em class="parameter"><code>application</code></em> is a proxy for
+a remote application.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody><tr>
+<td><p><span class="term"><em class="parameter"><code>application</code></em> :</span></p></td>
+<td>a <a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a>
+</td>
+</tr></tbody>
+</table></div>
+<p class="since">Since 2.26</p>
+</div>
+<hr>
+<div class="refsect2" title="g_application_quit_with_data ()">
+<a name="g-application-quit-with-data"></a><h3>g_application_quit_with_data ()</h3>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            g_application_quit_with_data        (<em class="parameter"><code><a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> *application</code></em>,
+                                                         <em class="parameter"><code><a href="http://library.gnome.org/devel/glib/unstable/glib-GVariant.html#GVariant"><span class="type">GVariant</span></a> *platform_data</code></em>);</pre>
+<p>
+Request that the application quits.
+</p>
+<p>
+This function has different behavior depending on whether <em class="parameter"><code>application</code></em>
+is acting as a proxy for another process.  In the normal case where
+the current process is hosting the application, the default
+implementation will quit the main loop created by <a class="link" href="GApplication.html#g-application-run" title="g_application_run ()"><code class="function">g_application_run()</code></a>.
+</p>
+<p>
+If <em class="parameter"><code>application</code></em> is a proxy, then the remote process will be asked
+to quit.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>application</code></em> :</span></p></td>
+<td>a <a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>platform_data</code></em> :</span></p></td>
+<td> platform-specific data. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td> <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the application accepted the request, <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> otherwise
+
+</td>
+</tr>
+</tbody>
+</table></div>
+<p class="since">Since 2.26</p>
+</div>
+<hr>
+<div class="refsect2" title="g_application_is_remote ()">
+<a name="g-application-is-remote"></a><h3>g_application_is_remote ()</h3>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            g_application_is_remote             (<em class="parameter"><code><a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> *application</code></em>);</pre>
+<p>
+Returns whether the object represents a proxy for a remote application.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>application</code></em> :</span></p></td>
+<td>a <a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td> <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if this object represents a proxy for a remote application.
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+</div>
+<div class="refsect1" title="Property Details">
+<a name="GApplication.property-details"></a><h2>Property Details</h2>
+<div class="refsect2" title='The "application-id" property'>
+<a name="GApplication--application-id"></a><h3>The <code class="literal">"application-id"</code> property</h3>
+<pre class="programlisting">  "application-id"           <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a>*                : Read / Write / Construct Only</pre>
+<p>
+The unique identifier for this application.  See the documentation for
+<a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> for more information about this property.
+</p>
+<p>Default value: NULL</p>
+</div>
+<hr>
+<div class="refsect2" title='The "argv" property'>
+<a name="GApplication--argv"></a><h3>The <code class="literal">"argv"</code> property</h3>
+<pre class="programlisting">  "argv"                     <a href="http://library.gnome.org/devel/glib/unstable/glib-GVariant.html#GVariant"><span class="type">GVariant</span></a>              : Read / Write / Construct Only</pre>
+<p>
+The argument vector given to this application.  It must be a <a href="http://library.gnome.org/devel/glib/unstable/glib-GVariant.html#GVariant"><span class="type">GVariant</span></a>
+with a type signature "aay".
+</p>
+</div>
+<hr>
+<div class="refsect2" title='The "default-quit" property'>
+<a name="GApplication--default-quit"></a><h3>The <code class="literal">"default-quit"</code> property</h3>
+<pre class="programlisting">  "default-quit"             <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a>              : Read / Write / Construct Only</pre>
+<p>
+By default, if the GApplication:register property is <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a>, and a
+different process is running this application, the process will
+be exited.  Set this property to <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> to allow custom
+interaction with the remote process.
+</p>
+<p>Default value: TRUE</p>
+</div>
+<hr>
+<div class="refsect2" title='The "is-remote" property'>
+<a name="GApplication--is-remote"></a><h3>The <code class="literal">"is-remote"</code> property</h3>
+<pre class="programlisting">  "is-remote"                <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a>              : Read</pre>
+<p>
+This property is <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if this application instance represents a proxy
+to the instance of this application in another process.
+</p>
+<p>Default value: TRUE</p>
+</div>
+<hr>
+<div class="refsect2" title='The "platform-data" property'>
+<a name="GApplication--platform-data"></a><h3>The <code class="literal">"platform-data"</code> property</h3>
+<pre class="programlisting">  "platform-data"            <a href="http://library.gnome.org/devel/glib/unstable/glib-GVariant.html#GVariant"><span class="type">GVariant</span></a>              : Read / Write / Construct Only</pre>
+<p>
+Platform-specific data retrieved from the operating system
+environment.  It must be a <a href="http://library.gnome.org/devel/glib/unstable/glib-GVariant.html#GVariant"><span class="type">GVariant</span></a> with type signature "a{sv}".
+</p>
+</div>
+<hr>
+<div class="refsect2" title='The "register" property'>
+<a name="GApplication--register"></a><h3>The <code class="literal">"register"</code> property</h3>
+<pre class="programlisting">  "register"                 <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="type">gboolean</span></a>              : Read / Write / Construct Only</pre>
+<p>
+If this property is <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a>, the application construction will not attempt
+to ensure process uniqueness, and the application is guaranteed to be in the
+remote state.  See GApplication:is-remote.
+</p>
+<p>Default value: TRUE</p>
+</div>
+</div>
+<div class="refsect1" title="Signal Details">
+<a name="GApplication.signal-details"></a><h2>Signal Details</h2>
+<div class="refsect2" title='The "action-with-data" signal'>
+<a name="GApplication-action-with-data"></a><h3>The <code class="literal">"action-with-data"</code> signal</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> *application,
+                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gchar"><span class="type">gchar</span></a>        *name,
+                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-GVariant.html#GVariant"><span class="type">GVariant</span></a>      platform_data,
+                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>      user_data)          : Run First / No Recursion / Has Details</pre>
+<p>
+This signal is emitted when an action is activated. The action name
+is passed as the first argument, but also as signal detail, so it
+is possible to connect to this signal for individual actions.
+</p>
+<p>
+The signal is never emitted for disabled actions.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>application</code></em> :</span></p></td>
+<td>the object on which the signal is emitted
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>name</code></em> :</span></p></td>
+<td>The name of the activated action
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>platform_data</code></em> :</span></p></td>
+<td>Platform-specific data, or <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>user_data</code></em> :</span></p></td>
+<td>user data set when the signal handler was connected.</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title='The "prepare-activation" signal'>
+<a name="GApplication-prepare-activation"></a><h3>The <code class="literal">"prepare-activation"</code> signal</h3>
+<pre class="programlisting"><span class="returnvalue">void</span>                user_function                      (<a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> *application,
+                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-GVariant.html#GVariant"><span class="type">GVariant</span></a>      arguments,
+                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-GVariant.html#GVariant"><span class="type">GVariant</span></a>      platform_data,
+                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>      user_data)          : Run Last</pre>
+<p>
+This signal is emitted when a non-primary process for a given
+application is invoked while your application is running; for
+example, when a file browser launches your program to open a
+file.  The raw operating system arguments are passed in the
+<em class="parameter"><code>arguments</code></em> variant.  Additional platform-dependent data is
+stored in <em class="parameter"><code>platform_data</code></em>.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>application</code></em> :</span></p></td>
+<td>the object on which the signal is emitted
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>arguments</code></em> :</span></p></td>
+<td>A <a href="http://library.gnome.org/devel/glib/unstable/glib-GVariant.html#GVariant"><span class="type">GVariant</span></a> with the signature "aay"
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>platform_data</code></em> :</span></p></td>
+<td>A <a href="http://library.gnome.org/devel/glib/unstable/glib-GVariant.html#GVariant"><span class="type">GVariant</span></a> with the signature "a{sv}", or <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>user_data</code></em> :</span></p></td>
+<td>user data set when the signal handler was connected.</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<hr>
+<div class="refsect2" title='The "quit-with-data" signal'>
+<a name="GApplication-quit-with-data"></a><h3>The <code class="literal">"quit-with-data"</code> signal</h3>
+<pre class="programlisting"><a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gboolean"><span class="returnvalue">gboolean</span></a>            user_function                      (<a class="link" href="GApplication.html" title="GApplication"><span class="type">GApplication</span></a> *application,
+                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-GVariant.html#GVariant"><span class="type">GVariant</span></a>      platform_data,
+                                                        <a href="http://library.gnome.org/devel/glib/unstable/glib-Basic-Types.html#gpointer"><span class="type">gpointer</span></a>      user_data)          : Run Last</pre>
+<p>
+This signal is emitted when the Quit action is invoked on the
+application.
+</p>
+<p>
+The default handler for this signal exits the mainloop of the
+application.
+</p>
+<div class="variablelist"><table border="0">
+<col align="left" valign="top">
+<tbody>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>application</code></em> :</span></p></td>
+<td>the object on which the signal is emitted
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>platform_data</code></em> :</span></p></td>
+<td>Platform-specific data, or <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#NULL:CAPS"><code class="literal">NULL</code></a>
+</td>
+</tr>
+<tr>
+<td><p><span class="term"><em class="parameter"><code>user_data</code></em> :</span></p></td>
+<td>user data set when the signal handler was connected.</td>
+</tr>
+<tr>
+<td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
+<td> <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#TRUE:CAPS"><code class="literal">TRUE</code></a> if the signal has been handled, <a href="http://library.gnome.org/devel/glib/unstable/glib-Standard-Macros.html#FALSE:CAPS"><code class="literal">FALSE</code></a> to continue
+  signal emission
+</td>
+</tr>
+</tbody>
+</table></div>
+</div>
+</div>
+</div>
+<div class="footer">
+<hr>
+          Generated by GTK-Doc V1.15</div>
+</body>
+</html>
