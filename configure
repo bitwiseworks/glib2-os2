@@ -796,6 +796,8 @@ OS_WIN32_X64_FALSE
 OS_WIN32_X64_TRUE
 OS_WIN32_FALSE
 OS_WIN32_TRUE
+OS_OS2_FALSE
+OS_OS2_TRUE
 LIB_EXE_MACHINE_FLAG
 host_os
 host_vendor
@@ -4654,6 +4656,20 @@ esac
 $as_echo "$glib_native_beos" >&6; }
 
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for OS/2" >&5
+$as_echo_n "checking for OS/2... " >&6; }
+case $host in
+  *-*-os2*)
+    glib_native_os2="yes"
+    ;;
+  *)
+    glib_native_os2="no"
+    ;;
+esac
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $glib_native_os2" >&5
+$as_echo "$glib_native_os2" >&6; }
+
+
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for Win32" >&5
 $as_echo_n "checking for Win32... " >&6; }
 LIB_EXE_MACHINE_FLAG=X86
@@ -4712,6 +4728,14 @@ rm -f conftest.err conftest.$ac_ext
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $glib_have_carbon" >&5
 $as_echo "$glib_have_carbon" >&6; }
+
+ if test "$glib_native_os2" = "yes"; then
+  OS_OS2_TRUE=
+  OS_OS2_FALSE='#'
+else
+  OS_OS2_TRUE='#'
+  OS_OS2_FALSE=
+fi
 
  if test "$glib_native_win32" = "yes"; then
   OS_WIN32_TRUE=
@@ -27592,6 +27616,10 @@ if test -z "${am__fastdepCC_TRUE}" && test -z "${am__fastdepCC_FALSE}"; then
   as_fn_error $? "conditional \"am__fastdepCC\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
+if test -z "${OS_OS2_TRUE}" && test -z "${OS_OS2_FALSE}"; then
+  as_fn_error $? "conditional \"OS_OS2\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
 if test -z "${OS_WIN32_TRUE}" && test -z "${OS_WIN32_FALSE}"; then
   as_fn_error $? "conditional \"OS_WIN32\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
@@ -29011,6 +29039,10 @@ case $host in
   *-*-mingw*)
     glib_os="#define G_OS_WIN32
 #define G_PLATFORM_WIN32"
+    ;;
+  *-*-os2*)
+    glib_os="#define G_OS_UNIX
+#define G_PLATFORM_OS2"
     ;;
   *)
     glib_os="#define G_OS_UNIX"

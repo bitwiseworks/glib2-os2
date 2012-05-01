@@ -119,6 +119,19 @@ AC_MSG_RESULT([$glib_native_beos])
 
 dnl
 
+AC_MSG_CHECKING([for OS/2])
+case $host in
+  *-*-os2*)
+    glib_native_os2="yes"
+    ;;
+  *)
+    glib_native_os2="no"
+    ;;
+esac
+AC_MSG_RESULT([$glib_native_os2])
+
+dnl
+
 AC_MSG_CHECKING([for Win32])
 LIB_EXE_MACHINE_FLAG=X86
 case "$host" in
@@ -165,6 +178,7 @@ AC_TRY_CPP([
 
 AC_MSG_RESULT([$glib_have_carbon])
 
+AM_CONDITIONAL(OS_OS2, [test "$glib_native_os2" = "yes"])
 AM_CONDITIONAL(OS_WIN32, [test "$glib_native_win32" = "yes"])
 AM_CONDITIONAL(OS_WIN32_X64, [test "$LIB_EXE_MACHINE_FLAG" = "X64"])
 AM_CONDITIONAL(OS_UNIX, [test "$glib_native_win32" != "yes"])
@@ -3602,6 +3616,10 @@ case $host in
   *-*-mingw*)
     glib_os="#define G_OS_WIN32
 #define G_PLATFORM_WIN32"
+    ;;
+  *-*-os2*)
+    glib_os="#define G_OS_UNIX
+#define G_PLATFORM_OS2"
     ;;
   *)
     glib_os="#define G_OS_UNIX"
