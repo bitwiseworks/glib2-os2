@@ -1748,6 +1748,7 @@ The following components of LINK-COMMAND are treated specially:
   -rpath LIBDIR     the created library will eventually be installed in LIBDIR
   -R[ ]LIBDIR       add LIBDIR to the runtime path of programs and libraries
   -shared           only do dynamic linking of libtool libraries
+  -shortname NAME   specify a short name to use for the created shared library
   -shrext SUFFIX    override the standard shared library file extension
   -static           do not do any dynamic linking of uninstalled libtool libraries
   -static-libtool-libs
@@ -4409,6 +4410,7 @@ func_mode_link ()
     rpath=
     xrpath=
     perm_rpath=
+    shortname=
     temp_rpath=
     thread_safe=no
     vinfo=
@@ -4990,6 +4992,15 @@ func_mode_link ()
 	continue
 	;;
 
+      -shortname)
+	if test "$build_libtool_libs" != yes ; then \
+	  func_warning "\`-shortname' is ignored for a non-shared library"
+	  continue
+	fi
+	prev=shortname
+	continue
+	;;
+
       -shrext)
 	prev=shrext
 	continue
@@ -5079,6 +5090,12 @@ func_mode_link ()
 	arg="$func_quote_for_eval_result"
 	;;
 
+      # OS/2-specific compiler/linker options with arguments
+      -Zlinker|-Zstack)
+	prev=xcompiler
+	continue
+	;;
+
       # Flags to be passed through unchanged, with rationale:
       # -64, -mips[0-9]      enable 64-bit mode for the SGI compiler
       # -r[0-9][0-9]*        specify processor for the SGI compiler
@@ -5090,8 +5107,9 @@ func_mode_link ()
       # -p, -pg, --coverage, -fprofile-*  profiling flags for GCC
       # @file                GCC response files
       # -tp=*                Portland pgcc target processor selection
+      # -Z*                  OS/2-specific compiler/linker options
       -64|-mips[0-9]|-r[0-9][0-9]*|-xarch=*|-xtarget=*|+DA*|+DD*|-q*|-m*| \
-      -t[45]*|-txscale*|-p|-pg|--coverage|-fprofile-*|-F*|@*|-tp=*)
+      -t[45]*|-txscale*|-p|-pg|--coverage|-fprofile-*|-F*|@*|-tp=*|-Z*)
         func_quote_for_eval "$arg"
 	arg="$func_quote_for_eval_result"
         func_append compile_command " $arg"
@@ -5837,9 +5855,13 @@ func_mode_link ()
 	    # We need to hardcode the library path
 	    if test -n "$shlibpath_var" && test -z "$avoidtemprpath" ; then
 	      # Make sure the rpath contains only unique directories.
-	      case "$temp_rpath:" in
-	      *"$absdir:"*) ;;
-	      *) temp_rpath="$temp_rpath$absdir:" ;;
+	      case $host_os in
+	      os2*) temp_rpath_sep=";" ;;
+	      *) temp_rpath_sep=":" ;;
+	      esac
+	      case "$temp_rpath$temp_rpath_sep" in
+	      *"$absdir$temp_rpath_sep"*) ;;
+	      *) temp_rpath="$temp_rpath$absdir$temp_rpath_sep" ;;
 	      esac
 	    fi
 
@@ -6446,6 +6468,20 @@ func_mode_link ()
 	else
 	  func_stripname '' '.la' "$outputname"
 	  libname=$func_stripname_result
+	fi
+	;;
+      esac
+
+      # Check the short name constraints
+      case $host_os in
+      os2*)
+	if test -z "$shortname" ; then
+	  shortname="$libname"
+	fi
+	func_len " $shortname"
+	len=$func_len_result
+	if test "$len" -gt 9; then
+	  func_fatal_error "short name \`$shortname' for library \`$libname' is longer than 8 chars (use -shortname to override)"
 	fi
 	;;
       esac
@@ -7700,7 +7736,15 @@ EOF
 	# Create links to the real library.
 	for linkname in $linknames; do
 	  if test "$realname" != "$linkname"; then
-	    func_show_eval '(cd "$output_objdir" && $RM "$linkname" && $LN_S "$realname" "$linkname")' 'exit $?'
+	    case $host_os in
+	    os2*)
+	      # Create import libraries in order to link against the DLL
+	      func_show_eval '(cd "$output_objdir" && $RM "$linkname" && emximp -o "$linkname" "$realname")' 'exit $?'
+	      ;;
+	    *)
+	      func_show_eval '(cd "$output_objdir" && $RM "$linkname" && $LN_S "$realname" "$linkname")' 'exit $?'
+	      ;;
+	    esac
 	  fi
 	done
 

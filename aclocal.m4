@@ -1600,6 +1600,12 @@ AC_CACHE_VAL([lt_cv_sys_max_cmd_len], [dnl
     lt_cv_sys_max_cmd_len=196608
     ;;
 
+  os2*)
+    # Limiting the command line length doesn't properly work on OS/2,
+    # let's remove the limit and hope for the best.
+    lt_cv_sys_max_cmd_len=-1;
+    ;;
+
   osf*)
     # Dr. Hans Ekkehard Plesser reports seeing a kernel panic running configure
     # due to this test when exec_disable_arg_limit is 1 on Tru64. It is not
@@ -2637,9 +2643,10 @@ os2*)
   libname_spec='$name'
   shrext_cmds=".dll"
   need_lib_prefix=no
-  library_names_spec='$libname${shared_ext} $libname.a'
+  library_names_spec='$shortname${shared_ext} $libname.$libext $libname.lib'
   dynamic_linker='OS/2 ld.exe'
-  shlibpath_var=LIBPATH
+  shlibpath_var=BEGINLIBPATH
+  shlibpath_overrides_runpath=yes
   ;;
 
 osf3* | osf4* | osf5*)
@@ -3194,6 +3201,10 @@ openbsd*)
   else
     lt_cv_deplibs_check_method='match_pattern /lib[[^/]]+(\.so\.[[0-9]]+\.[[0-9]]+|_pic\.a)$'
   fi
+  ;;
+
+os2*)
+  lt_cv_deplibs_check_method=pass_all
   ;;
 
 osf3* | osf4* | osf5*)
@@ -5078,9 +5089,10 @@ _LT_EOF
     os2*)
       _LT_TAGVAR(hardcode_libdir_flag_spec, $1)='-L$libdir'
       _LT_TAGVAR(hardcode_minus_L, $1)=yes
-      _LT_TAGVAR(allow_undefined_flag, $1)=unsupported
-      _LT_TAGVAR(archive_cmds, $1)='$ECHO "LIBRARY $libname INITINSTANCE" > $output_objdir/$libname.def~$ECHO "DESCRIPTION \"$libname\"" >> $output_objdir/$libname.def~echo DATA >> $output_objdir/$libname.def~echo " SINGLE NONSHARED" >> $output_objdir/$libname.def~echo EXPORTS >> $output_objdir/$libname.def~emxexp $libobjs >> $output_objdir/$libname.def~$CC -Zdll -Zcrtdll -o $lib $libobjs $deplibs $compiler_flags $output_objdir/$libname.def'
-      _LT_TAGVAR(old_archive_from_new_cmds, $1)='emximp -o $output_objdir/$libname.a $output_objdir/$libname.def'
+      _LT_TAGVAR(archive_cmds, $1)='$CC -Zdll -Zcrtdll -o $lib $libobjs $deplibs $compiler_flags'
+      _LT_TAGVAR(archive_expsym_cmds, $1)='\$ECHO "LIBRARY $shortname INITINSTANCE TERMINSTANCE" > $output_objdir/$shortname.def~\$ECHO "DESCRIPTION \"$shortname\"" >> $output_objdir/$shortname.def~\$ECHO "DATA MULTIPLE NONSHARED" >> $output_objdir/$shortname.def~\$ECHO "EXPORTS" >> $output_objdir/$shortname.def~cat $export_symbols >> $output_objdir/$shortname.def~$archive_cmds $output_objdir/$shortname.def'
+      _LT_TAGVAR(export_symbols_cmds, $1)='emxexp $libobjs >> $export_symbols'
+      _LT_TAGVAR(always_export_symbols, $1)=yes
       ;;
 
     osf3*)
