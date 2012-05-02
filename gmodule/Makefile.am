@@ -77,9 +77,13 @@ install-def-file:
 uninstall-def-file:
 endif
 
+if OS_OS2
+gmodule_os2_shortname_ldflag = -shortname gmodule2
+endif
+
 libgmodule_2_0_la_SOURCES = gmodule.c
 libgmodule_2_0_la_LDFLAGS = $(GLIB_LINK_FLAGS) \
-	$(gmodule_win32_res_ldflag) \
+	$(gmodule_win32_res_ldflag) $(gmodule_os2_shortname_ldflag) \
 	$(G_MODULE_LDFLAGS) \
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) \
 	-export-dynamic $(no_undefined) $(export_symbols)

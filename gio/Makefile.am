@@ -428,13 +428,17 @@ uninstall-def-file:
 export_symbols = -export-symbols-regex '^g_.*'
 endif
 
+if OS_OS2
+gio_os2_shortname_ldflag = -shortname gio2
+endif
+
 install-data-local: install-ms-lib install-def-file
 	$(mkinstalldirs) $(DESTDIR)$(GIO_MODULE_DIR)
 
 uninstall-local: uninstall-ms-lib uninstall-def-file
 
 libgio_2_0_la_LDFLAGS = $(GLIB_LINK_FLAGS) \
-	$(gio_win32_res_ldflag) \
+	$(gio_win32_res_ldflag) $(gio_os2_shortname_ldflag) \
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) \
 	-export-dynamic $(no_undefined) $(export_symbols)
 

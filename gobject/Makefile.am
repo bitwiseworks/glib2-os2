@@ -73,10 +73,14 @@ uninstall-def-file:
 export_symbols = $(LIBTOOL_EXPORT_OPTIONS)
 endif
 
+if OS_OS2
+gobject_os2_shortname_ldflag = -shortname gobject2
+endif
+
 # libtool stuff: set version and export symbols for resolving
 libgobjectincludedir = $(includedir)/glib-2.0/gobject
 libgobject_2_0_la_LDFLAGS = $(GLIB_LINK_FLAGS) \
-  $(gobject_win32_res_ldflag) \
+  $(gobject_win32_res_ldflag) $(gobject_os2_shortname_ldflag) \
   -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) \
   -export-dynamic $(no_undefined) $(export_symbols)
 

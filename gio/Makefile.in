@@ -919,8 +919,9 @@ libgio_2_0_la_LIBADD = \
 @OS_WIN32_AND_DLL_COMPILATION_TRUE@gio_def = gio.def
 @OS_WIN32_AND_DLL_COMPILATION_TRUE@gio_win32_res = gio-win32-res.o
 @OS_WIN32_AND_DLL_COMPILATION_TRUE@gio_win32_res_ldflag = -Wl,$(gio_win32_res)
+@OS_OS2_TRUE@gio_os2_shortname_ldflag = -shortname gio2
 libgio_2_0_la_LDFLAGS = $(GLIB_LINK_FLAGS) \
-	$(gio_win32_res_ldflag) \
+	$(gio_win32_res_ldflag) $(gio_os2_shortname_ldflag) \
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) \
 	-export-dynamic $(no_undefined) $(export_symbols)
 

@@ -319,6 +319,10 @@ uninstall-def-file:
 export_symbols = $(LIBTOOL_EXPORT_OPTIONS)
 endif
 
+if OS_OS2
+glib_os2_shortname_ldflag = -shortname glib2
+endif
+
 if ENABLE_REGEX
 if USE_SYSTEM_PCRE
 pcre_lib = $(PCRE_LIBS)
@@ -336,7 +340,7 @@ libglib_2_0_la_LIBADD = libcharset/libcharset.la $(printf_la) @GIO@ @GSPAWN@ @PL
 libglib_2_0_la_DEPENDENCIES = libcharset/libcharset.la $(printf_la) @GIO@ @GSPAWN@ @PLATFORMDEP@ $(glib_win32_res) $(glib_def)
 
 libglib_2_0_la_LDFLAGS = $(GLIB_LINK_FLAGS) \
-	 $(glib_win32_res_ldflag) \
+	 $(glib_win32_res_ldflag) $(glib_os2_shortname_ldflag) \
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) \
 	-export-dynamic $(no_undefined) $(export_symbols)
 

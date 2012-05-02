@@ -463,11 +463,12 @@ lib_LTLIBRARIES = libgobject-2.0.la
 @OS_WIN32_AND_DLL_COMPILATION_TRUE@gobject_def = gobject.def
 @OS_WIN32_AND_DLL_COMPILATION_TRUE@gobject_win32_res = gobject-win32-res.o
 @OS_WIN32_AND_DLL_COMPILATION_TRUE@gobject_win32_res_ldflag = -Wl,$(gobject_win32_res)
+@OS_OS2_TRUE@gobject_os2_shortname_ldflag = -shortname gobject2
 
 # libtool stuff: set version and export symbols for resolving
 libgobjectincludedir = $(includedir)/glib-2.0/gobject
 libgobject_2_0_la_LDFLAGS = $(GLIB_LINK_FLAGS) \
-  $(gobject_win32_res_ldflag) \
+  $(gobject_win32_res_ldflag) $(gobject_os2_shortname_ldflag) \
   -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) \
   -export-dynamic $(no_undefined) $(export_symbols)
 
