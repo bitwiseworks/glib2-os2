@@ -13,11 +13,6 @@
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
 
-OS2_LA_NAME=glib-2.0
-OS2_DLL_NAME=glib2
-OS2_DLL_OBJ=$(libglib_2_0_la_OBJECTS:%.lo=.libs/%.o)
-OS2_DLL_LIBS= -lgnulib/.libs/gnulib.a -llibcharset/.libs/charset.a -lpcre/.libs/pcre.a $(LIBS)
-
 @SET_MAKE@
 
 # GLIB - Library of useful C routines
@@ -155,7 +150,7 @@ libglib_2_0_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 @OS_WIN32_TRUE@@OS_WIN32_X64_TRUE@	gspawn-win64-helper-console$(EXEEXT)
 @OS_WIN32_TRUE@@OS_WIN32_X64_FALSE@am__EXEEXT_2 = gspawn-win32-helper$(EXEEXT) \
 @OS_WIN32_TRUE@@OS_WIN32_X64_FALSE@	gspawn-win32-helper-console$(EXEEXT)
-#@OS_UNIX_TRUE@am__EXEEXT_3 = gtester$(EXEEXT)
+@OS_UNIX_TRUE@am__EXEEXT_3 = gtester$(EXEEXT)
 am__EXEEXT_4 = $(am__EXEEXT_1) $(am__EXEEXT_2) $(am__EXEEXT_3)
 PROGRAMS = $(bin_PROGRAMS)
 gspawn_win32_helper_SOURCES = gspawn-win32-helper.c
@@ -547,7 +542,6 @@ nodist_configexecinclude_HEADERS = glibconfig.h
 @HAVE_GCC_BUILTINS_FOR_ATOMIC_OPERATIONS_FALSE@gatomic_c = gatomic.c
 @HAVE_GCC_BUILTINS_FOR_ATOMIC_OPERATIONS_TRUE@gatomic_c = gatomic-gcc.c
 SUBDIRS = libcharset $(PRINTF_SUBDIR) $(MAYBE_PCRE) update-pcre . tests
-SUBDIRS = libcharset $(PRINTF_SUBDIR) $(MAYBE_PCRE) update-pcre .
 DIST_SUBDIRS = libcharset gnulib pcre update-pcre tests
 AM_CPPFLAGS = \
 	$(glib_INCLUDES) 		\
@@ -1478,7 +1472,7 @@ check-am: all-am
 	$(MAKE) $(AM_MAKEFLAGS) check-TESTS check-local
 check: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) check-recursive
-all-am: Makefile $(LTLIBRARIES) $(OS2_DLL_NAME).dll $(PROGRAMS) $(SCRIPTS) $(DATA) \
+all-am: Makefile $(LTLIBRARIES) $(PROGRAMS) $(SCRIPTS) $(DATA) \
 		$(HEADERS)
 install-binPROGRAMS: install-libLTLIBRARIES
 
@@ -1806,14 +1800,3 @@ install-data-hook: libglib-gdb.py
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
-
-$(OS2_DLL_NAME).dll: lib$(OS2_LA_NAME).la
-	cp .libs/$(OS2_LA_NAME).a .libs/$(OS2_LA_NAME)_s.a
-	echo "LIBRARY $(OS2_DLL_NAME) INITINSTANCE TERMINSTANCE" > $(OS2_DLL_NAME).def
-	echo "DATA MULTIPLE" >> $(OS2_DLL_NAME).def
-	echo "EXPORTS" >> $(OS2_DLL_NAME).def
-	emxexp $(OS2_DLL_OBJ) >> $(OS2_DLL_NAME).def
-	gcc -g -Zbin-files -Zhigh-mem -Zomf -Zdll $(OS2_DLL_NAME).def -o $@ $(OS2_DLL_OBJ) $(OS2_DLL_LIBS) 
-	emximp -o .libs/$(OS2_LA_NAME).a $(OS2_DLL_NAME).def
-	emximp -o .libs/$(OS2_LA_NAME).lib $(OS2_DLL_NAME).def
-	cp $@ ../gobject

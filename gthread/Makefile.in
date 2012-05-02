@@ -13,11 +13,6 @@
 # even the implied warranty of MERCHANTABILITY or FITNESS FOR A
 # PARTICULAR PURPOSE.
 
-OS2_LA_NAME=gthread-2.0
-OS2_DLL_NAME=gthr2
-OS2_DLL_OBJ=$(libgthread_2_0_la_OBJECTS:%.lo=.libs/%.o)
-OS2_DLL_LIBS=-l../glib/.libs/glib-2.0.a $(LIBS)
-
 @SET_MAKE@
 
 # GLIB - Library of useful C routines
@@ -431,7 +426,7 @@ libgthread_2_0_la_LDFLAGS = $(GLIB_LINK_FLAGS) \
 
 libgthread_2_0_la_LIBADD = $(G_THREAD_LIBS_EXTRA) $(G_THREAD_LIBS_FOR_GTHREAD) $(libglib)
 libgthread_2_0_la_DEPENDENCIES = $(gthread_win32_res) $(gthread_def)
-all: all-recursive $(OS2_DLL_NAME).dll
+all: all-recursive
 
 .SUFFIXES:
 .SUFFIXES: .c .lo .o .obj
@@ -547,7 +542,7 @@ clean-libtool:
 # (1) if the variable is set in `config.status', edit `config.status'
 #     (which will cause the Makefiles to be regenerated when you run `make');
 # (2) otherwise, pass the desired values on the `make' command line.
-$(RECURSIVE_TARGETS): $(OS2_DLL_NAME).dll
+$(RECURSIVE_TARGETS):
 	@fail= failcom='exit 1'; \
 	for f in x $$MAKEFLAGS; do \
 	  case $$f in \
@@ -983,13 +978,3 @@ uninstall-local: uninstall-ms-lib uninstall-def-file
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:
-
-$(OS2_DLL_NAME).dll: lib$(OS2_LA_NAME).la
-	cp .libs/$(OS2_LA_NAME).a .libs/$(OS2_LA_NAME)_s.a
-	echo "LIBRARY $(OS2_DLL_NAME) INITINSTANCE TERMINSTANCE" > $(OS2_DLL_NAME).def
-	echo "DATA MULTIPLE" >> $(OS2_DLL_NAME).def
-	echo "EXPORTS" >> $(OS2_DLL_NAME).def
-	emxexp $(OS2_DLL_OBJ) >> $(OS2_DLL_NAME).def
-	gcc -g -Zbin-files -Zhigh-mem -Zomf -Zdll $(OS2_DLL_NAME).def -o $@ $(OS2_DLL_OBJ) $(OS2_DLL_LIBS) 
-	emximp -o .libs/$(OS2_LA_NAME).a $(OS2_DLL_NAME).def
-	emximp -o .libs/$(OS2_LA_NAME).lib $(OS2_DLL_NAME).def
