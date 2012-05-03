@@ -73,7 +73,7 @@ main (int   argc,
     { "c///", "c" },
     { "/a/b", "/a" },
     { "/a/b/", "/a/b" },
-#if defined(G_OS_WIN32) || defined(__EMX__)
+#if defined(G_OS_WIN32) || defined(G_PLATFORM_OS2)
     { "\\", "\\" },
     { ".\\\\\\\\", "." },
     { ".\\/\\/", "." },

@@ -705,7 +705,7 @@ g_basename (const gchar	   *file_name)
   
   base = strrchr (file_name, G_DIR_SEPARATOR);
 
-#if defined G_OS_WIN32 || defined __KLIBC__
+#if defined(G_OS_WIN32) || defined(G_PLATFORM_OS2)
   {
     gchar *q = strrchr (file_name, '/');
     if (base == NULL || (q != NULL && q > base))
@@ -716,10 +716,10 @@ g_basename (const gchar	   *file_name)
   if (base)
     return base + 1;
 
-#if defined G_OS_WIN32 || defined __KLIBC__
+#if defined(G_OS_WIN32) || defined(G_PLATFORM_OS2)
   if (g_ascii_isalpha (file_name[0]) && file_name[1] == ':')
     return (gchar*) file_name + 2;
-#endif /* G_OS_WIN32 */
+#endif /* G_OS_WIN32 || G_PLATFORM_OS2 */
   
   return (gchar*) file_name;
 }
@@ -760,21 +760,21 @@ g_path_get_basename (const gchar   *file_name)
     /* string only containing slashes */
     return g_strdup (G_DIR_SEPARATOR_S);
 
-#if defined G_OS_WIN32 || defined __KLIBC__
+#if defined(G_OS_WIN32) || defined(G_PLATFORM_OS2)
   if (last_nonslash == 1 && g_ascii_isalpha (file_name[0]) && file_name[1] == ':')
     /* string only containing slashes and a drive */
     return g_strdup (G_DIR_SEPARATOR_S);
-#endif /* G_OS_WIN32 */
+#endif /* G_OS_WIN32 || G_PLATFORM_OS2 */
 
   base = last_nonslash;
 
   while (base >=0 && !G_IS_DIR_SEPARATOR (file_name [base]))
     base--;
 
-#if defined G_OS_WIN32 || defined __KLIBC__
+#if defined(G_OS_WIN32) || defined(G_PLATFORM_OS2)
   if (base == -1 && g_ascii_isalpha (file_name[0]) && file_name[1] == ':')
     base = 1;
-#endif /* G_OS_WIN32 */
+#endif /* G_OS_WIN32 || G_PLATFORM_OS2 */
 
   len = last_nonslash - base;
   retval = g_malloc (len + 1);
@@ -801,12 +801,12 @@ g_path_is_absolute (const gchar *file_name)
   if (G_IS_DIR_SEPARATOR (file_name[0]))
     return TRUE;
 
-#if defined G_OS_WIN32 || defined __KLIBC__
+#if defined(G_OS_WIN32) || defined(G_PLATFORM_OS2)
   /* Recognize drive letter on native Windows */
   if (g_ascii_isalpha (file_name[0]) && 
       file_name[1] == ':' && G_IS_DIR_SEPARATOR (file_name[2]))
     return TRUE;
-#endif /* G_OS_WIN32 */
+#endif /* G_OS_WIN32 || G_PLATFORM_OS2 */
 
   return FALSE;
 }
@@ -826,7 +826,7 @@ g_path_skip_root (const gchar *file_name)
 {
   g_return_val_if_fail (file_name != NULL, NULL);
   
-#if defined G_PLATFORM_WIN32 || defined __KLIBC__
+#if defined(G_PLATFORM_WIN32) || defined(G_PLATFORM_OS2)
   /* Skip \\server\share or //server/share */
   if (G_IS_DIR_SEPARATOR (file_name[0]) &&
       G_IS_DIR_SEPARATOR (file_name[1]) &&
@@ -836,14 +836,14 @@ g_path_skip_root (const gchar *file_name)
       gchar *p;
 
       p = strchr (file_name + 2, G_DIR_SEPARATOR);
-#if defined G_OS_WIN32
+#ifdef G_OS_WIN32
       {
 	gchar *q = strchr (file_name + 2, '/');
 	if (p == NULL || (q != NULL && q < p))
 	  p = q;
       }
 #endif
-#if defined __KLIBC__
+#ifdef G_PLATFORM_OS2
       {
 	gchar *q = strchr (file_name + 2, '\\');
 	if (p == NULL || (q != NULL && q < p))
@@ -876,7 +876,7 @@ g_path_skip_root (const gchar *file_name)
       return (gchar *)file_name;
     }
 
-#if defined G_OS_WIN32 || defined __KLIBC__
+#if defined(G_OS_WIN32) || defined(G_PLATFORM_OS2)
   /* Skip X:\ */
   if (g_ascii_isalpha (file_name[0]) && file_name[1] == ':' && G_IS_DIR_SEPARATOR (file_name[2]))
     return (gchar *)file_name + 3;
@@ -904,14 +904,14 @@ g_path_get_dirname (const gchar	   *file_name)
   g_return_val_if_fail (file_name != NULL, NULL);
   
   base = strrchr (file_name, G_DIR_SEPARATOR);
-#if defined G_OS_WIN32
+#ifdef G_OS_WIN32
   {
     gchar *q = strrchr (file_name, '/');
     if (base == NULL || (q != NULL && q > base))
 	base = q;
   }
 #endif
-#if defined __KLIBC__
+#ifdef G_PLATFORM_OS2
   {
     gchar *q = strrchr (file_name, '\\');
     if (base == NULL || (q != NULL && q > base))
@@ -920,7 +920,7 @@ g_path_get_dirname (const gchar	   *file_name)
 #endif
   if (!base)
     {
-#if defined G_OS_WIN32 || defined __KLIBC__
+#if defined(G_OS_WIN32) || defined(G_PLATFORM_OS2)
       if (g_ascii_isalpha (file_name[0]) && file_name[1] == ':')
 	{
 	  gchar drive_colon_dot[4];
@@ -939,7 +939,7 @@ g_path_get_dirname (const gchar	   *file_name)
   while (base > file_name && G_IS_DIR_SEPARATOR (*base))
     base--;
 
-#if defined G_OS_WIN32 || defined __KLIBC__
+#if defined(G_OS_WIN32) || defined(G_PLATFORM_OS2)
   /* base points to the char before the last slash.
    *
    * In case file_name is the root of a drive (X:\) or a child of the
@@ -1744,10 +1744,11 @@ g_get_any_init_do (void)
     g_home_dir = g_strdup (g_getenv ("HOME"));
 #endif
 
-#ifdef __KLIBC__
+#ifdef G_PLATFORM_OS2
   /* change '\\' in %HOME% to '/' */
   g_strdelimit (g_home_dir, "\\",'/');
 #endif
+
   if (!g_user_name)
     g_user_name = g_strdup ("somebody");
   if (!g_real_name)

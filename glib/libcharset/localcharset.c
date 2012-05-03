@@ -33,7 +33,7 @@
 # define WIN32_NATIVE
 #endif
 
-#if defined __KLIBC__
+#if defined __OS2__
 /* Assume EMX program runs on OS/2, even if compiled under DOS.  */
 # define OS2
 #endif
@@ -70,7 +70,7 @@
 # include "configmake.h"
 #endif
 
-#if defined _WIN32 || defined __WIN32__ || defined __CYGWIN__ || defined __KLIBC__ || defined __DJGPP__
+#if defined _WIN32 || defined __WIN32__ || defined __CYGWIN__ || defined __OS2__ || defined __DJGPP__
   /* Win32, Cygwin, OS/2, DOS */
 # define ISSLASH(C) ((C) == '/' || (C) == '\\')
 #endif

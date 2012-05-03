@@ -623,7 +623,7 @@ main (int   argc,
   if (files)
     files = g_slist_reverse (files);
   else
-#ifndef __KLIBC__
+#ifndef G_PLATFORM_OS2
     files = g_slist_prepend (files, "/dev/stdin");
 #else
     files = g_slist_prepend (files, "con");

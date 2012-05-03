@@ -1666,7 +1666,7 @@ g_escape_file_uri (const gchar *hostname,
   char *escaped_path;
   char *res;
 
-#if defined G_OS_WIN32 || defined __KLIBC__
+#if defined(G_OS_WIN32) || defined(G_PLATFORM_OS2)
   char *p, *backslash;
 
   /* Turn backslashes into forward slashes. That's what Netscape
@@ -1696,7 +1696,7 @@ g_escape_file_uri (const gchar *hostname,
 		     escaped_path,
 		     NULL);
 
-#if defined G_OS_WIN32 || defined __KLIBC__
+#if defined(G_OS_WIN32) || defined(G_PLATFORM_OS2)
   g_free ((char *) pathname);
 #endif
 
@@ -1929,7 +1929,7 @@ g_filename_from_uri (const gchar *uri,
     }
 
   offs = 0;
-#if defined G_OS_WIN32 || defined __KLIBC__
+#if defined(G_OS_WIN32) || defined(G_PLATFORM_OS2)
   /* Drop localhost */
   if (hostname && *hostname != NULL &&
       g_ascii_strcasecmp (*hostname, "localhost") == 0)
@@ -1938,7 +1938,7 @@ g_filename_from_uri (const gchar *uri,
       *hostname = NULL;
     }
 
-#ifndef __KLIBC__
+#ifndef G_PLATFORM_OS2
   /* Turn slashes into backslashes, because that's the canonical spelling */
   p = filename;
   while ((slash = strchr (p, '/')) != NULL)
@@ -2034,7 +2034,7 @@ g_filename_to_uri (const gchar *filename,
       return NULL;
     }
   
-#if defined G_OS_WIN32 || defined __KLIBC__
+#if defined(G_OS_WIN32) || defined(G_PLATFORM_OS2)
   /* Don't use localhost unnecessarily */
   if (hostname && g_ascii_strcasecmp (hostname, "localhost") == 0)
     hostname = NULL;
