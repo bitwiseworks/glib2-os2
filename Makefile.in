@@ -419,7 +419,8 @@ EXTRA_DIST = ChangeLog.pre-2-20 ChangeLog.pre-2-18 ChangeLog.pre-2-16 \
 	gio-2.0-uninstalled.pc.in gio-unix-2.0-uninstalled.pc.in
 TEST_PROGS = 
 ACLOCAL_AMFLAGS = -I m4macros ${ACLOCAL_FLAGS}
-SUBDIRS = . m4macros glib gmodule gthread gobject gio tests po docs
+@OS_OS2_TRUE@SUBDIRS = . m4macros glib gmodule gthread gobject po docs
+@OS_OS2_FALSE@SUBDIRS = . m4macros glib gmodule gthread gobject gio tests po docs
 DIST_SUBDIRS = $(SUBDIRS) build
 bin_SCRIPTS = glib-gettextize
 AM_CPPFLAGS = \
