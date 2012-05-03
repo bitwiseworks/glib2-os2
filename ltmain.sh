@@ -2288,8 +2288,17 @@ func_mode_install ()
 	    # so we also need to try rm && ln -s.
 	    for linkname
 	    do
-	      test "$linkname" != "$realname" \
-		&& func_show_eval "(cd $destdir && { $LN_S -f $realname $linkname || { $RM $linkname && $LN_S $realname $linkname; }; })"
+	      if test "$linkname" != "$realname"; then
+		case $host_os in
+		os2*)
+	  	  # Create import libraries in order to link against the DLL
+	  	  func_show_eval '(cd "$destdir" && $RM "$linkname" && emximp -o "$linkname" "$realname")'
+	  	  ;;
+		*)
+		  func_show_eval "(cd $destdir && { $LN_S -f $realname $linkname || { $RM $linkname && $LN_S $realname $linkname; }; })"
+	  	  ;;
+		esac
+	      fi
 	    done
 	  fi
 
