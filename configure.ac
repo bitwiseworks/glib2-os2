@@ -1575,6 +1575,9 @@ case "$host" in
   *-*-mingw*)
     GSPAWN=gspawn-win32.lo
     ;;
+  *-*-os2*)
+    GSPAWN=gspawn-os2.lo
+    ;;
   *)
     GSPAWN=gspawn.lo
     ;;    

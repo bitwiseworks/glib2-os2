@@ -211,6 +211,7 @@ EXTRA_libglib_2_0_la_SOURCES = \
 	giowin32.c	\
 	gspawn.c	\
 	gspawn-win32.c	\
+	gspawn-os2.c	\
 	gwin32.c
 
 glibincludedir=$(includedir)/glib-2.0
