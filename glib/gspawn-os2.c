@@ -442,13 +442,25 @@ g_spawn_sync (const gchar          *working_directory,
 }
 
 static void
-Waitpid (void *pid)
+reap_child (GPid pid)
 {
-  int stat_loc;
+ wait_failed:
+  if (waitpid (pid, NULL, 0) < 0)
+    {
+       if (errno == EINTR)
+         goto wait_failed;
+       else if (errno == ECHILD)
+         ; /* do nothing, child already reaped */
+       else
+         g_warning ("waitpid() should not fail in "
+                    "'reap_child'");
+    }
+}
 
-  waitpid (*(GPid *)pid, &stat_loc, 0);
-  /* Discard everything
-   */
+static void
+reap_child_thread (void *pid)
+{
+  reap_child ((GPid) pid);
 }
 
 /**
@@ -631,6 +643,7 @@ g_spawn_async_with_pipes (const gchar          *working_directory,
 {
   gboolean result;
   int tid;
+  GPid pid = -1;
 
   g_return_val_if_fail (argv != NULL, FALSE);
   g_return_val_if_fail (standard_output == NULL ||
@@ -653,14 +666,17 @@ g_spawn_async_with_pipes (const gchar          *working_directory,
                                (flags & G_SPAWN_FILE_AND_ARGV_ZERO) != 0,
                                child_setup,
                                user_data,
-                               child_pid,
+                               &pid,
                                standard_input,
                                standard_output,
                                standard_error,
                                error);
-  /* start a thread with waitpid() so the return code does not fill up memory
-   */
-  tid = _beginthread (Waitpid, NULL, 0x2000, (void *) child_pid);
+  if (child_pid)
+    *child_pid = pid;
+
+  /* start a thread with waitpid() so the return code does not fill up memory */
+  if (result && pid > 0)
+    tid = _beginthread (reap_child_thread, NULL, 0x2000, (void *) pid);
 
   return result;
 }
@@ -1035,12 +1051,15 @@ fork_exec_with_pipes (gboolean              intermediate_child,
                 user_data,
                 error);
 
+  if (pid <= 0)
+      goto cleanup_and_fail;
+
+  /* Success against all odds! return the information */
+
   /* Close the uncared-about ends of the pipes */
   close_and_invalidate (&stdin_pipe[0]);
   close_and_invalidate (&stdout_pipe[1]);
   close_and_invalidate (&stderr_pipe[1]);
-
-  /* Success against all odds! return the information */
 
   if (child_pid)
     *child_pid = pid;
@@ -1061,19 +1080,7 @@ fork_exec_with_pipes (gboolean              intermediate_child,
    */
 
   if (pid > 0)
-  {
-    wait_failed:
-     if (waitpid (pid, NULL, 0) < 0)
-       {
-          if (errno == EINTR)
-            goto wait_failed;
-          else if (errno == ECHILD)
-            ; /* do nothing, child already reaped */
-          else
-            g_warning ("waitpid() should not fail in "
-                       "'fork_exec_with_pipes'");
-       }
-   }
+    reap_child (pid);
 
   close_and_invalidate (&stdin_pipe[0]);
   close_and_invalidate (&stdin_pipe[1]);
