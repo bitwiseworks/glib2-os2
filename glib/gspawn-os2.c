@@ -28,7 +28,6 @@
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <signal.h>
 #include <string.h>
 #include <stdlib.h>   /* for fdwalk */
 #include <dirent.h>
@@ -1020,11 +1019,6 @@ fork_exec_with_pipes (gboolean              intermediate_child,
 
   if (standard_error && !make_pipe (stderr_pipe, error))
     goto cleanup_and_fail;
-
-  /* Be sure we crash if the parent exits
-   * and we write to the err_report_pipe
-   */
-  signal (SIGPIPE, SIG_DFL);
 
   /* Close the parent's end of the pipes;
    * not needed in the close_descriptors case,
