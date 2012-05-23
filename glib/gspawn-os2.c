@@ -33,6 +33,7 @@
 #include <stdlib.h>   /* for fdwalk */
 #include <dirent.h>
 #include <process.h>
+#include <sys/socket.h>
 
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
@@ -1096,7 +1097,10 @@ static gboolean
 make_pipe (gint     p[2],
            GError **error)
 {
-  if (pipe (p) < 0)
+  /* Pipes created with pipe() have problems with select(), use
+     socketpair() instead.
+   */
+  if (socketpair (AF_LOCAL, SOCK_STREAM, 0, p) < 0)
     {
       gint errsv = errno;
       g_set_error (error,
