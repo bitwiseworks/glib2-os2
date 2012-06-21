@@ -77,6 +77,9 @@
 #include <sys/wait.h>
 #endif
 
+#ifdef G_PLATFORM_OS2
+#include <sys/socket.h> // for socketpair
+#endif
 
 /**
  * SECTION:main
@@ -486,7 +489,11 @@ g_main_context_init_pipe (GMainContext *context)
 #endif
   if (context->wake_up_pipe[0] == -1)
     {
+#ifdef G_PLATFORM_OS2
+      if (socketpair (AF_LOCAL, SOCK_STREAM, 0, context->wake_up_pipe) < 0)
+#else
       if (pipe (context->wake_up_pipe) < 0)
+#endif
         g_error ("Cannot create pipe main loop wake-up: %s\n",
   	         g_strerror (errno));
  
