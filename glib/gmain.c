@@ -78,6 +78,9 @@
 #endif
 
 #ifdef G_PLATFORM_OS2
+#define OS2EMX_PLAIN_CHAR
+#define INCL_PM
+#include <os2.h>
 #include <sys/socket.h> // for socketpair
 #endif
 
@@ -203,7 +206,7 @@ struct _GMainContext
   GThread *owner;
   guint owner_count;
   GSList *waiters;
-#endif  
+#endif
 
   gint ref_count;
 
@@ -219,7 +222,7 @@ struct _GMainContext
   GPollFD *cached_poll_array;
   guint cached_poll_array_size;
 
-#ifdef G_THREADS_ENABLED  
+#ifdef G_THREADS_ENABLED
 #ifndef G_OS_WIN32
 /* this pipe is used to wake up the main loop when a source is added.
  */
@@ -227,6 +230,11 @@ struct _GMainContext
 #else /* G_OS_WIN32 */
   HANDLE wake_up_semaphore;
 #endif /* G_OS_WIN32 */
+
+#ifdef G_PLATFORM_OS2
+  GThread *pm_integration_thread;
+  HWND pm_integration_hwnd;
+#endif
 
   GPollFD wake_up_rec;
   gboolean poll_waiting;
@@ -3411,6 +3419,185 @@ g_main_context_is_owner (GMainContext *context)
 
   return is_owner;
 }
+
+#ifdef G_PLATFORM_OS2
+
+#ifdef G_THREADS_ENABLED
+
+static ULONG WM_OS2CONTEXTPMWND_NOTIFY = 0;
+
+static MRESULT
+EXPENTRY OS2ContextPMWndProc (HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
+{
+  GMainContext *context = (GMainContext *) WinQueryWindowULong (hwnd, QWL_USER);
+
+  if (msg == WM_OS2CONTEXTPMWND_NOTIFY)
+    {
+      LOCK_CONTEXT (context);
+
+      /* dispatch existing events but not wait for the new ones */
+      g_main_context_iterate (context, FALSE, TRUE, G_THREAD_SELF);
+
+      UNLOCK_CONTEXT (context);
+    }
+
+  return 0;
+}
+
+static gpointer
+pm_integration_thread (gpointer data)
+{
+  GMainContext *context = (GMainContext *) data;
+  gboolean have_some;
+
+  LOCK_CONTEXT (context);
+
+  while (TRUE)
+    {
+      /* wait for events but not dispatch them */
+      have_some = g_main_context_iterate (context, TRUE, FALSE, G_THREAD_SELF);
+
+      if (context->pm_integration_thread == NULL)
+        break;
+
+      if (have_some)
+        WinPostMsg (context->pm_integration_hwnd,
+                    WM_OS2CONTEXTPMWND_NOTIFY, 0, 0);
+    }
+
+  /* finally indicate that there is no integration any more */
+  context->pm_integration_hwnd = NULLHANDLE;
+
+  UNLOCK_CONTEXT (context);
+
+  return NULL;
+}
+
+#endif /* G_THREADS_ENABLED */
+
+/**
+ * g_main_context_os2_start_pm_integration:
+ * @context: a #GMainContext (if %NULL, the default context will be used)
+ *
+ * Integrates the given context with the existing PM message queue on the
+ * current thread so that when this queue is run via normal PM routines it will
+ * also process GLib events. The integration should be cancelled with
+ * g_main_context_os2_stop_pm_integration() when no longer needed.
+ *
+ * An auxiliary thread is created to implement integration. This means that
+ * threads must be already initialized with g_thread_init() before this call,
+ * otheriwse it will fail. This integreation thread is automatically terminated
+ * by g_main_context_os2_stop_pm_integration().
+ *
+ * Return value: %TRUE on success and %FALSE if the integration fails (e.g. if
+ * the current thread doesn't have a PM message queue, or not enough memory, or
+ * threads are not initialized).
+ **/
+gboolean
+g_main_context_os2_start_pm_integration (GMainContext *context)
+{
+#ifdef G_THREADS_ENABLED
+  static gboolean initialized = FALSE;
+
+  if (!initialized)
+    {
+      if (!g_thread_supported())
+        {
+          g_warning ("PM integration: threads are not initialized");
+          return FALSE;
+        }
+
+      if (!WinRegisterClass (0, "GLib.OS2ContextPMWnd", OS2ContextPMWndProc,
+                             0, 4))
+        return FALSE;
+
+      WM_OS2CONTEXTPMWND_NOTIFY = WinAddAtom (WinQuerySystemAtomTable(),
+                                              "GLib.OS2ContextPMWnd.Notify");
+      if (WM_OS2CONTEXTPMWND_NOTIFY == 0)
+        return FALSE;
+    }
+
+  if (!context)
+    context = g_main_context_default();
+
+  LOCK_CONTEXT (context);
+
+  if (context->pm_integration_hwnd != NULLHANDLE)
+    {
+      g_warning ("PM integration: context is already integrated");
+      UNLOCK_CONTEXT (context);
+      return FALSE;
+    }
+
+  HWND hwnd = WinCreateWindow (HWND_OBJECT, "GLib.OS2ContextPMWnd",
+                               NULL, 0, 0, 0, 0, 0, NULLHANDLE, HWND_BOTTOM,
+                               0, NULL, NULL);
+  if (hwnd == NULLHANDLE)
+    {
+      g_warning ("PM integration: failed to create PM object window");
+      UNLOCK_CONTEXT (context);
+      return FALSE;
+    }
+
+  WinSetWindowULong (hwnd, QWL_USER, (ULONG) context);
+
+  GThread *thread = g_thread_create (pm_integration_thread, context, TRUE, NULL);
+  if (thread == NULL)
+    {
+      g_warning ("PM integration: failed to create context polling thread");
+      WinDestroyWindow (hwnd);
+      UNLOCK_CONTEXT (context);
+      return FALSE;
+    }
+
+  context->pm_integration_thread = thread;
+  context->pm_integration_hwnd = hwnd;
+
+  UNLOCK_CONTEXT (context);
+
+  return TRUE;
+
+#else
+  return FALSE;
+#endif /* G_THREADS_ENABLED */
+}
+
+/**
+ * g_main_context_os2_stop_pm_integration:
+ * @context: a #GMainContext (if %NULL, the default context will be used)
+ *
+ * Disables integration of the given context with the PM message queue enabled
+ * by g_main_context_os2_start_pm_integration().
+ **/
+void
+g_main_context_os2_stop_pm_integration (GMainContext *context)
+{
+#ifdef G_THREADS_ENABLED
+  if (!context)
+    context = g_main_context_default();
+
+  LOCK_CONTEXT (context);
+
+  if (context->pm_integration_hwnd == NULLHANDLE)
+    {
+      g_warning ("PM integration: context is not integrated");
+      UNLOCK_CONTEXT (context);
+      return;
+    }
+
+  GThread *thread = context->pm_integration_thread;
+  /* request termination */
+  context->pm_integration_thread = NULL;
+
+  UNLOCK_CONTEXT (context);
+
+  g_main_context_wakeup (context);
+
+  g_thread_join (thread);
+#endif /* G_THREADS_ENABLED */
+}
+
+#endif /* G_PLATFORM_OS2 */
 
 /* Timeouts */
 

@@ -526,6 +526,13 @@ GLIB_VAR GSourceFuncs g_timeout_funcs;
 GLIB_VAR GSourceFuncs g_child_watch_funcs;
 GLIB_VAR GSourceFuncs g_idle_funcs;
 
+#ifdef G_PLATFORM_OS2
+
+gboolean g_main_context_os2_start_pm_integration    (GMainContext *context);
+void     g_main_context_os2_stop_pm_integration     (GMainContext *context);
+
+#endif /* G_PLATFORM_OS2 */
+
 G_END_DECLS
 
 #endif /* __G_MAIN_H__ */
