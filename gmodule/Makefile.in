@@ -388,7 +388,7 @@ lib_LTLIBRARIES = libgmodule-2.0.la
 @OS_WIN32_AND_DLL_COMPILATION_TRUE@gmodule_def = gmodule.def
 @OS_WIN32_AND_DLL_COMPILATION_TRUE@gmodule_win32_res = gmodule-win32-res.o
 @OS_WIN32_AND_DLL_COMPILATION_TRUE@gmodule_win32_res_ldflag = -Wl,$(gmodule_win32_res)
-@OS_OS2_TRUE@gmodule_os2_shortname_ldflag = -shortname gmodule2
+@OS_OS2_TRUE@gmodule_os2_shortname_ldflag = -shortname gmod2
 libgmodule_2_0_la_SOURCES = gmodule.c
 libgmodule_2_0_la_LDFLAGS = $(GLIB_LINK_FLAGS) \
 	$(gmodule_win32_res_ldflag) $(gmodule_os2_shortname_ldflag) \

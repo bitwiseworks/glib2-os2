@@ -68,7 +68,7 @@ gthread_win32_res_ldflag = -Wl,$(gthread_win32_res)
 endif
 
 if OS_OS2
-gthread_os2_shortname_ldflag = -shortname gthread2
+gthread_os2_shortname_ldflag = -shortname gthr2
 endif
 
 libgthread_2_0_la_SOURCES = gthread-impl.c

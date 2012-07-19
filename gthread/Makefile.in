@@ -418,7 +418,7 @@ lib_LTLIBRARIES = libgthread-2.0.la
 @OS_WIN32_AND_DLL_COMPILATION_TRUE@gthread_def = gthread.def
 @OS_WIN32_AND_DLL_COMPILATION_TRUE@gthread_win32_res = gthread-win32-res.o
 @OS_WIN32_AND_DLL_COMPILATION_TRUE@gthread_win32_res_ldflag = -Wl,$(gthread_win32_res)
-@OS_OS2_TRUE@gthread_os2_shortname_ldflag = -shortname gthread2
+@OS_OS2_TRUE@gthread_os2_shortname_ldflag = -shortname gthr2
 libgthread_2_0_la_SOURCES = gthread-impl.c
 libgthread_2_0_la_LDFLAGS = $(GLIB_LINK_FLAGS) \
 	$(gthread_win32_res_ldflag) $(gthread_os2_shortname_ldflag) \

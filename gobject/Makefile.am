@@ -74,7 +74,7 @@ export_symbols = $(LIBTOOL_EXPORT_OPTIONS)
 endif
 
 if OS_OS2
-gobject_os2_shortname_ldflag = -shortname gobject2
+gobject_os2_shortname_ldflag = -shortname gobj2
 endif
 
 # libtool stuff: set version and export symbols for resolving

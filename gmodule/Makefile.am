@@ -78,7 +78,7 @@ uninstall-def-file:
 endif
 
 if OS_OS2
-gmodule_os2_shortname_ldflag = -shortname gmodule2
+gmodule_os2_shortname_ldflag = -shortname gmod2
 endif
 
 libgmodule_2_0_la_SOURCES = gmodule.c
