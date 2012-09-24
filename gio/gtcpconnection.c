@@ -11,9 +11,9 @@
  */
 
 /**
- * SECTION: gtcpconnection
+ * SECTION:gtcpconnection
  * @title: GTcpConnection
- * @short_description: a TCP GSocketConnection
+ * @short_description: A TCP GSocketConnection
  * @see_also: #GSocketConnection.
  *
  * This is the subclass of #GSocketConnection that is created
@@ -210,7 +210,7 @@ close_async_data_free (CloseAsyncData *data)
 
 static void
 async_close_finish (CloseAsyncData *data,
-                    GError         *error,
+                    GError         *error /* consumed */,
                     gboolean        in_mainloop)
 {
   GIOStreamClass *parent = G_IO_STREAM_CLASS (g_tcp_connection_parent_class);
@@ -223,17 +223,14 @@ async_close_finish (CloseAsyncData *data,
   if (error)
     {
       parent->close_fn (stream, data->cancellable, NULL);
-      g_simple_async_result_set_from_error (data->res, error);
+      g_simple_async_result_take_error (data->res, error);
     }
   else
     {
       my_error = NULL;
       parent->close_fn (stream, data->cancellable, &my_error);
       if (my_error)
-	{
-	  g_simple_async_result_set_from_error (data->res, my_error);
-	  g_error_free (my_error);
-	}
+        g_simple_async_result_take_error (data->res, my_error);
     }
 
   if (in_mainloop)
@@ -260,7 +257,6 @@ close_read_ready (GSocket        *socket,
       else
 	{
 	  async_close_finish (data, error, TRUE);
-	  g_error_free (error);
 	  return FALSE;
 	}
     }
@@ -306,7 +302,6 @@ g_tcp_connection_close_async (GIOStream           *stream,
       if (!g_socket_shutdown (socket, FALSE, TRUE, &error))
 	{
 	  async_close_finish (data, error, FALSE);
-	  g_error_free (error);
 	  close_async_data_free (data);
 	  return;
 	}
@@ -331,7 +326,7 @@ g_tcp_connection_close_async (GIOStream           *stream,
  * @graceful_disconnect: Whether to do graceful disconnects or not
  *
  * This enabled graceful disconnects on close. A graceful disconnect
- * means that we signal the recieving end that the connection is terminated
+ * means that we signal the receiving end that the connection is terminated
  * and wait for it to close the connection before closing the connection.
  *
  * A graceful disconnect means that we can be sure that we successfully sent

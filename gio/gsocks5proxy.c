@@ -176,8 +176,8 @@ parse_nego_reply (const guint8 *data,
       case SOCKS5_AUTH_NO_ACCEPT:
       default:
 	g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_PROXY_AUTH_FAILED,
-			     _("The SOCKSv5 require an authentication method that is not "
-			       "supported by GLib."));
+			     _("The SOCKSv5 proxy requires an authentication "
+			       "method that is not supported by GLib."));
 	return FALSE;
 	break;
     }
@@ -204,10 +204,9 @@ set_auth_msg (guint8	  *msg,
 
   if (ulen > SOCKS5_MAX_LEN || plen > SOCKS5_MAX_LEN)
     {
-      g_set_error (error, G_IO_ERROR, G_IO_ERROR_PROXY_FAILED,
-		   _("Username or password is too long for SOCKSv5 "
-		     "protocol (max. is %i)."),
-		   SOCKS5_MAX_LEN);
+      g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_PROXY_FAILED,
+			   _("Username or password is too long for SOCKSv5 "
+			     "protocol."));
       return FALSE;
     }
 
@@ -286,9 +285,8 @@ set_connect_msg (guint8       *msg,
       if (host_len > SOCKS5_MAX_LEN)
 	{
 	  g_set_error (error, G_IO_ERROR, G_IO_ERROR_PROXY_FAILED,
-		       _("Hostname '%s' too long for SOCKSv5 protocol "
-			 "(maximum is %i bytes)"),
-		       hostname, SOCKS5_MAX_LEN);
+		       _("Hostname '%s' is too long for SOCKSv5 protocol"),
+		       hostname);
 	  return -1;
 	}
 
@@ -349,7 +347,7 @@ parse_connect_reply (const guint8 *data, gint *atype, GError **error)
 
 	  default:
 	    g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_PROXY_FAILED,
-			   _("The SOCKSv5 proxy server uses unkown address type."));
+			   _("The SOCKSv5 proxy server uses unknown address type."));
 	    return FALSE;
 	  }
 	break;
@@ -399,7 +397,7 @@ parse_connect_reply (const guint8 *data, gint *atype, GError **error)
 
       default: /* Unknown error */
 	g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_PROXY_FAILED,
-			     _("Unkown SOCKSv5 proxy error."));
+			     _("Unknown SOCKSv5 proxy error."));
 	return FALSE;
 	break;
     }
@@ -444,7 +442,7 @@ g_socks5_proxy_connect (GProxy            *proxy,
 	goto error;
     }
 
-  /* Recieve SOCKS5 response and reply with authentication if required */
+  /* Receive SOCKS5 response and reply with authentication if required */
     {
       guint8 data[SOCKS5_NEGO_REP_LEN];
       gboolean must_auth = FALSE;
@@ -587,6 +585,7 @@ free_connect_data (ConnectAsyncData *data)
   g_free (data->hostname);
   g_free (data->username);
   g_free (data->password);
+  g_free (data->buffer);
   
   if (data->cancellable)
     g_object_unref (data->cancellable);
@@ -598,9 +597,7 @@ static void
 complete_async_from_error (ConnectAsyncData *data, GError *error)
 {
   GSimpleAsyncResult *simple = data->simple;
-  g_simple_async_result_set_from_error (data->simple,
-					error);
-  g_error_free (error);
+  g_simple_async_result_take_error (data->simple, error);
   g_simple_async_result_set_op_res_gpointer (simple, NULL, NULL);
   g_simple_async_result_complete (simple);
   g_object_unref (simple);

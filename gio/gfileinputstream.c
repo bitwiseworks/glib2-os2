@@ -45,7 +45,7 @@
  * stream to jump to arbitrary positions in the file, provided the 
  * filesystem of the file allows it. To find the position of a file
  * input stream, use g_seekable_tell(). To find out if a file input
- * stream supports seeking, use g_seekable_stream_can_seek().
+ * stream supports seeking, use g_seekable_can_seek().
  * To position a file input stream, use g_seekable_seek().
  **/
 
@@ -112,8 +112,8 @@ g_file_input_stream_init (GFileInputStream *stream)
  * g_file_input_stream_query_info:
  * @stream: a #GFileInputStream.
  * @attributes: a file attribute query string.
- * @cancellable: optional #GCancellable object, %NULL to ignore. 
- * @error: a #GError location to store the error occuring, or %NULL to 
+ * @cancellable: (allow-none): optional #GCancellable object, %NULL to ignore. 
+ * @error: a #GError location to store the error occurring, or %NULL to 
  * ignore.
  *
  * Queries a file input stream the given @attributes. This function blocks 
@@ -122,7 +122,7 @@ g_file_input_stream_init (GFileInputStream *stream)
  * stream is blocked, the stream will set the pending flag internally, and 
  * any other operations on the stream will fail with %G_IO_ERROR_PENDING.
  *
- * Returns: a #GFileInfo, or %NULL on error.
+ * Returns: (transfer full): a #GFileInfo, or %NULL on error.
  **/
 GFileInfo *
 g_file_input_stream_query_info (GFileInputStream  *stream,
@@ -180,9 +180,9 @@ async_ready_callback_wrapper (GObject      *source_object,
  * @attributes: a file attribute query string.
  * @io_priority: the <link linkend="io-priority">I/O priority</link> 
  *     of the request.
- * @cancellable: optional #GCancellable object, %NULL to ignore. 
- * @callback: callback to call when the request is satisfied
- * @user_data: the data to pass to callback function
+ * @cancellable: (allow-none): optional #GCancellable object, %NULL to ignore. 
+ * @callback: (scope async): callback to call when the request is satisfied
+ * @user_data: (closure): the data to pass to callback function
  * 
  * Queries the stream information asynchronously.
  * When the operation is finished @callback will be called. 
@@ -215,11 +215,10 @@ g_file_input_stream_query_info_async (GFileInputStream    *stream,
   
   if (!g_input_stream_set_pending (input_stream, &error))
     {
-      g_simple_async_report_gerror_in_idle (G_OBJECT (stream),
+      g_simple_async_report_take_gerror_in_idle (G_OBJECT (stream),
 					    callback,
 					    user_data,
 					    error);
-      g_error_free (error);
       return;
     }
 
@@ -235,30 +234,25 @@ g_file_input_stream_query_info_async (GFileInputStream    *stream,
  * g_file_input_stream_query_info_finish:
  * @stream: a #GFileInputStream.
  * @result: a #GAsyncResult.
- * @error: a #GError location to store the error occuring, 
+ * @error: a #GError location to store the error occurring, 
  *     or %NULL to ignore.
  * 
  * Finishes an asynchronous info query operation.
  * 
- * Returns: #GFileInfo. 
+ * Returns: (transfer full): #GFileInfo. 
  **/
 GFileInfo *
 g_file_input_stream_query_info_finish (GFileInputStream  *stream,
                                        GAsyncResult      *result,
                                        GError           **error)
 {
-  GSimpleAsyncResult *simple;
   GFileInputStreamClass *class;
 
   g_return_val_if_fail (G_IS_FILE_INPUT_STREAM (stream), NULL);
   g_return_val_if_fail (G_IS_ASYNC_RESULT (result), NULL);
 
-  if (G_IS_SIMPLE_ASYNC_RESULT (result))
-    {
-      simple = G_SIMPLE_ASYNC_RESULT (result);
-      if (g_simple_async_result_propagate_error (simple, error))
-	return NULL;
-    }
+  if (g_async_result_legacy_propagate_error (result, error))
+    return NULL;
 
   class = G_FILE_INPUT_STREAM_GET_CLASS (stream);
   return class->query_info_finish (stream, result, error);
@@ -421,10 +415,7 @@ query_info_async_thread (GSimpleAsyncResult *res,
                          _("Stream doesn't support query_info"));
 
   if (info == NULL)
-    {
-      g_simple_async_result_set_from_error (res, error);
-      g_error_free (error);
-    }
+    g_simple_async_result_take_error (res, error);
   else
     data->info = info;
 }
@@ -459,6 +450,9 @@ g_file_input_stream_real_query_info_finish (GFileInputStream  *stream,
   QueryInfoAsyncData *data;
 
   g_warn_if_fail (g_simple_async_result_get_source_tag (simple) == g_file_input_stream_real_query_info_async);
+
+  if (g_simple_async_result_propagate_error (simple, error))
+    return NULL;
 
   data = g_simple_async_result_get_op_res_gpointer (simple);
   if (data->info)

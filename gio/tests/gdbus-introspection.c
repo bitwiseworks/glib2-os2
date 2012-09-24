@@ -75,7 +75,8 @@ test_introspection (GDBusProxy *proxy)
   g_assert (method_info == NULL);
   method_info = g_dbus_interface_info_lookup_method (interface_info, "Introspect");
   g_assert (method_info != NULL);
-  g_assert (method_info->in_args == NULL);
+  g_assert (method_info->in_args != NULL);
+  g_assert (method_info->in_args[0] == NULL);
   g_assert (method_info->out_args != NULL);
   g_assert (method_info->out_args[0] != NULL);
   g_assert (method_info->out_args[1] == NULL);
@@ -106,13 +107,6 @@ test_introspection_parser (void)
   GDBusProxy *proxy;
   GDBusConnection *connection;
   GError *error;
-
-  session_bus_up ();
-
-  /* TODO: wait a bit for the bus to come up.. ideally session_bus_up() won't return
-   * until one can connect to the bus but that's not how things work right now
-   */
-  usleep (500 * 1000);
 
   error = NULL;
   connection = g_bus_get_sync (G_BUS_TYPE_SESSION,
@@ -265,6 +259,8 @@ test_default_direction (void)
   g_dbus_node_info_unref (info);
 }
 
+#if 0
+/* XXX: need to figure out how generous we want to be here */
 /* test that extraneous attributes are ignored
  */
 static void
@@ -297,6 +293,7 @@ test_extra_data (void)
 
   g_dbus_node_info_unref (info);
 }
+#endif
 
 /* ---------------------------------------------------------------------------------------------------- */
 
@@ -304,25 +301,27 @@ int
 main (int   argc,
       char *argv[])
 {
+  gint ret;
+
   g_type_init ();
   g_test_init (&argc, &argv, NULL);
 
   /* all the tests rely on a shared main loop */
   loop = g_main_loop_new (NULL, FALSE);
 
-  /* all the tests use a session bus with a well-known address that we can bring up and down
-   * using session_bus_up() and session_bus_down().
-   */
-  g_unsetenv ("DISPLAY");
-  g_setenv ("DBUS_SESSION_BUS_ADDRESS", session_bus_get_temporary_address (), TRUE);
+  session_bus_up ();
 
   g_test_add_func ("/gdbus/introspection-parser", test_introspection_parser);
   g_test_add_func ("/gdbus/introspection-generate", test_generate);
   g_test_add_func ("/gdbus/introspection-default-direction", test_default_direction);
 #if 0
-  /* need to figure out how generous we want to be here */
+  /* XXX: need to figure out how generous we want to be here */
   g_test_add_func ("/gdbus/introspection-extra-data", test_extra_data);
 #endif
 
-  return g_test_run();
+  ret = g_test_run ();
+
+  session_bus_down ();
+
+  return ret;
 }

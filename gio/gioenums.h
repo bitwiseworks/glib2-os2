@@ -218,7 +218,7 @@ typedef enum {
  *
  * Flags used when mounting a mount.
  */
-typedef enum {
+typedef enum /*< flags >*/ {
   G_MOUNT_MOUNT_NONE = 0
 } GMountMountFlags;
 
@@ -244,7 +244,7 @@ typedef enum {
  *
  * Since: 2.22
  */
-typedef enum {
+typedef enum /*< flags >*/ {
   G_DRIVE_START_NONE = 0
 } GDriveStartFlags;
 
@@ -393,9 +393,9 @@ typedef enum {
 /**
  * GIOErrorEnum:
  * @G_IO_ERROR_FAILED: Generic error condition for when any operation fails.
- * @G_IO_ERROR_NOT_FOUND: File not found error.
- * @G_IO_ERROR_EXISTS: File already exists error.
- * @G_IO_ERROR_IS_DIRECTORY: File is a directory error.
+ * @G_IO_ERROR_NOT_FOUND: File not found.
+ * @G_IO_ERROR_EXISTS: File already exists.
+ * @G_IO_ERROR_IS_DIRECTORY: File is a directory.
  * @G_IO_ERROR_NOT_DIRECTORY: File is not a directory.
  * @G_IO_ERROR_NOT_EMPTY: File is a directory that isn't empty.
  * @G_IO_ERROR_NOT_REGULAR_FILE: File is not a regular file.
@@ -572,6 +572,27 @@ typedef enum {
 
 
 /**
+ * GIOStreamSpliceFlags:
+ * @G_IO_STREAM_SPLICE_NONE: Do not close either stream.
+ * @G_IO_STREAM_SPLICE_CLOSE_STREAM1: Close the first stream after
+ *     the splice.
+ * @G_IO_STREAM_SPLICE_CLOSE_STREAM2: Close the second stream after
+ *     the splice.
+ * @G_IO_STREAM_SPLICE_WAIT_FOR_BOTH: Wait for both splice operations to finish
+ *     before calling the callback.
+ *
+ * GIOStreamSpliceFlags determine how streams should be spliced.
+ *
+ * Since: 2.28
+ **/
+typedef enum {
+  G_IO_STREAM_SPLICE_NONE          = 0,
+  G_IO_STREAM_SPLICE_CLOSE_STREAM1 = (1 << 0),
+  G_IO_STREAM_SPLICE_CLOSE_STREAM2 = (1 << 1),
+  G_IO_STREAM_SPLICE_WAIT_FOR_BOTH = (1 << 2)
+} GIOStreamSpliceFlags;
+
+/**
  * GEmblemOrigin:
  * @G_EMBLEM_ORIGIN_UNKNOWN: Emblem of unknown origin
  * @G_EMBLEM_ORIGIN_DEVICE: Emblem adds device-specific information
@@ -610,6 +631,91 @@ typedef enum {
 } GResolverError;
 
 /**
+ * GResolverRecordType:
+ * @G_RESOLVER_RECORD_SRV: lookup DNS SRV records for a domain
+ * @G_RESOLVER_RECORD_MX: lookup DNS MX records for a domain
+ * @G_RESOLVER_RECORD_TXT: lookup DNS TXT records for a name
+ * @G_RESOLVER_RECORD_SOA: lookup DNS SOA records for a zone
+ * @G_RESOLVER_RECORD_NS: lookup DNS NS records for a domain
+ *
+ * The type of record that g_resolver_lookup_records() or
+ * g_resolver_lookup_records_async() should retrieve. The records are returned
+ * as lists of #GVariant tuples. Each record type has different values in
+ * the variant tuples returned.
+ *
+ * %G_RESOLVER_RECORD_SRV records are returned as variants with the signature
+ * '(qqqs)', containing a guint16 with the priority, a guint16 with the
+ * weight, a guint16 with the port, and a string of the hostname.
+ *
+ * %G_RESOLVER_RECORD_MX records are returned as variants with the signature
+ * '(qs)', representing a guint16 with the preference, and a string containing
+ * the mail exchanger hostname.
+ *
+ * %G_RESOLVER_RECORD_TXT records are returned as variants with the signature
+ * '(as)', representing an array of the strings in the text record.
+ *
+ * %G_RESOLVER_RECORD_SOA records are returned as variants with the signature
+ * '(ssuuuuu)', representing a string containing the primary name server, a
+ * string containing the administrator, the serial as a guint32, the refresh
+ * interval as guint32, the retry interval as a guint32, the expire timeout
+ * as a guint32, and the ttl as a guint32.
+ *
+ * %G_RESOLVER_RECORD_NS records are returned as variants with the signature
+ * '(s)', representing a string of the hostname of the name server.
+ *
+ * Since: 2.34
+ */
+typedef enum {
+  G_RESOLVER_RECORD_SRV = 1,
+  G_RESOLVER_RECORD_MX,
+  G_RESOLVER_RECORD_TXT,
+  G_RESOLVER_RECORD_SOA,
+  G_RESOLVER_RECORD_NS
+} GResolverRecordType;
+
+/**
+ * GResourceError:
+ * @G_RESOURCE_ERROR_NOT_FOUND: no file was found at the requested path
+ * @G_RESOURCE_ERROR_INTERNAL: unknown error
+ *
+ * An error code used with %G_RESOURCE_ERROR in a #GError returned
+ * from a #GResource routine.
+ *
+ * Since: 2.32
+ */
+typedef enum {
+  G_RESOURCE_ERROR_NOT_FOUND,
+  G_RESOURCE_ERROR_INTERNAL
+} GResourceError;
+
+/**
+ * GResourceFlags:
+ * @G_RESOURCE_FLAGS_NONE: No flags set.
+ * @G_RESOURCE_FLAGS_COMPRESSED: The file is compressed.
+ *
+ * GResourceFlags give information about a particular file inside a resource
+ * bundle.
+ * 
+ * Since: 2.32
+ **/
+typedef enum {
+  G_RESOURCE_FLAGS_NONE       = 0,
+  G_RESOURCE_FLAGS_COMPRESSED = (1<<0)
+} GResourceFlags;
+
+/**
+ * GResourceLookupFlags:
+ * @G_RESOURCE_LOOKUP_FLAGS_NONE: No flags set.
+ *
+ * GResourceLookupFlags determine how resource path lookups are handled.
+ * 
+ * Since: 2.32
+ **/
+typedef enum /*< flags >*/ {
+  G_RESOURCE_LOOKUP_FLAGS_NONE       = 0
+} GResourceLookupFlags;
+
+/**
  * GSocketFamily:
  * @G_SOCKET_FAMILY_INVALID: no address family
  * @G_SOCKET_FAMILY_IPV4: the IPv4 family
@@ -624,9 +730,7 @@ typedef enum {
  */
 typedef enum {
   G_SOCKET_FAMILY_INVALID,
-#ifdef GLIB_SYSDEF_AF_UNIX
   G_SOCKET_FAMILY_UNIX = GLIB_SYSDEF_AF_UNIX,
-#endif
   G_SOCKET_FAMILY_IPV4 = GLIB_SYSDEF_AF_INET,
   G_SOCKET_FAMILY_IPV6 = GLIB_SYSDEF_AF_INET6
 } GSocketFamily;
@@ -670,7 +774,7 @@ typedef enum
  *
  * Since: 2.22
  */
-typedef enum
+typedef enum /*< flags >*/
 {
   G_SOCKET_MSG_NONE,
   G_SOCKET_MSG_OOB = GLIB_SYSDEF_MSG_OOB,
@@ -737,7 +841,7 @@ typedef enum {
  * or a socket created with socketpair()).
  *
  * For abstract sockets, there are two incompatible ways of naming
- * them: the man pages suggest using the entire <literal>struct
+ * them; the man pages suggest using the entire <literal>struct
  * sockaddr_un</literal> as the name, padding the unused parts of the
  * %sun_path field with zeroes; this corresponds to
  * %G_UNIX_SOCKET_ADDRESS_ABSTRACT_PADDED. However, many programs
@@ -777,7 +881,7 @@ typedef enum
 /**
  * GBusNameOwnerFlags:
  * @G_BUS_NAME_OWNER_FLAGS_NONE: No flags set.
- * @G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT: Allow another message bus connection to claim the the name.
+ * @G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT: Allow another message bus connection to claim the name.
  * @G_BUS_NAME_OWNER_FLAGS_REPLACE: If another message bus connection owns the name and have
  * specified #G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT, then take the name from the other connection.
  *
@@ -817,6 +921,7 @@ typedef enum
  * @G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START: If not set and the proxy if for a well-known name,
  * then request the bus to launch an owner for the name if no-one owns the name. This flag can
  * only be used in proxies for well-known names.
+ * @G_DBUS_PROXY_FLAGS_GET_INVALIDATED_PROPERTIES: If set, the property value for any <emphasis>invalidated property</emphasis> will be (asynchronously) retrieved upon receiving the <ulink url="http://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-properties">PropertiesChanged</ulink> D-Bus signal and the property will not cause emission of the #GDBusProxy::g-properties-changed signal. When the value is received the #GDBusProxy::g-properties-changed signal is emitted for the property along with the retrieved value. Since 2.32.
  *
  * Flags used when constructing an instance of a #GDBusProxy derived class.
  *
@@ -827,7 +932,8 @@ typedef enum
   G_DBUS_PROXY_FLAGS_NONE = 0,
   G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES = (1<<0),
   G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS = (1<<1),
-  G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START = (1<<2)
+  G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START = (1<<2),
+  G_DBUS_PROXY_FLAGS_GET_INVALIDATED_PROPERTIES = (1<<3)
 } GDBusProxyFlags;
 
 /**
@@ -1032,6 +1138,7 @@ typedef enum {
   G_DBUS_CALL_FLAGS_NONE = 0,
   G_DBUS_CALL_FLAGS_NO_AUTO_START = (1<<0)
 } GDBusCallFlags;
+/* (1<<31) is reserved for internal use by GDBusConnection, do not use it. */
 
 /**
  * GDBusMessageType:
@@ -1157,6 +1264,9 @@ typedef enum
 /**
  * GDBusSignalFlags:
  * @G_DBUS_SIGNAL_FLAGS_NONE: No flags set.
+ * @G_DBUS_SIGNAL_FLAGS_NO_MATCH_RULE: Don't actually send the AddMatch
+ * D-Bus call for this signal subscription.  This gives you more control
+ * over which match rules you add (but you must add them manually).
  *
  * Flags used when subscribing to signals via g_dbus_connection_signal_subscribe().
  *
@@ -1164,7 +1274,8 @@ typedef enum
  */
 typedef enum /*< flags >*/
 {
-  G_DBUS_SIGNAL_FLAGS_NONE = 0
+  G_DBUS_SIGNAL_FLAGS_NONE = 0,
+  G_DBUS_SIGNAL_FLAGS_NO_MATCH_RULE = (1<<0)
 } GDBusSignalFlags;
 
 /**
@@ -1183,11 +1294,14 @@ typedef enum
   G_DBUS_SEND_MESSAGE_FLAGS_NONE = 0,
   G_DBUS_SEND_MESSAGE_FLAGS_PRESERVE_SERIAL = (1<<0)
 } GDBusSendMessageFlags;
+/* (1<<31) is reserved for internal use by GDBusConnection, do not use it. */
 
 /**
  * GCredentialsType:
  * @G_CREDENTIALS_TYPE_INVALID: Indicates an invalid native credential type.
  * @G_CREDENTIALS_TYPE_LINUX_UCRED: The native credentials type is a <type>struct ucred</type>.
+ * @G_CREDENTIALS_TYPE_FREEBSD_CMSGCRED: The native credentials type is a <type>struct cmsgcred</type>.
+ * @G_CREDENTIALS_TYPE_OPENBSD_SOCKPEERCRED: The native credentials type is a <type>struct sockpeercred</type>. Added in 2.30.
  *
  * Enumeration describing different kinds of native credential types.
  *
@@ -1196,7 +1310,9 @@ typedef enum
 typedef enum
 {
   G_CREDENTIALS_TYPE_INVALID,
-  G_CREDENTIALS_TYPE_LINUX_UCRED
+  G_CREDENTIALS_TYPE_LINUX_UCRED,
+  G_CREDENTIALS_TYPE_FREEBSD_CMSGCRED,
+  G_CREDENTIALS_TYPE_OPENBSD_SOCKPEERCRED
 } GCredentialsType;
 
 /**
@@ -1215,29 +1331,327 @@ typedef enum
 } GDBusMessageByteOrder;
 
 /**
- * GDBusMessageFilterResult:
- * @G_DBUS_MESSAGE_FILTER_RESULT_NO_EFFECT: The filter function had
- * no effect on the message - the message will be passed on to the
- * next filter function and/or sent to the remote peer.
- * @G_DBUS_MESSAGE_FILTER_RESULT_MESSAGE_CONSUMED: The message was
- * consumed by the filter function and will be dropped - the message
- * will not be passed to other filter functions and/or sent to the
- * remote peer.
- * @G_DBUS_MESSAGE_FILTER_RESULT_MESSAGE_ALTERED: The message was
- * modified - the message will still be passed on to the next filter
- * function and/or sent to the remote peer.
+ * GApplicationFlags:
+ * @G_APPLICATION_FLAGS_NONE: Default
+ * @G_APPLICATION_IS_SERVICE: Run as a service. In this mode, registration
+ *      fails if the service is already running, and the application will
+ *      stay around for a while when the use count falls to zero.
+ * @G_APPLICATION_IS_LAUNCHER: Don't try to become the primary instance.
+ * @G_APPLICATION_HANDLES_OPEN: This application handles opening files (in
+ *     the primary instance). Note that this flag only affects the default
+ *     implementation of local_command_line(), and has no effect if
+ *     %G_APPLICATION_HANDLES_COMMAND_LINE is given.
+ *     See g_application_run() for details.
+ * @G_APPLICATION_HANDLES_COMMAND_LINE: This application handles command line
+ *     arguments (in the primary instance). Note that this flag only affect
+ *     the default implementation of local_command_line().
+ *     See g_application_run() for details.
+ * @G_APPLICATION_SEND_ENVIRONMENT: Send the environment of the
+ *     launching process to the primary instance. Set this flag if your
+ *     application is expected to behave differently depending on certain
+ *     environment variables. For instance, an editor might be expected
+ *     to use the <envar>GIT_COMMITTER_NAME</envar> environment variable
+ *     when editing a git commit message. The environment is available
+ *     to the #GApplication::command-line signal handler, via
+ *     g_application_command_line_getenv().
+ * @G_APPLICATION_NON_UNIQUE: Make no attempts to do any of the typical
+ *     single-instance application negotiation, even if the application
+ *     ID is given.  The application neither attempts to become the
+ *     owner of the application ID nor does it check if an existing
+ *     owner already exists.  Everything occurs in the local process.
+ *     Since: 2.30.
  *
- * Possible return values for #GDBusMessageFilterFunction when
- * handling a #GDBusMessage.
+ * Flags used to define the behaviour of a #GApplication.
  *
- * Since: 2.26
+ * Since: 2.28
+ **/
+typedef enum
+{
+  G_APPLICATION_FLAGS_NONE,
+  G_APPLICATION_IS_SERVICE  =          (1 << 0),
+  G_APPLICATION_IS_LAUNCHER =          (1 << 1),
+
+  G_APPLICATION_HANDLES_OPEN =         (1 << 2),
+  G_APPLICATION_HANDLES_COMMAND_LINE = (1 << 3),
+  G_APPLICATION_SEND_ENVIRONMENT    =  (1 << 4),
+
+  G_APPLICATION_NON_UNIQUE =           (1 << 5)
+} GApplicationFlags;
+
+/**
+ * GTlsError:
+ * @G_TLS_ERROR_UNAVAILABLE: No TLS provider is available
+ * @G_TLS_ERROR_MISC: Miscellaneous TLS error
+ * @G_TLS_ERROR_BAD_CERTIFICATE: A certificate could not be parsed
+ * @G_TLS_ERROR_NOT_TLS: The TLS handshake failed because the
+ *   peer does not seem to be a TLS server.
+ * @G_TLS_ERROR_HANDSHAKE: The TLS handshake failed because the
+ *   peer's certificate was not acceptable.
+ * @G_TLS_ERROR_CERTIFICATE_REQUIRED: The TLS handshake failed because
+ *   the server requested a client-side certificate, but none was
+ *   provided. See g_tls_connection_set_certificate().
+ * @G_TLS_ERROR_EOF: The TLS connection was closed without proper
+ *   notice, which may indicate an attack. See
+ *   g_tls_connection_set_require_close_notify().
+ *
+ * An error code used with %G_TLS_ERROR in a #GError returned from a
+ * TLS-related routine.
+ *
+ * Since: 2.28
+ */
+typedef enum {
+  G_TLS_ERROR_UNAVAILABLE,
+  G_TLS_ERROR_MISC,
+  G_TLS_ERROR_BAD_CERTIFICATE,
+  G_TLS_ERROR_NOT_TLS,
+  G_TLS_ERROR_HANDSHAKE,
+  G_TLS_ERROR_CERTIFICATE_REQUIRED,
+  G_TLS_ERROR_EOF
+} GTlsError;
+
+/**
+ * GTlsCertificateFlags:
+ * @G_TLS_CERTIFICATE_UNKNOWN_CA: The signing certificate authority is
+ *   not known.
+ * @G_TLS_CERTIFICATE_BAD_IDENTITY: The certificate does not match the
+ *   expected identity of the site that it was retrieved from.
+ * @G_TLS_CERTIFICATE_NOT_ACTIVATED: The certificate's activation time
+ *   is still in the future
+ * @G_TLS_CERTIFICATE_EXPIRED: The certificate has expired
+ * @G_TLS_CERTIFICATE_REVOKED: The certificate has been revoked
+ *   according to the #GTlsConnection's certificate revocation list.
+ * @G_TLS_CERTIFICATE_INSECURE: The certificate's algorithm is
+ *   considered insecure.
+ * @G_TLS_CERTIFICATE_GENERIC_ERROR: Some other error occurred validating
+ *   the certificate
+ * @G_TLS_CERTIFICATE_VALIDATE_ALL: the combination of all of the above
+ *   flags
+ *
+ * A set of flags describing TLS certification validation. This can be
+ * used to set which validation steps to perform (eg, with
+ * g_tls_client_connection_set_validation_flags()), or to describe why
+ * a particular certificate was rejected (eg, in
+ * #GTlsConnection::accept-certificate).
+ *
+ * Since: 2.28
+ */
+typedef enum {
+  G_TLS_CERTIFICATE_UNKNOWN_CA    = (1 << 0),
+  G_TLS_CERTIFICATE_BAD_IDENTITY  = (1 << 1),
+  G_TLS_CERTIFICATE_NOT_ACTIVATED = (1 << 2),
+  G_TLS_CERTIFICATE_EXPIRED       = (1 << 3),
+  G_TLS_CERTIFICATE_REVOKED       = (1 << 4),
+  G_TLS_CERTIFICATE_INSECURE      = (1 << 5),
+  G_TLS_CERTIFICATE_GENERIC_ERROR = (1 << 6),
+
+  G_TLS_CERTIFICATE_VALIDATE_ALL  = 0x007f
+} GTlsCertificateFlags;
+
+/**
+ * GTlsAuthenticationMode:
+ * @G_TLS_AUTHENTICATION_NONE: client authentication not required
+ * @G_TLS_AUTHENTICATION_REQUESTED: client authentication is requested
+ * @G_TLS_AUTHENTICATION_REQUIRED: client authentication is required
+ *
+ * The client authentication mode for a #GTlsServerConnection.
+ *
+ * Since: 2.28
+ */
+typedef enum {
+  G_TLS_AUTHENTICATION_NONE,
+  G_TLS_AUTHENTICATION_REQUESTED,
+  G_TLS_AUTHENTICATION_REQUIRED
+} GTlsAuthenticationMode;
+
+/**
+ * GTlsRehandshakeMode:
+ * @G_TLS_REHANDSHAKE_NEVER: Never allow rehandshaking
+ * @G_TLS_REHANDSHAKE_SAFELY: Allow safe rehandshaking only
+ * @G_TLS_REHANDSHAKE_UNSAFELY: Allow unsafe rehandshaking
+ *
+ * When to allow rehandshaking. See
+ * g_tls_connection_set_rehandshake_mode().
+ *
+ * Since: 2.28
+ */
+typedef enum {
+  G_TLS_REHANDSHAKE_NEVER,
+  G_TLS_REHANDSHAKE_SAFELY,
+  G_TLS_REHANDSHAKE_UNSAFELY
+} GTlsRehandshakeMode;
+
+/**
+ * GTlsPasswordFlags:
+ * @G_TLS_PASSWORD_NONE: No flags
+ * @G_TLS_PASSWORD_RETRY: The password was wrong, and the user should retry.
+ * @G_TLS_PASSWORD_MANY_TRIES: Hint to the user that the password has been
+ *    wrong many times, and the user may not have many chances left.
+ * @G_TLS_PASSWORD_FINAL_TRY: Hint to the user that this is the last try to get
+ *    this password right.
+ *
+ * Various flags for the password.
+ *
+ * Since: 2.30
+ */
+
+typedef enum _GTlsPasswordFlags
+{
+  G_TLS_PASSWORD_NONE = 0,
+  G_TLS_PASSWORD_RETRY = 1 << 1,
+  G_TLS_PASSWORD_MANY_TRIES = 1 << 2,
+  G_TLS_PASSWORD_FINAL_TRY = 1 << 3
+} GTlsPasswordFlags;
+
+/**
+ * GTlsInteractionResult:
+ * @G_TLS_INTERACTION_UNHANDLED: The interaction was unhandled (i.e. not
+ *     implemented).
+ * @G_TLS_INTERACTION_HANDLED: The interaction completed, and resulting data
+ *     is available.
+ * @G_TLS_INTERACTION_FAILED: The interaction has failed, or was cancelled.
+ *     and the operation should be aborted.
+ *
+ * #GTlsInteractionResult is returned by various functions in #GTlsInteraction
+ * when finishing an interaction request.
+ *
+ * Since: 2.30
+ */
+typedef enum {
+  G_TLS_INTERACTION_UNHANDLED,
+  G_TLS_INTERACTION_HANDLED,
+  G_TLS_INTERACTION_FAILED
+} GTlsInteractionResult;
+
+/**
+ * GDBusInterfaceSkeletonFlags:
+ * @G_DBUS_INTERFACE_SKELETON_FLAGS_NONE: No flags set.
+ * @G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD: Each method invocation is handled in
+ *   a thread dedicated to the invocation. This means that the method implementation can use blocking IO
+ *   without blocking any other part of the process. It also means that the method implementation must
+ *   use locking to access data structures used by other threads.
+ *
+ * Flags describing the behavior of a #GDBusInterfaceSkeleton instance.
+ *
+ * Since: 2.30
  */
 typedef enum
 {
-  G_DBUS_MESSAGE_FILTER_RESULT_NO_EFFECT,
-  G_DBUS_MESSAGE_FILTER_RESULT_MESSAGE_CONSUMED,
-  G_DBUS_MESSAGE_FILTER_RESULT_MESSAGE_ALTERED
-} GDBusMessageFilterResult;
+  G_DBUS_INTERFACE_SKELETON_FLAGS_NONE = 0,
+  G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD = (1<<0)
+} GDBusInterfaceSkeletonFlags;
+
+/**
+ * GDBusObjectManagerClientFlags:
+ * @G_DBUS_OBJECT_MANAGER_CLIENT_FLAGS_NONE: No flags set.
+ * @G_DBUS_OBJECT_MANAGER_CLIENT_FLAGS_DO_NOT_AUTO_START: If not set and the
+ *   manager is for a well-known name, then request the bus to launch
+ *   an owner for the name if no-one owns the name. This flag can only
+ *   be used in managers for well-known names.
+ *
+ * Flags used when constructing a #GDBusObjectManagerClient.
+ *
+ * Since: 2.30
+ */
+typedef enum
+{
+  G_DBUS_OBJECT_MANAGER_CLIENT_FLAGS_NONE = 0,
+  G_DBUS_OBJECT_MANAGER_CLIENT_FLAGS_DO_NOT_AUTO_START = (1<<0)
+} GDBusObjectManagerClientFlags;
+
+/**
+ * GTlsDatabaseVerifyFlags:
+ * @G_TLS_DATABASE_VERIFY_NONE: No verification flags
+ *
+ * Flags for g_tls_database_verify_chain().
+ *
+ * Since: 2.30
+ */
+typedef enum /*< flags >*/ {
+  G_TLS_DATABASE_VERIFY_NONE = 0
+} GTlsDatabaseVerifyFlags;
+
+/**
+ * GTlsDatabaseLookupFlags:
+ * @G_TLS_DATABASE_LOOKUP_NONE: No lookup flags
+ * @G_TLS_DATABASE_LOOKUP_KEYPAIR: Restrict lookup to certificates that have
+ *     a private key.
+ *
+ * Flags for g_tls_database_lookup_certificate_handle(),
+ * g_tls_database_lookup_certificate_issuer(),
+ * and g_tls_database_lookup_certificates_issued_by().
+ *
+ * Since: 2.30
+ */
+typedef enum {
+  G_TLS_DATABASE_LOOKUP_NONE = 0,
+  G_TLS_DATABASE_LOOKUP_KEYPAIR = 1
+} GTlsDatabaseLookupFlags;
+
+/**
+ * GIOModuleScopeFlags:
+ * @G_IO_MODULE_SCOPE_NONE: No module scan flags
+ * @G_IO_MODULE_SCOPE_BLOCK_DUPLICATES: When using this scope to load or
+ *     scan modules, automatically block a modules which has the same base
+ *     basename as previously loaded module.
+ *
+ * Flags for use with g_io_module_scope_new().
+ *
+ * Since: 2.30
+ */
+typedef enum {
+  G_IO_MODULE_SCOPE_NONE,
+  G_IO_MODULE_SCOPE_BLOCK_DUPLICATES
+} GIOModuleScopeFlags;
+
+/**
+ * GSocketClientEvent:
+ * @G_SOCKET_CLIENT_RESOLVING: The client is doing a DNS lookup.
+ * @G_SOCKET_CLIENT_RESOLVED: The client has completed a DNS lookup.
+ * @G_SOCKET_CLIENT_CONNECTING: The client is connecting to a remote
+ *   host (either a proxy or the destination server).
+ * @G_SOCKET_CLIENT_CONNECTED: The client has connected to a remote
+ *   host.
+ * @G_SOCKET_CLIENT_PROXY_NEGOTIATING: The client is negotiating
+ *   with a proxy to connect to the destination server.
+ * @G_SOCKET_CLIENT_PROXY_NEGOTIATED: The client has negotiated
+ *   with the proxy server.
+ * @G_SOCKET_CLIENT_TLS_HANDSHAKING: The client is performing a
+ *   TLS handshake.
+ * @G_SOCKET_CLIENT_TLS_HANDSHAKED: The client has performed a
+ *   TLS handshake.
+ * @G_SOCKET_CLIENT_COMPLETE: The client is done with a particular
+ *   #GSocketConnectable.
+ *
+ * Describes an event occurring on a #GSocketClient. See the
+ * #GSocketClient::event signal for more details.
+ *
+ * Additional values may be added to this type in the future.
+ *
+ * Since: 2.32
+ */
+typedef enum {
+  G_SOCKET_CLIENT_RESOLVING,
+  G_SOCKET_CLIENT_RESOLVED,
+  G_SOCKET_CLIENT_CONNECTING,
+  G_SOCKET_CLIENT_CONNECTED,
+  G_SOCKET_CLIENT_PROXY_NEGOTIATING,
+  G_SOCKET_CLIENT_PROXY_NEGOTIATED,
+  G_SOCKET_CLIENT_TLS_HANDSHAKING,
+  G_SOCKET_CLIENT_TLS_HANDSHAKED,
+  G_SOCKET_CLIENT_COMPLETE
+} GSocketClientEvent;
+
+/**
+ * GTestDBusFlags:
+ * @G_TEST_DBUS_NONE: No flags.
+ *
+ * Flags to define future #GTestDBus behaviour.
+ *
+ * Since: 2.34
+ */
+typedef enum /*< flags >*/ {
+  G_TEST_DBUS_NONE = 0
+} GTestDBusFlags;
 
 G_END_DECLS
 

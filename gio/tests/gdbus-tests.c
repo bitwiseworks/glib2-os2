@@ -60,7 +60,7 @@ _g_assert_property_notify_run (gpointer     object,
   guint timeout_id;
   PropertyNotifyData data;
 
-  data.loop = g_main_loop_new (NULL, FALSE);
+  data.loop = g_main_loop_new (g_main_context_get_thread_default (), FALSE);
   data.timed_out = FALSE;
   s = g_strdup_printf ("notify::%s", property_name);
   handler_id = g_signal_connect (object,
@@ -68,7 +68,7 @@ _g_assert_property_notify_run (gpointer     object,
                                  G_CALLBACK (on_property_notify),
                                  &data);
   g_free (s);
-  timeout_id = g_timeout_add (5 * 1000,
+  timeout_id = g_timeout_add (30 * 1000,
                               on_property_notify_timeout,
                               &data);
   g_main_loop_run (data.loop);
@@ -111,13 +111,13 @@ _g_assert_signal_received_run (gpointer     object,
   guint timeout_id;
   SignalReceivedData data;
 
-  data.loop = g_main_loop_new (NULL, FALSE);
+  data.loop = g_main_loop_new (g_main_context_get_thread_default (), FALSE);
   data.timed_out = FALSE;
   handler_id = g_signal_connect_swapped (object,
                                          signal_name,
                                          G_CALLBACK (on_signal_received),
                                          &data);
-  timeout_id = g_timeout_add (5 * 1000,
+  timeout_id = g_timeout_add (30 * 1000,
                               on_signal_received_timeout,
                               &data);
   g_main_loop_run (data.loop);
@@ -154,66 +154,6 @@ _g_bus_get_priv (GBusType            bus_type,
 
  out:
   return ret;
-}
-
-/* ---------------------------------------------------------------------------------------------------- */
-
-typedef struct
-{
-  GMainLoop *loop;
-  gboolean   timed_out;
-} WaitSingleRefData;
-
-static gboolean
-on_wait_single_ref_timeout (gpointer user_data)
-{
-  WaitSingleRefData *data = user_data;
-  data->timed_out = TRUE;
-  g_main_loop_quit (data->loop);
-  return TRUE;
-}
-
-static void
-on_wait_for_single_ref_toggled (gpointer   user_data,
-                                GObject   *object,
-                                gboolean   is_last_ref)
-{
-  WaitSingleRefData *data = user_data;
-  g_main_loop_quit (data->loop);
-}
-
-gboolean
-_g_object_wait_for_single_ref_do (gpointer object)
-{
-  WaitSingleRefData data;
-  guint timeout_id;
-
-  data.timed_out = FALSE;
-
-  if (G_OBJECT (object)->ref_count == 1)
-    goto out;
-
-  data.loop = g_main_loop_new (NULL, FALSE);
-  timeout_id = g_timeout_add (5 * 1000,
-                              on_wait_single_ref_timeout,
-                              &data);
-
-  g_object_add_toggle_ref (G_OBJECT (object),
-                           on_wait_for_single_ref_toggled,
-                           &data);
-  g_object_unref (object);
-
-  g_main_loop_run (data.loop);
-
-  g_object_ref (object);
-  g_object_remove_toggle_ref (object,
-                              on_wait_for_single_ref_toggled,
-                              &data);
-
-  g_source_remove (timeout_id);
-  g_main_loop_unref (data.loop);
- out:
-  return data.timed_out;
 }
 
 /* ---------------------------------------------------------------------------------------------------- */

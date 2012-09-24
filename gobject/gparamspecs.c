@@ -26,8 +26,12 @@
 
 #include <string.h>
 
+#define GLIB_DISABLE_DEPRECATION_WARNINGS
+
 #include "gparamspecs.h"
+#include "gtype-private.h"
 #include "gvaluecollector.h"
+
 #include "gvaluearray.h"
 
 
@@ -1160,7 +1164,7 @@ param_variant_values_cmp (GParamSpec   *pspec,
 GType *g_param_spec_types = NULL;
 
 void
-g_param_spec_types_init (void)	
+_g_param_spec_types_init (void)	
 {
   const guint n_types = 23;
   GType type, *spec_types, *spec_types_bound;
@@ -1591,7 +1595,7 @@ g_param_spec_types_init (void)
 /* --- GParamSpec initialization --- */
 
 /**
- * g_param_spec_char:
+ * g_param_spec_char: (skip)
  * @name: canonical name of the property specified
  * @nick: nick name for the property specified
  * @blurb: description of the property specified
@@ -1631,7 +1635,7 @@ g_param_spec_char (const gchar *name,
 }
 
 /**
- * g_param_spec_uchar:
+ * g_param_spec_uchar: (skip)
  * @name: canonical name of the property specified
  * @nick: nick name for the property specified
  * @blurb: description of the property specified
@@ -1671,7 +1675,7 @@ g_param_spec_uchar (const gchar *name,
 }
 
 /**
- * g_param_spec_boolean:
+ * g_param_spec_boolean: (skip)
  * @name: canonical name of the property specified
  * @nick: nick name for the property specified
  * @blurb: description of the property specified
@@ -1708,7 +1712,7 @@ g_param_spec_boolean (const gchar *name,
 }
 
 /**
- * g_param_spec_int:
+ * g_param_spec_int: (skip)
  * @name: canonical name of the property specified
  * @nick: nick name for the property specified
  * @blurb: description of the property specified
@@ -1750,7 +1754,7 @@ g_param_spec_int (const gchar *name,
 }
 
 /**
- * g_param_spec_uint:
+ * g_param_spec_uint: (skip)
  * @name: canonical name of the property specified
  * @nick: nick name for the property specified
  * @blurb: description of the property specified
@@ -1792,7 +1796,7 @@ g_param_spec_uint (const gchar *name,
 }
 
 /**
- * g_param_spec_long:
+ * g_param_spec_long: (skip)
  * @name: canonical name of the property specified
  * @nick: nick name for the property specified
  * @blurb: description of the property specified
@@ -1834,7 +1838,7 @@ g_param_spec_long (const gchar *name,
 }
 
 /**
- * g_param_spec_ulong:
+ * g_param_spec_ulong: (skip)
  * @name: canonical name of the property specified
  * @nick: nick name for the property specified
  * @blurb: description of the property specified
@@ -1877,7 +1881,7 @@ g_param_spec_ulong (const gchar *name,
 }
 
 /**
- * g_param_spec_int64:
+ * g_param_spec_int64: (skip)
  * @name: canonical name of the property specified
  * @nick: nick name for the property specified
  * @blurb: description of the property specified
@@ -1919,7 +1923,7 @@ g_param_spec_int64 (const gchar *name,
 }
 
 /**
- * g_param_spec_uint64:
+ * g_param_spec_uint64: (skip)
  * @name: canonical name of the property specified
  * @nick: nick name for the property specified
  * @blurb: description of the property specified
@@ -1962,7 +1966,7 @@ g_param_spec_uint64 (const gchar *name,
 }
 
 /**
- * g_param_spec_unichar:
+ * g_param_spec_unichar: (skip)
  * @name: canonical name of the property specified
  * @nick: nick name for the property specified
  * @blurb: description of the property specified
@@ -1998,7 +2002,7 @@ g_param_spec_unichar (const gchar *name,
 }
 
 /**
- * g_param_spec_enum:
+ * g_param_spec_enum: (skip)
  * @name: canonical name of the property specified
  * @nick: nick name for the property specified
  * @blurb: description of the property specified
@@ -2044,7 +2048,7 @@ g_param_spec_enum (const gchar *name,
 }
 
 /**
- * g_param_spec_flags:
+ * g_param_spec_flags: (skip)
  * @name: canonical name of the property specified
  * @nick: nick name for the property specified
  * @blurb: description of the property specified
@@ -2090,7 +2094,7 @@ g_param_spec_flags (const gchar *name,
 }
 
 /**
- * g_param_spec_float:
+ * g_param_spec_float: (skip)
  * @name: canonical name of the property specified
  * @nick: nick name for the property specified
  * @blurb: description of the property specified
@@ -2132,7 +2136,7 @@ g_param_spec_float (const gchar *name,
 }
 
 /**
- * g_param_spec_double:
+ * g_param_spec_double: (skip)
  * @name: canonical name of the property specified
  * @nick: nick name for the property specified
  * @blurb: description of the property specified
@@ -2175,7 +2179,7 @@ g_param_spec_double (const gchar *name,
 }
 
 /**
- * g_param_spec_string:
+ * g_param_spec_string: (skip)
  * @name: canonical name of the property specified
  * @nick: nick name for the property specified
  * @blurb: description of the property specified
@@ -2207,7 +2211,7 @@ g_param_spec_string (const gchar *name,
 }
 
 /**
- * g_param_spec_param:
+ * g_param_spec_param: (skip)
  * @name: canonical name of the property specified
  * @nick: nick name for the property specified
  * @blurb: description of the property specified
@@ -2243,7 +2247,7 @@ g_param_spec_param (const gchar *name,
 }
 
 /**
- * g_param_spec_boxed:
+ * g_param_spec_boxed: (skip)
  * @name: canonical name of the property specified
  * @nick: nick name for the property specified
  * @blurb: description of the property specified
@@ -2280,13 +2284,13 @@ g_param_spec_boxed (const gchar *name,
 }
 
 /**
- * g_param_spec_pointer:
+ * g_param_spec_pointer: (skip)
  * @name: canonical name of the property specified
  * @nick: nick name for the property specified
  * @blurb: description of the property specified
  * @flags: flags for the property specified
  *
- * Creates a new #GParamSpecPoiner instance specifying a pointer property.
+ * Creates a new #GParamSpecPointer instance specifying a pointer property.
  *
  * See g_param_spec_internal() for details on property names.
  *
@@ -2309,7 +2313,7 @@ g_param_spec_pointer (const gchar *name,
 }
 
 /**
- * g_param_spec_gtype:
+ * g_param_spec_gtype: (skip)
  * @name: canonical name of the property specified
  * @nick: nick name for the property specified
  * @blurb: description of the property specified
@@ -2347,7 +2351,7 @@ g_param_spec_gtype (const gchar *name,
 }
 
 /**
- * g_param_spec_value_array:
+ * g_param_spec_value_array: (skip)
  * @name: canonical name of the property specified
  * @nick: nick name for the property specified
  * @blurb: description of the property specified
@@ -2391,7 +2395,7 @@ g_param_spec_value_array (const gchar *name,
 }
 
 /**
- * g_param_spec_object:
+ * g_param_spec_object: (skip)
  * @name: canonical name of the property specified
  * @nick: nick name for the property specified
  * @blurb: description of the property specified
@@ -2427,7 +2431,7 @@ g_param_spec_object (const gchar *name,
 }
 
 /**
- * g_param_spec_override:
+ * g_param_spec_override: (skip)
  * @name: the name of the property.
  * @overridden: The property that is being overridden
  *
@@ -2470,7 +2474,7 @@ g_param_spec_override (const gchar *name,
 }
 
 /**
- * g_param_spec_variant:
+ * g_param_spec_variant: (skip)
  * @name: canonical name of the property specified
  * @nick: nick name for the property specified
  * @blurb: description of the property specified

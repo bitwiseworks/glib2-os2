@@ -3,12 +3,12 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>The GObject messaging system</title>
-<meta name="generator" content="DocBook XSL Stylesheets V1.75.2">
+<meta name="generator" content="DocBook XSL Stylesheets V1.77.1">
 <link rel="home" href="index.html" title="GObject Reference Manual">
 <link rel="up" href="pt01.html" title="Part I. Concepts">
 <link rel="prev" href="gobject-properties.html" title="Object properties">
 <link rel="next" href="signal.html" title="Signals">
-<meta name="generator" content="GTK-Doc V1.15 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.18.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -19,14 +19,14 @@
 <th width="100%" align="center">GObject Reference Manual</th>
 <td><a accesskey="n" href="signal.html"><img src="right.png" width="24" height="24" border="0" alt="Next"></a></td>
 </tr></table>
-<div class="chapter" title="The GObject messaging system">
+<div class="chapter">
 <div class="titlepage"><div><div><h2 class="title">
 <a name="chapter-signal"></a>The GObject messaging system</h2></div></div></div>
 <div class="toc"><dl>
 <dt><span class="sect1"><a href="chapter-signal.html#closure">Closures</a></span></dt>
 <dd><dl>
-<dt><span class="sect2"><a href="chapter-signal.html#id407219">C Closures</a></span></dt>
-<dt><span class="sect2"><a href="chapter-signal.html#id413274">Non-C closures (for the fearless)</a></span></dt>
+<dt><span class="sect2"><a href="chapter-signal.html#id419264">C Closures</a></span></dt>
+<dt><span class="sect2"><a href="chapter-signal.html#id433072">Non-C closures (for the fearless)</a></span></dt>
 </dl></dd>
 <dt><span class="sect1"><a href="signal.html">Signals</a></span></dt>
 <dd><dl>
@@ -36,7 +36,7 @@
 <dt><span class="sect2"><a href="signal.html#signal-detail">The <span class="emphasis"><em>detail</em></span> argument</a></span></dt>
 </dl></dd>
 </dl></div>
-<div class="sect1" title="Closures">
+<div class="sect1">
 <div class="titlepage"><div><div><h2 class="title" style="clear: both">
 <a name="closure"></a>Closures</h2></div></div></div>
 <p>
@@ -45,7 +45,7 @@
       abstraction, a generic representation of a callback. It is a small structure
       which contains three objects:
       </p>
-<div class="itemizedlist"><ul class="itemizedlist" type="disc">
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
 <li class="listitem">
 <p>a function pointer (the callback itself) whose prototype looks like:
 </p>
@@ -67,17 +67,17 @@ return_type function_callback (... , gpointer user_data);
 <p>
     </p>
 <p>
-      The <span class="type"><a class="link" href="gobject-Closures.html#GClosure" title="GClosure">GClosure</a></span> structure represents the common functionality of all
+      The <a class="link" href="gobject-Closures.html#GClosure" title="struct GClosure"><span class="type">GClosure</span></a> structure represents the common functionality of all
       closure implementations: there exists a different Closure implementation for
       each separate runtime which wants to use the GObject type system.
-      <sup>[<a name="id397002" href="#ftn.id397002" class="footnote">6</a>]</sup>
-      The GObject library provides a simple <span class="type"><a class="link" href="gobject-Closures.html#GCClosure" title="GCClosure">GCClosure</a></span> type which
+      <a href="#ftn.id430752" class="footnote"><sup class="footnote"><a name="id430752"></a>[6]</sup></a>
+      The GObject library provides a simple <a class="link" href="gobject-Closures.html#GCClosure" title="struct GCClosure"><span class="type">GCClosure</span></a> type which
       is a specific implementation of closures to be used with C/C++ callbacks.
     </p>
 <p>
-      A <span class="type"><a class="link" href="gobject-Closures.html#GClosure" title="GClosure">GClosure</a></span> provides simple services:
+      A <a class="link" href="gobject-Closures.html#GClosure" title="struct GClosure"><span class="type">GClosure</span></a> provides simple services:
       </p>
-<div class="itemizedlist"><ul class="itemizedlist" type="disc">
+<div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; ">
 <li class="listitem"><p>
           Invocation (<code class="function"><a class="link" href="gobject-Closures.html#g-closure-invoke" title="g_closure_invoke ()">g_closure_invoke</a></code>): this is what closures 
           were created for: they hide the details of callback invocation from the
@@ -93,16 +93,16 @@ return_type function_callback (... , gpointer user_data);
           events (<code class="function"><a class="link" href="gobject-Closures.html#g-closure-remove-finalize-notifier" title="g_closure_remove_finalize_notifier ()">g_closure_remove_finalize_notifier</a></code> and
           <code class="function"><a class="link" href="gobject-Closures.html#g-closure-remove-invalidate-notifier" title="g_closure_remove_invalidate_notifier ()">g_closure_remove_invalidate_notifier</a></code>) but not for the invocation 
           process.
-          <sup>[<a name="id407209" href="#ftn.id407209" class="footnote">7</a>]</sup></p></li>
+          <a href="#ftn.id433854" class="footnote"><sup class="footnote"><a name="id433854"></a>[7]</sup></a></p></li>
 </ul></div>
 <p>
     </p>
-<div class="sect2" title="C Closures">
+<div class="sect2">
 <div class="titlepage"><div><div><h3 class="title">
-<a name="id407219"></a>C Closures</h3></div></div></div>
+<a name="id419264"></a>C Closures</h3></div></div></div>
 <p>
         If you are using C or C++
-        to connect a callback to a given event, you will either use simple <span class="type"><a class="link" href="gobject-Closures.html#GCClosure" title="GCClosure">GCClosure</a></span>s
+        to connect a callback to a given event, you will either use simple <a class="link" href="gobject-Closures.html#GCClosure" title="struct GCClosure"><span class="type">GCClosure</span></a>s
         which have a pretty minimal API or the even simpler <code class="function"><a class="link" href="gobject-Signals.html#g-signal-connect" title="g_signal_connect()">g_signal_connect</a></code> 
         functions (which will be presented a bit later :).
 </p>
@@ -132,9 +132,9 @@ GClosure *g_signal_type_cclosure_new (GType          itype,
         function if the user has supplied one.
       </p>
 </div>
-<div class="sect2" title="Non-C closures (for the fearless)">
+<div class="sect2">
 <div class="titlepage"><div><div><h3 class="title">
-<a name="id413274"></a>Non-C closures (for the fearless)</h3></div></div></div>
+<a name="id433072"></a>Non-C closures (for the fearless)</h3></div></div></div>
 <p>
         As was explained above, closures hide the details of callback invocation. In C,
         callback invocation is just like function invocation: it is a matter of creating
@@ -192,8 +192,8 @@ g_cclosure_marshal_VOID__INT (GClosure     *closure,
 </div>
 </div>
 <div class="footnotes">
-<br><hr width="100" align="left">
-<div class="footnote"><p><sup>[<a name="ftn.id397002" href="#id397002" class="para">6</a>] </sup>
+<br><hr style="width:100; align:left;">
+<div id="ftn.id430752" class="footnote"><p><a href="#id430752" class="para"><sup class="para">[6] </sup></a>
         In practice, closures sit at the boundary of language runtimes: if you are
         writing Python code and one of your Python callbacks receives a signal from
         a GTK+ widget, the C code in GTK+ needs to execute your Python
@@ -201,7 +201,7 @@ g_cclosure_marshal_VOID__INT (GClosure     *closure,
         it behaves as a normal C object for GTK+ and as a normal Python object for
         Python code.
       </p></div>
-<div class="footnote"><p><sup>[<a name="ftn.id407209" href="#id407209" class="para">7</a>] </sup>
+<div id="ftn.id433854" class="footnote"><p><a href="#id433854" class="para"><sup class="para">[7] </sup></a>
             Closures are reference counted and notify listeners of their destruction in a two-stage
             process: the invalidation notifiers are invoked before the finalization notifiers.
           </p></div>
@@ -209,6 +209,6 @@ g_cclosure_marshal_VOID__INT (GClosure     *closure,
 </div>
 <div class="footer">
 <hr>
-          Generated by GTK-Doc V1.15</div>
+          Generated by GTK-Doc V1.18.1</div>
 </body>
 </html>

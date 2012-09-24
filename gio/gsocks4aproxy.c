@@ -135,9 +135,8 @@ set_connect_msg (guint8      *msg,
 
       if (user_len > SOCKS4_MAX_LEN)
 	{
-	  g_set_error (error, G_IO_ERROR, G_IO_ERROR_PROXY_FAILED,
-		       _("SOCKSv4 implementation limits username to %i characters"),
-		       SOCKS4_MAX_LEN);
+	  g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_PROXY_FAILED,
+			       _("Username is too long for SOCKSv4 protocol"));
 	  return -1;
 	}
 
@@ -154,8 +153,8 @@ set_connect_msg (guint8      *msg,
       if (host_len > SOCKS4_MAX_LEN)
 	{
 	  g_set_error (error, G_IO_ERROR, G_IO_ERROR_PROXY_FAILED,
-		       _("SOCKSv4a implementation limits hostname to %i characters"),
-		       SOCKS4_MAX_LEN);
+		       _("Hostname '%s' is too long for SOCKSv4 protocol"),
+		       hostname);
 	  return -1;
 	}
 
@@ -288,9 +287,7 @@ static void
 complete_async_from_error (ConnectAsyncData *data, GError *error)
 {
   GSimpleAsyncResult *simple = data->simple;
-  g_simple_async_result_set_from_error (data->simple,
-					error);
-  g_error_free (error);
+  g_simple_async_result_take_error (data->simple, error);
   g_simple_async_result_set_op_res_gpointer (simple, NULL, NULL);
   g_simple_async_result_complete (simple);
   g_object_unref (simple);
@@ -364,9 +361,7 @@ g_socks4a_proxy_connect_async (GProxy               *proxy,
 
   if (data->length < 0)
     {
-      g_simple_async_result_set_from_error (data->simple,
-					    error);
-      g_error_free (error);
+      g_simple_async_result_take_error (data->simple, error);
       g_simple_async_result_set_op_res_gpointer (simple, NULL, NULL);
       g_simple_async_result_complete_in_idle (simple);
       g_object_unref (simple);
