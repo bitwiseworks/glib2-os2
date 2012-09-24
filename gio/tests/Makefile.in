@@ -18,6 +18,7 @@
 # GLIB - Library of useful C routines
 
 
+EXEEXT = @EXEEXT@
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
@@ -348,7 +349,7 @@ am_win32_streams_OBJECTS = win32-streams.$(OBJEXT)
 win32_streams_OBJECTS = $(am_win32_streams_OBJECTS)
 win32_streams_DEPENDENCIES = $(progs_ldadd) \
 	$(top_builddir)/gthread/libgthread-2.0.la
-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
+DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir) -I/@unixroot/usr/include/bind9
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 am__mv = mv -f
@@ -563,7 +564,7 @@ MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
 MKDIR_P = @MKDIR_P@
 MKINSTALLDIRS = @MKINSTALLDIRS@
-MSGFMT = @MSGFMT@
+MSGFMT = msgfmt
 MSGFMT_OPTS = @MSGFMT_OPTS@
 NM = @NM@
 NMEDIT = @NMEDIT@

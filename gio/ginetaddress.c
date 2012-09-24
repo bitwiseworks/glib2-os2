@@ -77,7 +77,9 @@ struct _GInetAddressPrivate
   GSocketFamily family;
   union {
     struct in_addr ipv4;
+#ifndef __KLIBC__
     struct in6_addr ipv6;
+#endif
   } addr;
 };
 
@@ -113,10 +115,15 @@ g_inet_address_set_property (GObject      *object,
       break;
 
     case PROP_BYTES:
+#ifndef __KLIBC__
       memcpy (&address->priv->addr, g_value_get_pointer (value),
 	      address->priv->family == AF_INET ?
 	      sizeof (address->priv->addr.ipv4) :
 	      sizeof (address->priv->addr.ipv6));
+#else
+      memcpy (&address->priv->addr, g_value_get_pointer (value),
+	      sizeof (address->priv->addr.ipv4));
+#endif
       break;
 
     default:
@@ -409,7 +416,9 @@ g_inet_address_new_from_string (const gchar *string)
   gint len;
 #else /* !G_OS_WIN32 */
   struct in_addr in_addr;
+#ifndef __KLIBC__
   struct in6_addr in6_addr;
+#endif
 #endif
 
   /* Make sure _g_networking_init() has been called */
@@ -427,8 +436,10 @@ g_inet_address_new_from_string (const gchar *string)
 
   if (inet_pton (AF_INET, string, &in_addr) > 0)
     return g_inet_address_new_from_bytes ((guint8 *)&in_addr, AF_INET);
+#ifndef __KLIBC__
   else if (inet_pton (AF_INET6, string, &in6_addr) > 0)
     return g_inet_address_new_from_bytes ((guint8 *)&in6_addr, AF_INET6);
+#endif
 #endif
 
   return NULL;
@@ -483,8 +494,10 @@ g_inet_address_new_loopback (GSocketFamily family)
 
       return g_inet_address_new_from_bytes (addr, family);
     }
+#ifndef __KLIBC__
   else
     return g_inet_address_new_from_bytes (in6addr_loopback.s6_addr, family);
+#endif
 }
 
 /**
@@ -510,8 +523,10 @@ g_inet_address_new_any (GSocketFamily family)
 
       return g_inet_address_new_from_bytes (addr, family);
     }
+#ifndef __KLIBC__
   else
     return g_inet_address_new_from_bytes (in6addr_any.s6_addr, family);
+#endif
 }
 
 
@@ -529,6 +544,9 @@ g_inet_address_new_any (GSocketFamily family)
 gchar *
 g_inet_address_to_string (GInetAddress *address)
 {
+#ifdef __KLIBC__
+# define INET6_ADDRSTRLEN 46
+#endif
   gchar buffer[INET6_ADDRSTRLEN];
 #ifdef G_OS_WIN32
   DWORD buflen = sizeof (buffer), addrlen;
@@ -562,8 +580,10 @@ g_inet_address_to_string (GInetAddress *address)
 
   if (address->priv->family == AF_INET)
     inet_ntop (AF_INET, &address->priv->addr.ipv4, buffer, sizeof (buffer));
+#ifndef __KLIBC__
   else
     inet_ntop (AF_INET6, &address->priv->addr.ipv6, buffer, sizeof (buffer));
+#endif
 #endif
 
   return g_strdup (buffer);
@@ -605,7 +625,9 @@ g_inet_address_get_native_size (GInetAddress *address)
 {
   if (address->priv->family == AF_INET)
     return sizeof (address->priv->addr.ipv4);
+#ifndef __KLIBC__
   return sizeof (address->priv->addr.ipv6);
+#endif
 }
 
 /**
@@ -647,8 +669,10 @@ g_inet_address_get_is_any (GInetAddress *address)
 
       return addr4 == INADDR_ANY;
     }
+#ifndef __KLIBC__
   else
     return IN6_IS_ADDR_UNSPECIFIED (&address->priv->addr.ipv6);
+#endif
 }
 
 /**
@@ -673,8 +697,10 @@ g_inet_address_get_is_loopback (GInetAddress *address)
       /* 127.0.0.0/8 */
       return ((addr4 & 0xff000000) == 0x7f000000);
     }
+#ifndef __KLIBC__
   else
     return IN6_IS_ADDR_LOOPBACK (&address->priv->addr.ipv6);
+#endif
 }
 
 /**
@@ -701,8 +727,10 @@ g_inet_address_get_is_link_local (GInetAddress *address)
       /* 169.254.0.0/16 */
       return ((addr4 & 0xffff0000) == 0xa9fe0000);
     }
+#ifndef __KLIBC__
   else
     return IN6_IS_ADDR_LINKLOCAL (&address->priv->addr.ipv6);
+#endif
 }
 
 /**
@@ -732,8 +760,10 @@ g_inet_address_get_is_site_local (GInetAddress *address)
 	      (addr4 & 0xfff00000) == 0xac100000 ||
 	      (addr4 & 0xffff0000) == 0xc0a80000);
     }
+#ifndef __KLIBC__
   else
     return IN6_IS_ADDR_SITELOCAL (&address->priv->addr.ipv6);
+#endif
 }
 
 /**
@@ -757,8 +787,10 @@ g_inet_address_get_is_multicast (GInetAddress *address)
 
       return IN_MULTICAST (addr4);
     }
+#ifndef __KLIBC__
   else
     return IN6_IS_ADDR_MULTICAST (&address->priv->addr.ipv6);
+#endif
 }
 
 /**
@@ -778,8 +810,10 @@ g_inet_address_get_is_mc_global (GInetAddress *address)
 
   if (address->priv->family == AF_INET)
     return FALSE;
+#ifndef __KLIBC__
   else
     return IN6_IS_ADDR_MC_GLOBAL (&address->priv->addr.ipv6);
+#endif
 }
 
 /**
@@ -799,8 +833,10 @@ g_inet_address_get_is_mc_link_local (GInetAddress *address)
 
   if (address->priv->family == AF_INET)
     return FALSE;
+#ifndef __KLIBC__
   else
     return IN6_IS_ADDR_MC_LINKLOCAL (&address->priv->addr.ipv6);
+#endif
 }
 
 /**
@@ -820,8 +856,10 @@ g_inet_address_get_is_mc_node_local (GInetAddress *address)
 
   if (address->priv->family == AF_INET)
     return FALSE;
+#ifndef __KLIBC__
   else
     return IN6_IS_ADDR_MC_NODELOCAL (&address->priv->addr.ipv6);
+#endif
 }
 
 /**
@@ -841,8 +879,10 @@ g_inet_address_get_is_mc_org_local  (GInetAddress *address)
 
   if (address->priv->family == AF_INET)
     return FALSE;
+#ifndef __KLIBC__
   else
     return IN6_IS_ADDR_MC_ORGLOCAL (&address->priv->addr.ipv6);
+#endif
 }
 
 /**
@@ -862,6 +902,8 @@ g_inet_address_get_is_mc_site_local (GInetAddress *address)
 
   if (address->priv->family == AF_INET)
     return FALSE;
+#ifndef __KLIBC__
   else
     return IN6_IS_ADDR_MC_SITELOCAL (&address->priv->addr.ipv6);
+#endif
 }

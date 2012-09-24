@@ -425,7 +425,7 @@ else
 install-def-file:
 uninstall-def-file:
 
-export_symbols = -export-symbols-regex '^g_.*'
+export_symbols = $(LIBTOOL_EXPORT_OPTIONS)
 endif
 
 if OS_OS2

@@ -21,6 +21,7 @@
 
 
 
+EXEEXT = @EXEEXT@
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
@@ -275,7 +276,7 @@ gsettings_OBJECTS = $(am_gsettings_OBJECTS)
 gsettings_DEPENDENCIES = $(top_builddir)/glib/libglib-2.0.la \
 	$(top_builddir)/gobject/libgobject-2.0.la libgio-2.0.la
 SCRIPTS = $(completion_SCRIPTS)
-DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
+DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir) -I/@unixroot/usr/include/bind9
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
 am__mv = mv -f
@@ -455,7 +456,7 @@ LD = @LD@
 LDFLAGS = @LDFLAGS@
 LIBASYNCNS_LIBADD = @LIBASYNCNS_LIBADD@
 LIBOBJS = @LIBOBJS@
-LIBS = @LIBS@
+LIBS = @LIBS@ -llwres
 LIBTOOL = @LIBTOOL@
 LIBTOOL_EXPORT_OPTIONS = @LIBTOOL_EXPORT_OPTIONS@
 LIB_EXE_MACHINE_FLAG = @LIB_EXE_MACHINE_FLAG@
@@ -914,7 +915,7 @@ libgio_2_0_la_LIBADD = \
 	$(NULL)
 
 @PLATFORM_WIN32_TRUE@no_undefined = -no-undefined
-@OS_WIN32_AND_DLL_COMPILATION_FALSE@export_symbols = -export-symbols-regex '^g_.*'
+@OS_WIN32_AND_DLL_COMPILATION_FALSE@export_symbols = $(LIBTOOL_EXPORT_OPTIONS)
 @OS_WIN32_AND_DLL_COMPILATION_TRUE@export_symbols = -export-symbols gio.def
 @OS_WIN32_AND_DLL_COMPILATION_TRUE@gio_def = gio.def
 @OS_WIN32_AND_DLL_COMPILATION_TRUE@gio_win32_res = gio-win32-res.o

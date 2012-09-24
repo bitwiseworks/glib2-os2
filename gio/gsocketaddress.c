@@ -232,6 +232,7 @@ g_socket_address_new_from_native (gpointer native,
       return sockaddr;
     }
 
+#ifndef __KLIBC__
   if (family == AF_INET6)
     {
       struct sockaddr_in6 *addr = (struct sockaddr_in6 *) native;
@@ -246,6 +247,7 @@ g_socket_address_new_from_native (gpointer native,
       g_object_unref (iaddr);
       return sockaddr;
     }
+#endif
 
 #ifdef G_OS_UNIX
   if (family == AF_UNIX)

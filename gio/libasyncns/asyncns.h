@@ -47,6 +47,48 @@
 extern "C" {
 #endif
 
+#ifdef __KLIBC__
+
+#include <lwres/netdb.h>
+
+typedef unsigned int socklen_t;
+
+struct sockaddr_storage {
+	u_char ss_len;
+	u_char ss_family;
+	u_char fill[126];
+};
+
+#define SHUT_RD 0
+#define SHUT_WR 1
+#define SHUT_RDWR 2
+
+#define	NI_NOFQDN	0x00000001
+#define	NI_NUMERICHOST	0x00000002
+#define	NI_NAMEREQD	0x00000004
+#define	NI_NUMERICSERV	0x00000008
+#define	NI_DGRAM	0x00000010
+
+#define	EAI_AGAIN	 2	/* temporary failure in name resolution */
+#define	EAI_FAIL	 4	/* non-recoverable failure in name resolution */
+#define	EAI_MEMORY	 6	/* memory allocation failure */
+#define	EAI_NONAME	 8	/* hostname nor servname provided, or not known */
+#define	EAI_SYSTEM	11	/* system error returned in errno */
+#define EAI_MAX		14
+
+#define	NI_MAXHOST	1025
+#define	NI_MAXSERV	32
+#define getaddrinfo lwres_getaddrinfo
+#define getnameinfo lwres_getnameinfo
+#define freeaddrinfo lwres_freeaddrinfo
+int		lwres_getaddrinfo(const char *, const char *,
+				 const struct addrinfo *, struct addrinfo **);
+int		lwres_getnameinfo(const struct sockaddr *, size_t, char *,
+				 size_t, char *, size_t, int);
+void		lwres_freeaddrinfo(struct addrinfo *);
+
+#endif
+
 /** An opaque libasyncns session structure */
 typedef struct asyncns _g_asyncns_t;
 

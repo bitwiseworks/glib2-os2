@@ -151,8 +151,10 @@ g_inet_socket_address_get_native_size (GSocketAddress *address)
 
   if (family == AF_INET)
     return sizeof (struct sockaddr_in);
+#ifndef __KLIBC__
   else if (family == AF_INET6)
     return sizeof (struct sockaddr_in6);
+#endif
   else
     return -1;
 }
@@ -188,6 +190,7 @@ g_inet_socket_address_to_native (GSocketAddress  *address,
       memset (sock->sin_zero, 0, sizeof (sock->sin_zero));
       return TRUE;
     }
+#ifndef __KLIBC__
   else if (family == AF_INET6)
     {
       struct sockaddr_in6 *sock = (struct sockaddr_in6 *) dest;
@@ -205,6 +208,7 @@ g_inet_socket_address_to_native (GSocketAddress  *address,
       memcpy (&(sock->sin6_addr.s6_addr), g_inet_address_to_bytes (addr->priv->address), sizeof (sock->sin6_addr));
       return TRUE;
     }
+#endif
   else
     {
       g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,

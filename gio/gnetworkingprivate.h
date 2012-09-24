@@ -90,6 +90,10 @@
 #endif
 #endif
 
+#ifdef __KLIBC__
+#include "libasyncns/asyncns.h"
+#endif
+
 G_BEGIN_DECLS
 
 extern struct addrinfo _g_resolver_addrinfo_hints;

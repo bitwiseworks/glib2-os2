@@ -656,6 +656,20 @@ _g_get_unix_mounts (void)
 
   return return_list;
 }
+
+#elif defined(__KLIBC__)
+
+static char *
+get_mtab_monitor_file (void)
+{
+  return NULL;
+}
+
+static GList *
+_g_get_unix_mounts (void)
+{
+  return NULL;
+}
 #else
 #error No _g_get_unix_mounts() implementation for system
 #endif
@@ -1039,6 +1053,12 @@ static GList *
 _g_get_unix_mount_points (void)
 {
   return _g_get_unix_mounts ();
+}
+#elif defined(__KLIBC__)
+static GList *
+_g_get_unix_mount_points (void)
+{
+  return NULL;
 }
 #else
 #error No g_get_mount_table() implementation for system

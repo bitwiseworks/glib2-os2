@@ -201,6 +201,39 @@ typedef union packet {
     res_response_t res_response;
 } packet_t;
 
+#ifdef __KLIBC__
+
+int lwres_h_errno;
+
+static char *ai_errlist[] = {
+	"Success",
+	"Address family for hostname not supported",	/* EAI_ADDRFAMILY */
+	"Temporary failure in name resolution",		/* EAI_AGAIN      */
+	"Invalid value for ai_flags",		       	/* EAI_BADFLAGS   */
+	"Non-recoverable failure in name resolution", 	/* EAI_FAIL       */
+	"ai_family not supported",			/* EAI_FAMILY     */
+	"Memory allocation failure", 			/* EAI_MEMORY     */
+	"No address associated with hostname", 		/* EAI_NODATA     */
+	"hostname nor servname provided, or not known",/* EAI_NONAME     */
+	"servname not supported for ai_socktype",	/* EAI_SERVICE    */
+	"ai_socktype not supported", 			/* EAI_SOCKTYPE   */
+	"System error returned in errno", 		/* EAI_SYSTEM     */
+	"Invalid value for hints",			/* EAI_BADHINTS	  */
+	"Resolved protocol is unknown",			/* EAI_PROTOCOL   */
+	"Unknown error", 				/* EAI_MAX        */
+};
+
+char *
+gai_strerror(ecode)
+	int ecode;
+{
+	if (ecode < 0 || ecode > EAI_MAX)
+		ecode = EAI_MAX;
+	return ai_errlist[ecode];
+}
+#endif
+
+
 #ifndef HAVE_STRNDUP
 
 static char *strndup(const char *s, size_t l) {
