@@ -230,12 +230,12 @@ g_mount_mount_flags_get_type (void)
 
   if (g_once_init_enter (&g_define_type_id__volatile))
     {
-      static const GEnumValue values[] = {
+      static const GFlagsValue values[] = {
         { G_MOUNT_MOUNT_NONE, "G_MOUNT_MOUNT_NONE", "none" },
         { 0, NULL, NULL }
       };
       GType g_define_type_id =
-        g_enum_register_static (g_intern_static_string ("GMountMountFlags"), values);
+        g_flags_register_static (g_intern_static_string ("GMountMountFlags"), values);
       g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
     }
 
@@ -269,12 +269,12 @@ g_drive_start_flags_get_type (void)
 
   if (g_once_init_enter (&g_define_type_id__volatile))
     {
-      static const GEnumValue values[] = {
+      static const GFlagsValue values[] = {
         { G_DRIVE_START_NONE, "G_DRIVE_START_NONE", "none" },
         { 0, NULL, NULL }
       };
       GType g_define_type_id =
-        g_enum_register_static (g_intern_static_string ("GDriveStartFlags"), values);
+        g_flags_register_static (g_intern_static_string ("GDriveStartFlags"), values);
       g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
     }
 
@@ -571,6 +571,28 @@ g_output_stream_splice_flags_get_type (void)
 }
 
 GType
+g_io_stream_splice_flags_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_define_type_id__volatile))
+    {
+      static const GFlagsValue values[] = {
+        { G_IO_STREAM_SPLICE_NONE, "G_IO_STREAM_SPLICE_NONE", "none" },
+        { G_IO_STREAM_SPLICE_CLOSE_STREAM1, "G_IO_STREAM_SPLICE_CLOSE_STREAM1", "close-stream1" },
+        { G_IO_STREAM_SPLICE_CLOSE_STREAM2, "G_IO_STREAM_SPLICE_CLOSE_STREAM2", "close-stream2" },
+        { G_IO_STREAM_SPLICE_WAIT_FOR_BOTH, "G_IO_STREAM_SPLICE_WAIT_FOR_BOTH", "wait-for-both" },
+        { 0, NULL, NULL }
+      };
+      GType g_define_type_id =
+        g_flags_register_static (g_intern_static_string ("GIOStreamSpliceFlags"), values);
+      g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+    }
+
+  return g_define_type_id__volatile;
+}
+
+GType
 g_emblem_origin_get_type (void)
 {
   static volatile gsize g_define_type_id__volatile = 0;
@@ -607,6 +629,88 @@ g_resolver_error_get_type (void)
       };
       GType g_define_type_id =
         g_enum_register_static (g_intern_static_string ("GResolverError"), values);
+      g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+    }
+
+  return g_define_type_id__volatile;
+}
+
+GType
+g_resolver_record_type_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_define_type_id__volatile))
+    {
+      static const GEnumValue values[] = {
+        { G_RESOLVER_RECORD_SRV, "G_RESOLVER_RECORD_SRV", "srv" },
+        { G_RESOLVER_RECORD_MX, "G_RESOLVER_RECORD_MX", "mx" },
+        { G_RESOLVER_RECORD_TXT, "G_RESOLVER_RECORD_TXT", "txt" },
+        { G_RESOLVER_RECORD_SOA, "G_RESOLVER_RECORD_SOA", "soa" },
+        { G_RESOLVER_RECORD_NS, "G_RESOLVER_RECORD_NS", "ns" },
+        { 0, NULL, NULL }
+      };
+      GType g_define_type_id =
+        g_enum_register_static (g_intern_static_string ("GResolverRecordType"), values);
+      g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+    }
+
+  return g_define_type_id__volatile;
+}
+
+GType
+g_resource_error_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_define_type_id__volatile))
+    {
+      static const GEnumValue values[] = {
+        { G_RESOURCE_ERROR_NOT_FOUND, "G_RESOURCE_ERROR_NOT_FOUND", "not-found" },
+        { G_RESOURCE_ERROR_INTERNAL, "G_RESOURCE_ERROR_INTERNAL", "internal" },
+        { 0, NULL, NULL }
+      };
+      GType g_define_type_id =
+        g_enum_register_static (g_intern_static_string ("GResourceError"), values);
+      g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+    }
+
+  return g_define_type_id__volatile;
+}
+
+GType
+g_resource_flags_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_define_type_id__volatile))
+    {
+      static const GFlagsValue values[] = {
+        { G_RESOURCE_FLAGS_NONE, "G_RESOURCE_FLAGS_NONE", "none" },
+        { G_RESOURCE_FLAGS_COMPRESSED, "G_RESOURCE_FLAGS_COMPRESSED", "compressed" },
+        { 0, NULL, NULL }
+      };
+      GType g_define_type_id =
+        g_flags_register_static (g_intern_static_string ("GResourceFlags"), values);
+      g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+    }
+
+  return g_define_type_id__volatile;
+}
+
+GType
+g_resource_lookup_flags_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_define_type_id__volatile))
+    {
+      static const GFlagsValue values[] = {
+        { G_RESOURCE_LOOKUP_FLAGS_NONE, "G_RESOURCE_LOOKUP_FLAGS_NONE", "none" },
+        { 0, NULL, NULL }
+      };
+      GType g_define_type_id =
+        g_flags_register_static (g_intern_static_string ("GResourceLookupFlags"), values);
       g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
     }
 
@@ -664,7 +768,7 @@ g_socket_msg_flags_get_type (void)
 
   if (g_once_init_enter (&g_define_type_id__volatile))
     {
-      static const GEnumValue values[] = {
+      static const GFlagsValue values[] = {
         { G_SOCKET_MSG_NONE, "G_SOCKET_MSG_NONE", "none" },
         { G_SOCKET_MSG_OOB, "G_SOCKET_MSG_OOB", "oob" },
         { G_SOCKET_MSG_PEEK, "G_SOCKET_MSG_PEEK", "peek" },
@@ -672,7 +776,7 @@ g_socket_msg_flags_get_type (void)
         { 0, NULL, NULL }
       };
       GType g_define_type_id =
-        g_enum_register_static (g_intern_static_string ("GSocketMsgFlags"), values);
+        g_flags_register_static (g_intern_static_string ("GSocketMsgFlags"), values);
       g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
     }
 
@@ -821,6 +925,7 @@ g_dbus_proxy_flags_get_type (void)
         { G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES, "G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES", "do-not-load-properties" },
         { G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS, "G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS", "do-not-connect-signals" },
         { G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START, "G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START", "do-not-auto-start" },
+        { G_DBUS_PROXY_FLAGS_GET_INVALIDATED_PROPERTIES, "G_DBUS_PROXY_FLAGS_GET_INVALIDATED_PROPERTIES", "get-invalidated-properties" },
         { 0, NULL, NULL }
       };
       GType g_define_type_id =
@@ -1097,6 +1202,7 @@ g_dbus_signal_flags_get_type (void)
     {
       static const GFlagsValue values[] = {
         { G_DBUS_SIGNAL_FLAGS_NONE, "G_DBUS_SIGNAL_FLAGS_NONE", "none" },
+        { G_DBUS_SIGNAL_FLAGS_NO_MATCH_RULE, "G_DBUS_SIGNAL_FLAGS_NO_MATCH_RULE", "no-match-rule" },
         { 0, NULL, NULL }
       };
       GType g_define_type_id =
@@ -1137,6 +1243,8 @@ g_credentials_type_get_type (void)
       static const GEnumValue values[] = {
         { G_CREDENTIALS_TYPE_INVALID, "G_CREDENTIALS_TYPE_INVALID", "invalid" },
         { G_CREDENTIALS_TYPE_LINUX_UCRED, "G_CREDENTIALS_TYPE_LINUX_UCRED", "linux-ucred" },
+        { G_CREDENTIALS_TYPE_FREEBSD_CMSGCRED, "G_CREDENTIALS_TYPE_FREEBSD_CMSGCRED", "freebsd-cmsgcred" },
+        { G_CREDENTIALS_TYPE_OPENBSD_SOCKPEERCRED, "G_CREDENTIALS_TYPE_OPENBSD_SOCKPEERCRED", "openbsd-sockpeercred" },
         { 0, NULL, NULL }
       };
       GType g_define_type_id =
@@ -1168,20 +1276,305 @@ g_dbus_message_byte_order_get_type (void)
 }
 
 GType
-g_dbus_message_filter_result_get_type (void)
+g_application_flags_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_define_type_id__volatile))
+    {
+      static const GFlagsValue values[] = {
+        { G_APPLICATION_FLAGS_NONE, "G_APPLICATION_FLAGS_NONE", "flags-none" },
+        { G_APPLICATION_IS_SERVICE, "G_APPLICATION_IS_SERVICE", "is-service" },
+        { G_APPLICATION_IS_LAUNCHER, "G_APPLICATION_IS_LAUNCHER", "is-launcher" },
+        { G_APPLICATION_HANDLES_OPEN, "G_APPLICATION_HANDLES_OPEN", "handles-open" },
+        { G_APPLICATION_HANDLES_COMMAND_LINE, "G_APPLICATION_HANDLES_COMMAND_LINE", "handles-command-line" },
+        { G_APPLICATION_SEND_ENVIRONMENT, "G_APPLICATION_SEND_ENVIRONMENT", "send-environment" },
+        { G_APPLICATION_NON_UNIQUE, "G_APPLICATION_NON_UNIQUE", "non-unique" },
+        { 0, NULL, NULL }
+      };
+      GType g_define_type_id =
+        g_flags_register_static (g_intern_static_string ("GApplicationFlags"), values);
+      g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+    }
+
+  return g_define_type_id__volatile;
+}
+
+GType
+g_tls_error_get_type (void)
 {
   static volatile gsize g_define_type_id__volatile = 0;
 
   if (g_once_init_enter (&g_define_type_id__volatile))
     {
       static const GEnumValue values[] = {
-        { G_DBUS_MESSAGE_FILTER_RESULT_NO_EFFECT, "G_DBUS_MESSAGE_FILTER_RESULT_NO_EFFECT", "no-effect" },
-        { G_DBUS_MESSAGE_FILTER_RESULT_MESSAGE_CONSUMED, "G_DBUS_MESSAGE_FILTER_RESULT_MESSAGE_CONSUMED", "message-consumed" },
-        { G_DBUS_MESSAGE_FILTER_RESULT_MESSAGE_ALTERED, "G_DBUS_MESSAGE_FILTER_RESULT_MESSAGE_ALTERED", "message-altered" },
+        { G_TLS_ERROR_UNAVAILABLE, "G_TLS_ERROR_UNAVAILABLE", "unavailable" },
+        { G_TLS_ERROR_MISC, "G_TLS_ERROR_MISC", "misc" },
+        { G_TLS_ERROR_BAD_CERTIFICATE, "G_TLS_ERROR_BAD_CERTIFICATE", "bad-certificate" },
+        { G_TLS_ERROR_NOT_TLS, "G_TLS_ERROR_NOT_TLS", "not-tls" },
+        { G_TLS_ERROR_HANDSHAKE, "G_TLS_ERROR_HANDSHAKE", "handshake" },
+        { G_TLS_ERROR_CERTIFICATE_REQUIRED, "G_TLS_ERROR_CERTIFICATE_REQUIRED", "certificate-required" },
+        { G_TLS_ERROR_EOF, "G_TLS_ERROR_EOF", "eof" },
         { 0, NULL, NULL }
       };
       GType g_define_type_id =
-        g_enum_register_static (g_intern_static_string ("GDBusMessageFilterResult"), values);
+        g_enum_register_static (g_intern_static_string ("GTlsError"), values);
+      g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+    }
+
+  return g_define_type_id__volatile;
+}
+
+GType
+g_tls_certificate_flags_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_define_type_id__volatile))
+    {
+      static const GFlagsValue values[] = {
+        { G_TLS_CERTIFICATE_UNKNOWN_CA, "G_TLS_CERTIFICATE_UNKNOWN_CA", "unknown-ca" },
+        { G_TLS_CERTIFICATE_BAD_IDENTITY, "G_TLS_CERTIFICATE_BAD_IDENTITY", "bad-identity" },
+        { G_TLS_CERTIFICATE_NOT_ACTIVATED, "G_TLS_CERTIFICATE_NOT_ACTIVATED", "not-activated" },
+        { G_TLS_CERTIFICATE_EXPIRED, "G_TLS_CERTIFICATE_EXPIRED", "expired" },
+        { G_TLS_CERTIFICATE_REVOKED, "G_TLS_CERTIFICATE_REVOKED", "revoked" },
+        { G_TLS_CERTIFICATE_INSECURE, "G_TLS_CERTIFICATE_INSECURE", "insecure" },
+        { G_TLS_CERTIFICATE_GENERIC_ERROR, "G_TLS_CERTIFICATE_GENERIC_ERROR", "generic-error" },
+        { G_TLS_CERTIFICATE_VALIDATE_ALL, "G_TLS_CERTIFICATE_VALIDATE_ALL", "validate-all" },
+        { 0, NULL, NULL }
+      };
+      GType g_define_type_id =
+        g_flags_register_static (g_intern_static_string ("GTlsCertificateFlags"), values);
+      g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+    }
+
+  return g_define_type_id__volatile;
+}
+
+GType
+g_tls_authentication_mode_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_define_type_id__volatile))
+    {
+      static const GEnumValue values[] = {
+        { G_TLS_AUTHENTICATION_NONE, "G_TLS_AUTHENTICATION_NONE", "none" },
+        { G_TLS_AUTHENTICATION_REQUESTED, "G_TLS_AUTHENTICATION_REQUESTED", "requested" },
+        { G_TLS_AUTHENTICATION_REQUIRED, "G_TLS_AUTHENTICATION_REQUIRED", "required" },
+        { 0, NULL, NULL }
+      };
+      GType g_define_type_id =
+        g_enum_register_static (g_intern_static_string ("GTlsAuthenticationMode"), values);
+      g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+    }
+
+  return g_define_type_id__volatile;
+}
+
+GType
+g_tls_rehandshake_mode_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_define_type_id__volatile))
+    {
+      static const GEnumValue values[] = {
+        { G_TLS_REHANDSHAKE_NEVER, "G_TLS_REHANDSHAKE_NEVER", "never" },
+        { G_TLS_REHANDSHAKE_SAFELY, "G_TLS_REHANDSHAKE_SAFELY", "safely" },
+        { G_TLS_REHANDSHAKE_UNSAFELY, "G_TLS_REHANDSHAKE_UNSAFELY", "unsafely" },
+        { 0, NULL, NULL }
+      };
+      GType g_define_type_id =
+        g_enum_register_static (g_intern_static_string ("GTlsRehandshakeMode"), values);
+      g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+    }
+
+  return g_define_type_id__volatile;
+}
+
+GType
+g_tls_password_flags_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_define_type_id__volatile))
+    {
+      static const GFlagsValue values[] = {
+        { G_TLS_PASSWORD_NONE, "G_TLS_PASSWORD_NONE", "none" },
+        { G_TLS_PASSWORD_RETRY, "G_TLS_PASSWORD_RETRY", "retry" },
+        { G_TLS_PASSWORD_MANY_TRIES, "G_TLS_PASSWORD_MANY_TRIES", "many-tries" },
+        { G_TLS_PASSWORD_FINAL_TRY, "G_TLS_PASSWORD_FINAL_TRY", "final-try" },
+        { 0, NULL, NULL }
+      };
+      GType g_define_type_id =
+        g_flags_register_static (g_intern_static_string ("GTlsPasswordFlags"), values);
+      g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+    }
+
+  return g_define_type_id__volatile;
+}
+
+GType
+g_tls_interaction_result_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_define_type_id__volatile))
+    {
+      static const GEnumValue values[] = {
+        { G_TLS_INTERACTION_UNHANDLED, "G_TLS_INTERACTION_UNHANDLED", "unhandled" },
+        { G_TLS_INTERACTION_HANDLED, "G_TLS_INTERACTION_HANDLED", "handled" },
+        { G_TLS_INTERACTION_FAILED, "G_TLS_INTERACTION_FAILED", "failed" },
+        { 0, NULL, NULL }
+      };
+      GType g_define_type_id =
+        g_enum_register_static (g_intern_static_string ("GTlsInteractionResult"), values);
+      g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+    }
+
+  return g_define_type_id__volatile;
+}
+
+GType
+g_dbus_interface_skeleton_flags_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_define_type_id__volatile))
+    {
+      static const GFlagsValue values[] = {
+        { G_DBUS_INTERFACE_SKELETON_FLAGS_NONE, "G_DBUS_INTERFACE_SKELETON_FLAGS_NONE", "none" },
+        { G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD, "G_DBUS_INTERFACE_SKELETON_FLAGS_HANDLE_METHOD_INVOCATIONS_IN_THREAD", "handle-method-invocations-in-thread" },
+        { 0, NULL, NULL }
+      };
+      GType g_define_type_id =
+        g_flags_register_static (g_intern_static_string ("GDBusInterfaceSkeletonFlags"), values);
+      g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+    }
+
+  return g_define_type_id__volatile;
+}
+
+GType
+g_dbus_object_manager_client_flags_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_define_type_id__volatile))
+    {
+      static const GFlagsValue values[] = {
+        { G_DBUS_OBJECT_MANAGER_CLIENT_FLAGS_NONE, "G_DBUS_OBJECT_MANAGER_CLIENT_FLAGS_NONE", "none" },
+        { G_DBUS_OBJECT_MANAGER_CLIENT_FLAGS_DO_NOT_AUTO_START, "G_DBUS_OBJECT_MANAGER_CLIENT_FLAGS_DO_NOT_AUTO_START", "do-not-auto-start" },
+        { 0, NULL, NULL }
+      };
+      GType g_define_type_id =
+        g_flags_register_static (g_intern_static_string ("GDBusObjectManagerClientFlags"), values);
+      g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+    }
+
+  return g_define_type_id__volatile;
+}
+
+GType
+g_tls_database_verify_flags_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_define_type_id__volatile))
+    {
+      static const GFlagsValue values[] = {
+        { G_TLS_DATABASE_VERIFY_NONE, "G_TLS_DATABASE_VERIFY_NONE", "none" },
+        { 0, NULL, NULL }
+      };
+      GType g_define_type_id =
+        g_flags_register_static (g_intern_static_string ("GTlsDatabaseVerifyFlags"), values);
+      g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+    }
+
+  return g_define_type_id__volatile;
+}
+
+GType
+g_tls_database_lookup_flags_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_define_type_id__volatile))
+    {
+      static const GEnumValue values[] = {
+        { G_TLS_DATABASE_LOOKUP_NONE, "G_TLS_DATABASE_LOOKUP_NONE", "none" },
+        { G_TLS_DATABASE_LOOKUP_KEYPAIR, "G_TLS_DATABASE_LOOKUP_KEYPAIR", "keypair" },
+        { 0, NULL, NULL }
+      };
+      GType g_define_type_id =
+        g_enum_register_static (g_intern_static_string ("GTlsDatabaseLookupFlags"), values);
+      g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+    }
+
+  return g_define_type_id__volatile;
+}
+
+GType
+g_io_module_scope_flags_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_define_type_id__volatile))
+    {
+      static const GEnumValue values[] = {
+        { G_IO_MODULE_SCOPE_NONE, "G_IO_MODULE_SCOPE_NONE", "none" },
+        { G_IO_MODULE_SCOPE_BLOCK_DUPLICATES, "G_IO_MODULE_SCOPE_BLOCK_DUPLICATES", "block-duplicates" },
+        { 0, NULL, NULL }
+      };
+      GType g_define_type_id =
+        g_enum_register_static (g_intern_static_string ("GIOModuleScopeFlags"), values);
+      g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+    }
+
+  return g_define_type_id__volatile;
+}
+
+GType
+g_socket_client_event_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_define_type_id__volatile))
+    {
+      static const GEnumValue values[] = {
+        { G_SOCKET_CLIENT_RESOLVING, "G_SOCKET_CLIENT_RESOLVING", "resolving" },
+        { G_SOCKET_CLIENT_RESOLVED, "G_SOCKET_CLIENT_RESOLVED", "resolved" },
+        { G_SOCKET_CLIENT_CONNECTING, "G_SOCKET_CLIENT_CONNECTING", "connecting" },
+        { G_SOCKET_CLIENT_CONNECTED, "G_SOCKET_CLIENT_CONNECTED", "connected" },
+        { G_SOCKET_CLIENT_PROXY_NEGOTIATING, "G_SOCKET_CLIENT_PROXY_NEGOTIATING", "proxy-negotiating" },
+        { G_SOCKET_CLIENT_PROXY_NEGOTIATED, "G_SOCKET_CLIENT_PROXY_NEGOTIATED", "proxy-negotiated" },
+        { G_SOCKET_CLIENT_TLS_HANDSHAKING, "G_SOCKET_CLIENT_TLS_HANDSHAKING", "tls-handshaking" },
+        { G_SOCKET_CLIENT_TLS_HANDSHAKED, "G_SOCKET_CLIENT_TLS_HANDSHAKED", "tls-handshaked" },
+        { G_SOCKET_CLIENT_COMPLETE, "G_SOCKET_CLIENT_COMPLETE", "complete" },
+        { 0, NULL, NULL }
+      };
+      GType g_define_type_id =
+        g_enum_register_static (g_intern_static_string ("GSocketClientEvent"), values);
+      g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
+    }
+
+  return g_define_type_id__volatile;
+}
+
+GType
+g_test_dbus_flags_get_type (void)
+{
+  static volatile gsize g_define_type_id__volatile = 0;
+
+  if (g_once_init_enter (&g_define_type_id__volatile))
+    {
+      static const GFlagsValue values[] = {
+        { G_TEST_DBUS_NONE, "G_TEST_DBUS_NONE", "none" },
+        { 0, NULL, NULL }
+      };
+      GType g_define_type_id =
+        g_flags_register_static (g_intern_static_string ("GTestDBusFlags"), values);
       g_once_init_leave (&g_define_type_id__volatile, g_define_type_id);
     }
 

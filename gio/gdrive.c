@@ -24,6 +24,7 @@
 #include "config.h"
 #include "gdrive.h"
 #include "gsimpleasyncresult.h"
+#include "gthemedicon.h"
 #include "gasyncresult.h"
 #include "gioerror.h"
 #include "glibintl.h"
@@ -159,7 +160,7 @@ g_drive_get_name (GDrive *drive)
  * 
  * Gets the icon for @drive.
  * 
- * Returns: #GIcon for the @drive.
+ * Returns: (transfer full): #GIcon for the @drive.
  *    Free the returned object with g_object_unref().
  **/
 GIcon *
@@ -172,6 +173,35 @@ g_drive_get_icon (GDrive *drive)
   iface = G_DRIVE_GET_IFACE (drive);
 
   return (* iface->get_icon) (drive);
+}
+
+/**
+ * g_drive_get_symbolic_icon:
+ * @drive: a #GDrive.
+ * 
+ * Gets the icon for @drive.
+ * 
+ * Returns: (transfer full): symbolic #GIcon for the @drive.
+ *    Free the returned object with g_object_unref().
+ *
+ * Since: 2.34
+ **/
+GIcon *
+g_drive_get_symbolic_icon (GDrive *drive)
+{
+  GDriveIface *iface;
+  GIcon *ret;
+
+  g_return_val_if_fail (G_IS_DRIVE (drive), NULL);
+
+  iface = G_DRIVE_GET_IFACE (drive);
+
+  if (iface->get_symbolic_icon != NULL)
+    ret = iface->get_symbolic_icon (drive);
+  else
+    ret = g_themed_icon_new_with_default_fallbacks ("drive-removable-media-symbolic");
+
+  return ret;
 }
 
 /**
@@ -331,8 +361,8 @@ g_drive_can_poll_for_media (GDrive *drive)
  * g_drive_eject:
  * @drive: a #GDrive.
  * @flags: flags affecting the unmount if required for eject
- * @cancellable: optional #GCancellable object, %NULL to ignore.
- * @callback: a #GAsyncReadyCallback, or %NULL.
+ * @cancellable: (allow-none): optional #GCancellable object, %NULL to ignore.
+ * @callback: (allow-none): a #GAsyncReadyCallback, or %NULL.
  * @user_data: user data to pass to @callback
  * 
  * Asynchronously ejects a drive.
@@ -391,13 +421,9 @@ g_drive_eject_finish (GDrive        *drive,
   g_return_val_if_fail (G_IS_DRIVE (drive), FALSE);
   g_return_val_if_fail (G_IS_ASYNC_RESULT (result), FALSE);
 
-  if (G_IS_SIMPLE_ASYNC_RESULT (result))
-    {
-      GSimpleAsyncResult *simple = G_SIMPLE_ASYNC_RESULT (result);
-      if (g_simple_async_result_propagate_error (simple, error))
-	return FALSE;
-    }
-  
+  if (g_async_result_legacy_propagate_error (result, error))
+    return FALSE;
+
   iface = G_DRIVE_GET_IFACE (drive);
   
   return (* iface->eject_finish) (drive, result, error);
@@ -407,9 +433,10 @@ g_drive_eject_finish (GDrive        *drive,
  * g_drive_eject_with_operation:
  * @drive: a #GDrive.
  * @flags: flags affecting the unmount if required for eject
- * @mount_operation: a #GMountOperation or %NULL to avoid user interaction.
- * @cancellable: optional #GCancellable object, %NULL to ignore.
- * @callback: a #GAsyncReadyCallback, or %NULL.
+ * @mount_operation: (allow-none): a #GMountOperation or %NULL to avoid
+ *     user interaction.
+ * @cancellable: (allow-none): optional #GCancellable object, %NULL to ignore.
+ * @callback: (allow-none): a #GAsyncReadyCallback, or %NULL.
  * @user_data: user data passed to @callback.
  *
  * Ejects a drive. This is an asynchronous operation, and is
@@ -454,7 +481,7 @@ g_drive_eject_with_operation (GDrive              *drive,
  * g_drive_eject_with_operation_finish:
  * @drive: a #GDrive.
  * @result: a #GAsyncResult.
- * @error: a #GError location to store the error occuring, or %NULL to
+ * @error: a #GError location to store the error occurring, or %NULL to
  *     ignore.
  *
  * Finishes ejecting a drive. If any errors occurred during the operation,
@@ -474,12 +501,8 @@ g_drive_eject_with_operation_finish (GDrive        *drive,
   g_return_val_if_fail (G_IS_DRIVE (drive), FALSE);
   g_return_val_if_fail (G_IS_ASYNC_RESULT (result), FALSE);
 
-  if (G_IS_SIMPLE_ASYNC_RESULT (result))
-    {
-      GSimpleAsyncResult *simple = G_SIMPLE_ASYNC_RESULT (result);
-      if (g_simple_async_result_propagate_error (simple, error))
-        return FALSE;
-    }
+  if (g_async_result_legacy_propagate_error (result, error))
+    return FALSE;
 
   iface = G_DRIVE_GET_IFACE (drive);
   if (iface->eject_with_operation_finish != NULL)
@@ -491,8 +514,8 @@ g_drive_eject_with_operation_finish (GDrive        *drive,
 /**
  * g_drive_poll_for_media:
  * @drive: a #GDrive.
- * @cancellable: optional #GCancellable object, %NULL to ignore.
- * @callback: a #GAsyncReadyCallback, or %NULL.
+ * @cancellable: (allow-none): optional #GCancellable object, %NULL to ignore.
+ * @callback: (allow-none): a #GAsyncReadyCallback, or %NULL.
  * @user_data: user data to pass to @callback
  * 
  * Asynchronously polls @drive to see if media has been inserted or removed.
@@ -546,13 +569,9 @@ g_drive_poll_for_media_finish (GDrive        *drive,
   g_return_val_if_fail (G_IS_DRIVE (drive), FALSE);
   g_return_val_if_fail (G_IS_ASYNC_RESULT (result), FALSE);
 
-  if (G_IS_SIMPLE_ASYNC_RESULT (result))
-    {
-      GSimpleAsyncResult *simple = G_SIMPLE_ASYNC_RESULT (result);
-      if (g_simple_async_result_propagate_error (simple, error))
-	return FALSE;
-    }
-  
+  if (g_async_result_legacy_propagate_error (result, error))
+    return FALSE;
+
   iface = G_DRIVE_GET_IFACE (drive);
   
   return (* iface->poll_for_media_finish) (drive, result, error);
@@ -591,11 +610,12 @@ g_drive_get_identifier (GDrive     *drive,
  * @drive: a #GDrive
  *
  * Gets the kinds of identifiers that @drive has. 
- * Use g_drive_get_identifer() to obtain the identifiers
+ * Use g_drive_get_identifier() to obtain the identifiers
  * themselves.
  *
- * Returns: a %NULL-terminated array of strings containing
- *     kinds of identifiers. Use g_strfreev() to free.
+ * Returns: (transfer full) (array zero-terminated=1): a %NULL-terminated
+ *     array of strings containing kinds of identifiers. Use g_strfreev()
+ *     to free.
  */
 char **
 g_drive_enumerate_identifiers (GDrive *drive)
@@ -691,9 +711,10 @@ g_drive_can_start_degraded (GDrive *drive)
  * g_drive_start:
  * @drive: a #GDrive.
  * @flags: flags affecting the start operation.
- * @mount_operation: a #GMountOperation or %NULL to avoid user interaction.
- * @cancellable: optional #GCancellable object, %NULL to ignore.
- * @callback: a #GAsyncReadyCallback, or %NULL.
+ * @mount_operation: (allow-none): a #GMountOperation or %NULL to avoid
+ *     user interaction.
+ * @cancellable: (allow-none): optional #GCancellable object, %NULL to ignore.
+ * @callback: (allow-none): a #GAsyncReadyCallback, or %NULL.
  * @user_data: user data to pass to @callback
  *
  * Asynchronously starts a drive.
@@ -752,12 +773,8 @@ g_drive_start_finish (GDrive         *drive,
   g_return_val_if_fail (G_IS_DRIVE (drive), FALSE);
   g_return_val_if_fail (G_IS_ASYNC_RESULT (result), FALSE);
 
-  if (G_IS_SIMPLE_ASYNC_RESULT (result))
-    {
-      GSimpleAsyncResult *simple = G_SIMPLE_ASYNC_RESULT (result);
-      if (g_simple_async_result_propagate_error (simple, error))
-	return FALSE;
-    }
+  if (g_async_result_legacy_propagate_error (result, error))
+    return FALSE;
 
   iface = G_DRIVE_GET_IFACE (drive);
 
@@ -793,9 +810,10 @@ g_drive_can_stop (GDrive *drive)
  * g_drive_stop:
  * @drive: a #GDrive.
  * @flags: flags affecting the unmount if required for stopping.
- * @mount_operation: a #GMountOperation or %NULL to avoid user interaction.
- * @cancellable: optional #GCancellable object, %NULL to ignore.
- * @callback: a #GAsyncReadyCallback, or %NULL.
+ * @mount_operation: (allow-none): a #GMountOperation or %NULL to avoid
+ *     user interaction.
+ * @cancellable: (allow-none): optional #GCancellable object, %NULL to ignore.
+ * @callback: (allow-none): a #GAsyncReadyCallback, or %NULL.
  * @user_data: user data to pass to @callback
  *
  * Asynchronously stops a drive.
@@ -854,14 +872,35 @@ g_drive_stop_finish (GDrive        *drive,
   g_return_val_if_fail (G_IS_DRIVE (drive), FALSE);
   g_return_val_if_fail (G_IS_ASYNC_RESULT (result), FALSE);
 
-  if (G_IS_SIMPLE_ASYNC_RESULT (result))
-    {
-      GSimpleAsyncResult *simple = G_SIMPLE_ASYNC_RESULT (result);
-      if (g_simple_async_result_propagate_error (simple, error))
-	return FALSE;
-    }
+  if (g_async_result_legacy_propagate_error (result, error))
+    return FALSE;
 
   iface = G_DRIVE_GET_IFACE (drive);
 
   return (* iface->stop_finish) (drive, result, error);
+}
+
+/**
+ * g_drive_get_sort_key:
+ * @drive: A #GDrive.
+ *
+ * Gets the sort key for @drive, if any.
+ *
+ * Returns: Sorting key for @drive or %NULL if no such key is available.
+ *
+ * Since: 2.32
+ */
+const gchar *
+g_drive_get_sort_key (GDrive  *drive)
+{
+  const gchar *ret = NULL;
+  GDriveIface *iface;
+
+  g_return_val_if_fail (G_IS_DRIVE (drive), NULL);
+
+  iface = G_DRIVE_GET_IFACE (drive);
+  if (iface->get_sort_key != NULL)
+    ret = iface->get_sort_key (drive);
+
+  return ret;
 }

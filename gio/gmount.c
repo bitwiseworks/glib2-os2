@@ -29,6 +29,7 @@
 
 #include "gmount.h"
 #include "gmountprivate.h"
+#include "gthemedicon.h"
 #include "gasyncresult.h"
 #include "gsimpleasyncresult.h"
 #include "gioerror.h"
@@ -39,7 +40,7 @@
  * SECTION:gmount
  * @short_description: Mount management
  * @include: gio/gio.h
- * @see also: GVolume, GUnixMount
+ * @see_also: GVolume, GUnixMountEntry, GUnixMountPoint
  *
  * The #GMount interface represents user-visible mounts. Note, when 
  * porting from GnomeVFS, #GMount is the moral equivalent of #GnomeVFSVolume.
@@ -50,8 +51,8 @@
  * might not be related to a volume object.
  * 
  * Unmounting a #GMount instance is an asynchronous operation. For
- * more information about asynchronous operations, see #GAsyncReady
- * and #GSimpleAsyncReady. To unmount a #GMount instance, first call
+ * more information about asynchronous operations, see #GAsyncResult
+ * and #GSimpleAsyncResult. To unmount a #GMount instance, first call
  * g_mount_unmount_with_operation() with (at least) the #GMount instance and a
  * #GAsyncReadyCallback.  The callback will be fired when the
  * operation has resolved (either with success or failure), and a
@@ -122,7 +123,7 @@ g_mount_default_init (GMountInterface *iface)
  * 
  * Gets the root directory on @mount.
  * 
- * Returns: a #GFile. 
+ * Returns: (transfer full): a #GFile. 
  *      The returned object should be unreffed with 
  *      g_object_unref() when no longer needed.
  **/
@@ -146,7 +147,7 @@ g_mount_get_root (GMount *mount)
  * @mount is a path that reflects the main entry point for the user (e.g.
  * the home directory, or the root of the volume).
  *
- * Returns: a #GFile.
+ * Returns: (transfer full): a #GFile.
  *      The returned object should be unreffed with
  *      g_object_unref() when no longer needed.
  **/
@@ -197,7 +198,7 @@ g_mount_get_name (GMount *mount)
  * 
  * Gets the icon for @mount.
  * 
- * Returns: a #GIcon.
+ * Returns: (transfer full): a #GIcon.
  *      The returned object should be unreffed with 
  *      g_object_unref() when no longer needed.
  **/
@@ -211,6 +212,37 @@ g_mount_get_icon (GMount *mount)
   iface = G_MOUNT_GET_IFACE (mount);
 
   return (* iface->get_icon) (mount);
+}
+
+
+/**
+ * g_mount_get_symbolic_icon:
+ * @mount: a #GMount.
+ * 
+ * Gets the symbolic icon for @mount.
+ * 
+ * Returns: (transfer full): a #GIcon.
+ *      The returned object should be unreffed with 
+ *      g_object_unref() when no longer needed.
+ *
+ * Since: 2.34
+ **/
+GIcon *
+g_mount_get_symbolic_icon (GMount *mount)
+{
+  GMountIface *iface;
+  GIcon *ret;
+
+  g_return_val_if_fail (G_IS_MOUNT (mount), NULL);
+
+  iface = G_MOUNT_GET_IFACE (mount);
+
+  if (iface->get_symbolic_icon != NULL)
+    ret = iface->get_symbolic_icon (mount);
+  else
+    ret = g_themed_icon_new_with_default_fallbacks ("folder-remote-symbolic");
+
+  return ret;
 }
 
 /**
@@ -244,7 +276,7 @@ g_mount_get_uuid (GMount *mount)
  * 
  * Gets the volume for the @mount.
  * 
- * Returns: a #GVolume or %NULL if @mount is not associated with a volume.
+ * Returns: (transfer full): a #GVolume or %NULL if @mount is not associated with a volume.
  *      The returned object should be unreffed with 
  *      g_object_unref() when no longer needed.
  **/
@@ -269,7 +301,7 @@ g_mount_get_volume (GMount *mount)
  * This is a convenience method for getting the #GVolume and then
  * using that object to get the #GDrive.
  * 
- * Returns: a #GDrive or %NULL if @mount is not associated with a volume or a drive.
+ * Returns: (transfer full): a #GDrive or %NULL if @mount is not associated with a volume or a drive.
  *      The returned object should be unreffed with 
  *      g_object_unref() when no longer needed.
  **/
@@ -329,8 +361,8 @@ g_mount_can_eject (GMount *mount)
  * g_mount_unmount:
  * @mount: a #GMount.
  * @flags: flags affecting the operation
- * @cancellable: optional #GCancellable object, %NULL to ignore.
- * @callback: a #GAsyncReadyCallback, or %NULL.
+ * @cancellable: (allow-none): optional #GCancellable object, %NULL to ignore.
+ * @callback: (allow-none): a #GAsyncReadyCallback, or %NULL.
  * @user_data: user data passed to @callback.
  * 
  * Unmounts a mount. This is an asynchronous operation, and is 
@@ -372,7 +404,7 @@ g_mount_unmount (GMount              *mount,
  * g_mount_unmount_finish:
  * @mount: a #GMount.
  * @result: a #GAsyncResult.
- * @error: a #GError location to store the error occuring, or %NULL to 
+ * @error: a #GError location to store the error occurring, or %NULL to 
  *     ignore.
  * 
  * Finishes unmounting a mount. If any errors occurred during the operation, 
@@ -392,12 +424,8 @@ g_mount_unmount_finish (GMount        *mount,
   g_return_val_if_fail (G_IS_MOUNT (mount), FALSE);
   g_return_val_if_fail (G_IS_ASYNC_RESULT (result), FALSE);
 
-  if (G_IS_SIMPLE_ASYNC_RESULT (result))
-    {
-      GSimpleAsyncResult *simple = G_SIMPLE_ASYNC_RESULT (result);
-      if (g_simple_async_result_propagate_error (simple, error))
-        return FALSE;
-    }
+  if (g_async_result_legacy_propagate_error (result, error))
+    return FALSE;
   
   iface = G_MOUNT_GET_IFACE (mount);
   return (* iface->unmount_finish) (mount, result, error);
@@ -408,8 +436,8 @@ g_mount_unmount_finish (GMount        *mount,
  * g_mount_eject:
  * @mount: a #GMount.
  * @flags: flags affecting the unmount if required for eject
- * @cancellable: optional #GCancellable object, %NULL to ignore.
- * @callback: a #GAsyncReadyCallback, or %NULL.
+ * @cancellable: (allow-none): optional #GCancellable object, %NULL to ignore.
+ * @callback: (allow-none): a #GAsyncReadyCallback, or %NULL.
  * @user_data: user data passed to @callback.
  * 
  * Ejects a mount. This is an asynchronous operation, and is 
@@ -451,7 +479,7 @@ g_mount_eject (GMount              *mount,
  * g_mount_eject_finish:
  * @mount: a #GMount.
  * @result: a #GAsyncResult.
- * @error: a #GError location to store the error occuring, or %NULL to 
+ * @error: a #GError location to store the error occurring, or %NULL to 
  *     ignore.
  * 
  * Finishes ejecting a mount. If any errors occurred during the operation, 
@@ -471,12 +499,8 @@ g_mount_eject_finish (GMount        *mount,
   g_return_val_if_fail (G_IS_MOUNT (mount), FALSE);
   g_return_val_if_fail (G_IS_ASYNC_RESULT (result), FALSE);
 
-  if (G_IS_SIMPLE_ASYNC_RESULT (result))
-    {
-      GSimpleAsyncResult *simple = G_SIMPLE_ASYNC_RESULT (result);
-      if (g_simple_async_result_propagate_error (simple, error))
-        return FALSE;
-    }
+  if (g_async_result_legacy_propagate_error (result, error))
+    return FALSE;
   
   iface = G_MOUNT_GET_IFACE (mount);
   return (* iface->eject_finish) (mount, result, error);
@@ -486,9 +510,10 @@ g_mount_eject_finish (GMount        *mount,
  * g_mount_unmount_with_operation:
  * @mount: a #GMount.
  * @flags: flags affecting the operation
- * @mount_operation: a #GMountOperation or %NULL to avoid user interaction.
- * @cancellable: optional #GCancellable object, %NULL to ignore.
- * @callback: a #GAsyncReadyCallback, or %NULL.
+ * @mount_operation: (allow-none): a #GMountOperation or %NULL to avoid
+ *     user interaction.
+ * @cancellable: (allow-none): optional #GCancellable object, %NULL to ignore.
+ * @callback: (allow-none): a #GAsyncReadyCallback, or %NULL.
  * @user_data: user data passed to @callback.
  *
  * Unmounts a mount. This is an asynchronous operation, and is
@@ -534,7 +559,7 @@ g_mount_unmount_with_operation (GMount              *mount,
  * g_mount_unmount_with_operation_finish:
  * @mount: a #GMount.
  * @result: a #GAsyncResult.
- * @error: a #GError location to store the error occuring, or %NULL to
+ * @error: a #GError location to store the error occurring, or %NULL to
  *     ignore.
  *
  * Finishes unmounting a mount. If any errors occurred during the operation,
@@ -554,12 +579,8 @@ g_mount_unmount_with_operation_finish (GMount        *mount,
   g_return_val_if_fail (G_IS_MOUNT (mount), FALSE);
   g_return_val_if_fail (G_IS_ASYNC_RESULT (result), FALSE);
 
-  if (G_IS_SIMPLE_ASYNC_RESULT (result))
-    {
-      GSimpleAsyncResult *simple = G_SIMPLE_ASYNC_RESULT (result);
-      if (g_simple_async_result_propagate_error (simple, error))
-        return FALSE;
-    }
+  if (g_async_result_legacy_propagate_error (result, error))
+    return FALSE;
 
   iface = G_MOUNT_GET_IFACE (mount);
   if (iface->unmount_with_operation_finish != NULL)
@@ -573,9 +594,10 @@ g_mount_unmount_with_operation_finish (GMount        *mount,
  * g_mount_eject_with_operation:
  * @mount: a #GMount.
  * @flags: flags affecting the unmount if required for eject
- * @mount_operation: a #GMountOperation or %NULL to avoid user interaction.
- * @cancellable: optional #GCancellable object, %NULL to ignore.
- * @callback: a #GAsyncReadyCallback, or %NULL.
+ * @mount_operation: (allow-none): a #GMountOperation or %NULL to avoid
+ *     user interaction.
+ * @cancellable: (allow-none): optional #GCancellable object, %NULL to ignore.
+ * @callback: (allow-none): a #GAsyncReadyCallback, or %NULL.
  * @user_data: user data passed to @callback.
  *
  * Ejects a mount. This is an asynchronous operation, and is
@@ -620,7 +642,7 @@ g_mount_eject_with_operation (GMount              *mount,
  * g_mount_eject_with_operation_finish:
  * @mount: a #GMount.
  * @result: a #GAsyncResult.
- * @error: a #GError location to store the error occuring, or %NULL to
+ * @error: a #GError location to store the error occurring, or %NULL to
  *     ignore.
  *
  * Finishes ejecting a mount. If any errors occurred during the operation,
@@ -640,12 +662,8 @@ g_mount_eject_with_operation_finish (GMount        *mount,
   g_return_val_if_fail (G_IS_MOUNT (mount), FALSE);
   g_return_val_if_fail (G_IS_ASYNC_RESULT (result), FALSE);
 
-  if (G_IS_SIMPLE_ASYNC_RESULT (result))
-    {
-      GSimpleAsyncResult *simple = G_SIMPLE_ASYNC_RESULT (result);
-      if (g_simple_async_result_propagate_error (simple, error))
-        return FALSE;
-    }
+  if (g_async_result_legacy_propagate_error (result, error))
+    return FALSE;
 
   iface = G_MOUNT_GET_IFACE (mount);
   if (iface->eject_with_operation_finish != NULL)
@@ -658,9 +676,10 @@ g_mount_eject_with_operation_finish (GMount        *mount,
  * g_mount_remount:
  * @mount: a #GMount.
  * @flags: flags affecting the operation
- * @mount_operation: a #GMountOperation or %NULL to avoid user interaction.
- * @cancellable: optional #GCancellable object, %NULL to ignore.
- * @callback: a #GAsyncReadyCallback, or %NULL.
+ * @mount_operation: (allow-none): a #GMountOperation or %NULL to avoid
+ *     user interaction.
+ * @cancellable: (allow-none): optional #GCancellable object, %NULL to ignore.
+ * @callback: (allow-none): a #GAsyncReadyCallback, or %NULL.
  * @user_data: user data passed to @callback.
  * 
  * Remounts a mount. This is an asynchronous operation, and is 
@@ -707,7 +726,7 @@ g_mount_remount (GMount              *mount,
  * g_mount_remount_finish:
  * @mount: a #GMount.
  * @result: a #GAsyncResult.
- * @error: a #GError location to store the error occuring, or %NULL to 
+ * @error: a #GError location to store the error occurring, or %NULL to 
  *     ignore.
  * 
  * Finishes remounting a mount. If any errors occurred during the operation, 
@@ -725,12 +744,8 @@ g_mount_remount_finish (GMount        *mount,
   g_return_val_if_fail (G_IS_MOUNT (mount), FALSE);
   g_return_val_if_fail (G_IS_ASYNC_RESULT (result), FALSE);
 
-  if (G_IS_SIMPLE_ASYNC_RESULT (result))
-    {
-      GSimpleAsyncResult *simple = G_SIMPLE_ASYNC_RESULT (result);
-      if (g_simple_async_result_propagate_error (simple, error))
-        return FALSE;
-    }
+  if (g_async_result_legacy_propagate_error (result, error))
+    return FALSE;
   
   iface = G_MOUNT_GET_IFACE (mount);
   return (* iface->remount_finish) (mount, result, error);
@@ -741,7 +756,7 @@ g_mount_remount_finish (GMount        *mount,
  * @mount: a #GMount
  * @force_rescan: Whether to force a rescan of the content. 
  *     Otherwise a cached result will be used if available
- * @cancellable: optional #GCancellable object, %NULL to ignore
+ * @cancellable: (allow-none): optional #GCancellable object, %NULL to ignore
  * @callback: a #GAsyncReadyCallback
  * @user_data: user data passed to @callback
  * 
@@ -791,16 +806,16 @@ g_mount_guess_content_type (GMount              *mount,
  * g_mount_guess_content_type_finish:
  * @mount: a #GMount
  * @result: a #GAsyncResult
- * @error: a #GError location to store the error occuring, or %NULL to 
+ * @error: a #GError location to store the error occurring, or %NULL to 
  *     ignore
  * 
- * Finishes guessing content types of @mount. If any errors occured
+ * Finishes guessing content types of @mount. If any errors occurred
  * during the operation, @error will be set to contain the errors and
  * %FALSE will be returned. In particular, you may get an 
  * %G_IO_ERROR_NOT_SUPPORTED if the mount does not support content 
  * guessing.
  * 
- * Returns: a %NULL-terminated array of content types or %NULL on error. 
+ * Returns: (transfer full) (element-type utf8): a %NULL-terminated array of content types or %NULL on error. 
  *     Caller should free this array with g_strfreev() when done with it.
  *
  * Since: 2.18
@@ -815,12 +830,8 @@ g_mount_guess_content_type_finish (GMount        *mount,
   g_return_val_if_fail (G_IS_MOUNT (mount), NULL);
   g_return_val_if_fail (G_IS_ASYNC_RESULT (result), NULL);
 
-  if (G_IS_SIMPLE_ASYNC_RESULT (result))
-    {
-      GSimpleAsyncResult *simple = G_SIMPLE_ASYNC_RESULT (result);
-      if (g_simple_async_result_propagate_error (simple, error))
-        return NULL;
-    }
+  if (g_async_result_legacy_propagate_error (result, error))
+    return NULL;
   
   iface = G_MOUNT_GET_IFACE (mount);
   return (* iface->guess_content_type_finish) (mount, result, error);
@@ -831,8 +842,8 @@ g_mount_guess_content_type_finish (GMount        *mount,
  * @mount: a #GMount
  * @force_rescan: Whether to force a rescan of the content.
  *     Otherwise a cached result will be used if available
- * @cancellable: optional #GCancellable object, %NULL to ignore
- * @error: a #GError location to store the error occuring, or %NULL to
+ * @cancellable: (allow-none): optional #GCancellable object, %NULL to ignore
+ * @error: a #GError location to store the error occurring, or %NULL to
  *     ignore
  *
  * Tries to guess the type of content stored on @mount. Returns one or
@@ -844,7 +855,7 @@ g_mount_guess_content_type_finish (GMount        *mount,
  * This is an synchronous operation and as such may block doing IO;
  * see g_mount_guess_content_type() for the asynchronous version.
  *
- * Returns: a %NULL-terminated array of content types or %NULL on error.
+ * Returns: (transfer full) (element-type utf8): a %NULL-terminated array of content types or %NULL on error.
  *     Caller should free this array with g_strfreev() when done with it.
  *
  * Since: 2.18
@@ -1008,4 +1019,29 @@ g_mount_unshadow (GMount *mount)
   if (priv->shadow_ref_count < 0)
     g_warning ("Shadow ref count on GMount is negative");
   G_UNLOCK (priv_lock);
+}
+
+/**
+ * g_mount_get_sort_key:
+ * @mount: A #GMount.
+ *
+ * Gets the sort key for @mount, if any.
+ *
+ * Returns: Sorting key for @mount or %NULL if no such key is available.
+ *
+ * Since: 2.32
+ */
+const gchar *
+g_mount_get_sort_key (GMount  *mount)
+{
+  const gchar *ret = NULL;
+  GMountIface *iface;
+
+  g_return_val_if_fail (G_IS_MOUNT (mount), NULL);
+
+  iface = G_MOUNT_GET_IFACE (mount);
+  if (iface->get_sort_key != NULL)
+    ret = iface->get_sort_key (mount);
+
+  return ret;
 }

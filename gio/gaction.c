@@ -28,7 +28,7 @@ G_DEFINE_INTERFACE (GAction, g_action, G_TYPE_OBJECT)
 /**
  * SECTION:gaction
  * @title: GAction
- * @short_description: an action
+ * @short_description: An action interface
  *
  * #GAction represents a single named action.
  *
@@ -39,7 +39,7 @@ G_DEFINE_INTERFACE (GAction, g_action, G_TYPE_OBJECT)
  * parameter type (which is given at construction time).
  *
  * An action may optionally have a state, in which case the state may be
- * set with g_action_set_state().  This call takes a #GVariant.  The
+ * set with g_action_change_state().  This call takes a #GVariant.  The
  * correct type for the state is determined by a static state type
  * (which is given at construction time).
  *
@@ -54,12 +54,29 @@ G_DEFINE_INTERFACE (GAction, g_action, G_TYPE_OBJECT)
  * name of the action, the parameter type, the enabled state, the
  * optional state type and the state and emitting the appropriate
  * signals when these change.  The implementor responsible for filtering
- * calls to g_action_activate() and g_action_set_state() for type safety
- * and for the state being enabled.
+ * calls to g_action_activate() and g_action_change_state() for type
+ * safety and for the state being enabled.
  *
  * Probably the only useful thing to do with a #GAction is to put it
  * inside of a #GSimpleActionGroup.
  **/
+
+/**
+ * GActionInterface:
+ * @get_name: the virtual function pointer for g_action_get_name()
+ * @get_parameter_type: the virtual function pointer for g_action_get_parameter_type()
+ * @get_state_type: the virtual function pointer for g_action_get_state_type()
+ * @get_state_hint: the virtual function pointer for g_action_get_state_hint()
+ * @get_enabled: the virtual function pointer for g_action_get_enabled()
+ * @get_state: the virtual function pointer for g_action_get_state()
+ * @change_state: the virtual function pointer for g_action_change_state()
+ * @activate: the virtual function pointer for g_action_activate().  Note that #GAction does not have an
+ *            'activate' signal but that implementations of it may have one.
+ *
+ * The virtual function table for #GAction.
+ *
+ * Since: 2.28
+ */
 
 void
 g_action_default_init (GActionInterface *iface)
@@ -70,7 +87,7 @@ g_action_default_init (GActionInterface *iface)
    * The name of the action.  This is mostly meaningful for identifying
    * the action once it has been added to a #GActionGroup.
    *
-   * Since: 2.26
+   * Since: 2.28
    **/
   g_object_interface_install_property (iface,
                                        g_param_spec_string ("name",
@@ -86,7 +103,7 @@ g_action_default_init (GActionInterface *iface)
    * The type of the parameter that must be given when activating the
    * action.
    *
-   * Since: 2.26
+   * Since: 2.28
    **/
   g_object_interface_install_property (iface,
                                        g_param_spec_boxed ("parameter-type",
@@ -102,9 +119,9 @@ g_action_default_init (GActionInterface *iface)
    * If @action is currently enabled.
    *
    * If the action is disabled then calls to g_action_activate() and
-   * g_action_set_state() have no effect.
+   * g_action_change_state() have no effect.
    *
-   * Since: 2.26
+   * Since: 2.28
    **/
   g_object_interface_install_property (iface,
                                        g_param_spec_boolean ("enabled",
@@ -120,7 +137,7 @@ g_action_default_init (GActionInterface *iface)
    * The #GVariantType of the state that the action has, or %NULL if the
    * action is stateless.
    *
-   * Since: 2.26
+   * Since: 2.28
    **/
   g_object_interface_install_property (iface,
                                        g_param_spec_boxed ("state-type",
@@ -135,7 +152,7 @@ g_action_default_init (GActionInterface *iface)
    *
    * The state of the action, or %NULL if the action is stateless.
    *
-   * Since: 2.26
+   * Since: 2.28
    **/
   g_object_interface_install_property (iface,
                                        g_param_spec_variant ("state",
@@ -143,13 +160,12 @@ g_action_default_init (GActionInterface *iface)
                                                              P_("The state the action is in"),
                                                              G_VARIANT_TYPE_ANY,
                                                              NULL,
-                                                             G_PARAM_CONSTRUCT |
-                                                             G_PARAM_READWRITE |
+                                                             G_PARAM_READABLE |
                                                              G_PARAM_STATIC_STRINGS));
 }
 
 /**
- * g_action_set_state:
+ * g_action_change_state:
  * @action: a #GAction
  * @value: the new state
  *
@@ -164,11 +180,11 @@ g_action_default_init (GActionInterface *iface)
  *
  * If the @value GVariant is floating, it is consumed.
  *
- * Since: 2.26
+ * Since: 2.30
  **/
 void
-g_action_set_state (GAction  *action,
-                    GVariant *value)
+g_action_change_state (GAction  *action,
+                       GVariant *value)
 {
   const GVariantType *state_type;
 
@@ -181,7 +197,7 @@ g_action_set_state (GAction  *action,
   g_variant_ref_sink (value);
 
   G_ACTION_GET_IFACE (action)
-    ->set_state (action, value);
+    ->change_state (action, value);
 
   g_variant_unref (value);
 }
@@ -199,9 +215,9 @@ g_action_set_state (GAction  *action,
  * The return value (if non-%NULL) should be freed with
  * g_variant_unref() when it is no longer required.
  *
- * Returns: (allow-none): the current state of the action
+ * Returns: (transfer full): the current state of the action
  *
- * Since: 2.26
+ * Since: 2.28
  **/
 GVariant *
 g_action_get_state (GAction *action)
@@ -220,7 +236,7 @@ g_action_get_state (GAction *action)
  *
  * Returns: the name of the action
  *
- * Since: 2.26
+ * Since: 2.28
  **/
 const gchar *
 g_action_get_name (GAction *action)
@@ -246,7 +262,7 @@ g_action_get_name (GAction *action)
  *
  * Returns: (allow-none): the parameter type
  *
- * Since: 2.26
+ * Since: 2.28
  **/
 const GVariantType *
 g_action_get_parameter_type (GAction *action)
@@ -263,20 +279,20 @@ g_action_get_parameter_type (GAction *action)
  *
  * Queries the type of the state of @action.
  *
- * If the action is stateful (ie: was created with
- * g_action_new_stateful()) then this function returns the #GVariantType
- * of the state.  This is the type of the initial value given as the
- * state.  All calls to g_action_set_state() must give a #GVariant of
- * this type and g_action_get_state() will return a #GVariant of the
- * same type.
+ * If the action is stateful (e.g. created with
+ * g_simple_action_new_stateful()) then this function returns the
+ * #GVariantType of the state.  This is the type of the initial value
+ * given as the state. All calls to g_action_change_state() must give a
+ * #GVariant of this type and g_action_get_state() will return a
+ * #GVariant of the same type.
  *
- * If the action is not stateful (ie: created with g_action_new()) then
- * this function will return %NULL.  In that case, g_action_get_state()
- * will return %NULL and you must not call g_action_set_state().
+ * If the action is not stateful (e.g. created with g_simple_action_new())
+ * then this function will return %NULL. In that case, g_action_get_state()
+ * will return %NULL and you must not call g_action_change_state().
  *
  * Returns: (allow-none): the state type, if the action is stateful
  *
- * Since: 2.26
+ * Since: 2.28
  **/
 const GVariantType *
 g_action_get_state_type (GAction *action)
@@ -310,9 +326,9 @@ g_action_get_state_type (GAction *action)
  * The return value (if non-%NULL) should be freed with
  * g_variant_unref() when it is no longer required.
  *
- * Returns: (allow-none): the state range hint
+ * Returns: (transfer full): the state range hint
  *
- * Since: 2.26
+ * Since: 2.28
  **/
 GVariant *
 g_action_get_state_hint (GAction *action)
@@ -334,7 +350,7 @@ g_action_get_state_hint (GAction *action)
  *
  * Returns: whether the action is enabled
  *
- * Since: 2.26
+ * Since: 2.28
  **/
 gboolean
 g_action_get_enabled (GAction *action)
@@ -356,7 +372,7 @@ g_action_get_enabled (GAction *action)
  * the parameter type given at construction time).  If the parameter
  * type was %NULL then @parameter must also be %NULL.
  *
- * Since: 2.26
+ * Since: 2.28
  **/
 void
 g_action_activate (GAction  *action,

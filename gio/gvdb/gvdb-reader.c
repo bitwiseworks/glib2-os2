@@ -30,15 +30,18 @@ struct _GvdbTable {
   const gchar *data;
   gsize size;
 
-  GMappedFile *mapped;
+  gpointer user_data;
+  GvdbRefFunc ref_user_data;
+  GDestroyNotify unref_user_data;
+
   gboolean byteswapped;
   gboolean trusted;
 
-  const guint32 *bloom_words;
+  const guint32_le *bloom_words;
   guint32 n_bloom_words;
   guint bloom_shift;
 
-  const guint32 *hash_buckets;
+  const guint32_le *hash_buckets;
   guint32 n_buckets;
 
   struct gvdb_hash_item *hash_items;
@@ -87,7 +90,6 @@ gvdb_table_setup_root (GvdbTable                 *file,
 {
   const struct gvdb_hash_header *header;
   guint32 n_bloom_words;
-  guint32 bloom_shift;
   guint32 n_buckets;
   gsize size;
 
@@ -100,7 +102,6 @@ gvdb_table_setup_root (GvdbTable                 *file,
 
   n_bloom_words = guint32_from_le (header->n_bloom_words);
   n_buckets = guint32_from_le (header->n_buckets);
-  bloom_shift = n_bloom_words >> 27;
   n_bloom_words &= (1u << 27) - 1;
 
   if G_UNLIKELY (n_bloom_words * sizeof (guint32_le) > size)
@@ -125,43 +126,26 @@ gvdb_table_setup_root (GvdbTable                 *file,
   file->n_hash_items = size / sizeof (struct gvdb_hash_item);
 }
 
-/**
- * gvdb_table_new:
- * @filename: the path to the hash file
- * @trusted: if the contents of @filename are trusted
- * @error: %NULL, or a pointer to a %NULL #GError
- * @returns: a new #GvdbTable
- *
- * Creates a new #GvdbTable from the contents of the file found at
- * @filename.
- *
- * The only time this function fails is if the file can not be opened.
- * In that case, the #GError that is returned will be an error from
- * g_mapped_file_new().
- *
- * An empty or otherwise corrupted file is considered to be a valid
- * #GvdbTable with no entries.
- *
- * You should call gvdb_table_unref() on the return result when you no
- * longer require it.
- **/
-GvdbTable *
-gvdb_table_new (const gchar  *filename,
-                gboolean      trusted,
-                GError      **error)
+static GvdbTable *
+new_from_data (const void    *data,
+	       gsize          data_len,
+	       gboolean       trusted,
+	       gpointer       user_data,
+	       GvdbRefFunc    ref,
+	       GDestroyNotify unref,
+	       const char    *filename,
+	       GError       **error)
 {
-  GMappedFile *mapped;
   GvdbTable *file;
 
-  if ((mapped = g_mapped_file_new (filename, FALSE, error)) == NULL)
-    return NULL;
-
   file = g_slice_new0 (GvdbTable);
-  file->data = g_mapped_file_get_contents (mapped);
-  file->size = g_mapped_file_get_length (mapped);
+  file->data = data;
+  file->size = data_len;
   file->trusted = trusted;
-  file->mapped = mapped;
   file->ref_count = 1;
+  file->ref_user_data = ref;
+  file->unref_user_data = unref;
+  file->user_data = user_data;
 
   if (sizeof (struct gvdb_header) <= file->size)
     {
@@ -179,10 +163,15 @@ gvdb_table_new (const gchar  *filename,
 
       else
         {
-          g_set_error (error, G_FILE_ERROR, G_FILE_ERROR_INVAL,
-                       "%s: invalid header", filename);
+	  if (filename)
+	    g_set_error (error, G_FILE_ERROR, G_FILE_ERROR_INVAL,
+			 "%s: invalid header", filename);
+	  else
+	    g_set_error (error, G_FILE_ERROR, G_FILE_ERROR_INVAL,
+			 "invalid gvdb header");
           g_slice_free (GvdbTable, file);
-          g_mapped_file_unref (mapped);
+	  if (unref)
+	    unref (user_data);
 
           return NULL;
         }
@@ -191,6 +180,80 @@ gvdb_table_new (const gchar  *filename,
     }
 
   return file;
+}
+
+/**
+ * gvdb_table_new:
+ * @filename: the path to the hash file
+ * @trusted: if the contents of @filename are trusted
+ * @error: %NULL, or a pointer to a %NULL #GError
+ * @returns: a new #GvdbTable
+ *
+ * Creates a new #GvdbTable from the contents of the file found at
+ * @filename.
+ *
+ * The only time this function fails is if the file cannot be opened.
+ * In that case, the #GError that is returned will be an error from
+ * g_mapped_file_new().
+ *
+ * An empty or otherwise corrupted file is considered to be a valid
+ * #GvdbTable with no entries.
+ *
+ * You should call gvdb_table_unref() on the return result when you no
+ * longer require it.
+ **/
+GvdbTable *
+gvdb_table_new (const gchar  *filename,
+                gboolean      trusted,
+                GError      **error)
+{
+  GMappedFile *mapped;
+
+  if ((mapped = g_mapped_file_new (filename, FALSE, error)) == NULL)
+    return NULL;
+
+  return new_from_data (g_mapped_file_get_contents (mapped),
+			g_mapped_file_get_length (mapped),
+			trusted,
+			mapped,
+			(GvdbRefFunc)g_mapped_file_ref,
+			(GDestroyNotify)g_mapped_file_unref,
+			filename,
+			error);
+}
+
+/**
+ * gvdb_table_new_from_data:
+ * @data: the data
+ * @data_len: the length of @data in bytes
+ * @trusted: if the contents of @data are trusted
+ * @user_data: User supplied data that owns @data
+ * @ref: Ref function for @user_data
+ * @unref: Unref function for @user_data
+ * @returns: a new #GvdbTable
+ *
+ * Creates a new #GvdbTable from the data in @data.
+ *
+ * An empty or otherwise corrupted data is considered to be a valid
+ * #GvdbTable with no entries.
+ *
+ * You should call gvdb_table_unref() on the return result when you no
+ * longer require it.
+ **/
+GvdbTable *
+gvdb_table_new_from_data (const void    *data,
+			  gsize          data_len,
+			  gboolean       trusted,
+			  gpointer       user_data,
+			  GvdbRefFunc    ref,
+			  GDestroyNotify unref,
+			  GError        **error)
+{
+  return new_from_data (data, data_len,
+			trusted,
+			user_data, ref, unref,
+			NULL,
+			error);
 }
 
 static gboolean
@@ -206,7 +269,7 @@ gvdb_table_bloom_filter (GvdbTable *file,
   mask = 1 << (hash_value & 31);
   mask |= 1 << ((hash_value >> file->bloom_shift) & 31);
 
-  return (file->bloom_words[word] & mask) == mask;
+  return (guint32_from_le (file->bloom_words[word]) & mask) == mask;
 }
 
 static gboolean
@@ -230,7 +293,7 @@ gvdb_table_check_name (GvdbTable             *file,
     return FALSE;
 
   parent = guint32_from_le (item->parent);
-  if (key_length == 0 && parent == -1)
+  if (key_length == 0 && parent == 0xffffffffu)
     return TRUE;
 
   if G_LIKELY (parent < file->n_hash_items && this_size > 0)
@@ -256,16 +319,16 @@ gvdb_table_lookup (GvdbTable   *file,
     return NULL;
 
   for (key_length = 0; key[key_length]; key_length++)
-    hash_value = (hash_value * 33) + key[key_length];
+    hash_value = (hash_value * 33) + ((signed char *) key)[key_length];
 
   if (!gvdb_table_bloom_filter (file, hash_value))
     return NULL;
 
   bucket = hash_value % file->n_buckets;
-  itemno = file->hash_buckets[bucket];
+  itemno = guint32_from_le (file->hash_buckets[bucket]);
 
   if (bucket == file->n_buckets - 1 ||
-      (lastno = file->hash_buckets[bucket + 1]) > file->n_hash_items)
+      (lastno = guint32_from_le(file->hash_buckets[bucket + 1])) > file->n_hash_items)
     lastno = file->n_hash_items;
 
   while G_LIKELY (itemno < lastno)
@@ -340,7 +403,7 @@ gvdb_table_list (GvdbTable   *file,
   const guint32_le *list;
   gchar **strv;
   guint length;
-  gint i;
+  guint i;
 
   if ((item = gvdb_table_lookup (file, key, 'L')) == NULL)
     return NULL;
@@ -410,8 +473,8 @@ gvdb_table_value_from_item (GvdbTable                   *table,
 
   variant = g_variant_new_from_data (G_VARIANT_TYPE_VARIANT,
                                      data, size, table->trusted,
-                                     (GDestroyNotify) g_mapped_file_unref,
-                                     g_mapped_file_ref (table->mapped));
+                                     table->unref_user_data,
+                                     table->ref_user_data ? table->ref_user_data (table->user_data) : table->user_data);
   value = g_variant_get_variant (variant);
   g_variant_unref (variant);
 
@@ -438,11 +501,46 @@ gvdb_table_get_value (GvdbTable    *file,
                       const gchar  *key)
 {
   const struct gvdb_hash_item *item;
+  GVariant *value;
 
   if ((item = gvdb_table_lookup (file, key, 'v')) == NULL)
     return NULL;
 
-  return gvdb_table_value_from_item (file, item);
+  value = gvdb_table_value_from_item (file, item);
+
+  if (value && file->byteswapped)
+    {
+      GVariant *tmp;
+
+      tmp = g_variant_byteswap (value);
+      g_variant_unref (value);
+      value = tmp;
+    }
+
+  return value;
+}
+
+/**
+ * gvdb_table_get_raw_value:
+ * @table: a #GvdbTable
+ * @key: a string
+ * @returns: a #GVariant, or %NULL
+ *
+ * Looks up a value named @key in @file.
+ *
+ * This call is equivalent to gvdb_table_get_value() except that it
+ * never byteswaps the value.
+ **/
+GVariant *
+gvdb_table_get_raw_value (GvdbTable   *table,
+                          const gchar *key)
+{
+  const struct gvdb_hash_item *item;
+
+  if ((item = gvdb_table_lookup (table, key, 'v')) == NULL)
+    return NULL;
+
+  return gvdb_table_value_from_item (table, item);
 }
 
 /**
@@ -477,7 +575,9 @@ gvdb_table_get_table (GvdbTable   *file,
     return NULL;
 
   new = g_slice_new0 (GvdbTable);
-  new->mapped = g_mapped_file_ref (file->mapped);
+  new->user_data = file->ref_user_data ? file->ref_user_data (file->user_data) : file->user_data;
+  new->ref_user_data = file->ref_user_data;
+  new->unref_user_data = file->unref_user_data;
   new->byteswapped = file->byteswapped;
   new->trusted = file->trusted;
   new->data = file->data;
@@ -517,11 +617,53 @@ gvdb_table_unref (GvdbTable *file)
 {
   if (g_atomic_int_dec_and_test (&file->ref_count))
     {
-      g_mapped_file_unref (file->mapped);
+      if (file->unref_user_data)
+	file->unref_user_data (file->user_data);
       g_slice_free (GvdbTable, file);
     }
 }
 
+/**
+ * gvdb_table_is_valid:
+ * @table: a #GvdbTable
+ * @returns: %TRUE if @table is still valid
+ *
+ * Checks if the table is still valid.
+ *
+ * An on-disk GVDB can be marked as invalid.  This happens when the file
+ * has been replaced.  The appropriate action is typically to reopen the
+ * file.
+ **/
+gboolean
+gvdb_table_is_valid (GvdbTable *table)
+{
+  return !!*table->data;
+}
+
+/**
+ * gvdb_table_walk:
+ * @table: a #GvdbTable
+ * @key: a key corresponding to a list
+ * @open_func: the #GvdbWalkOpenFunc
+ * @value_func: the #GvdbWalkValueFunc
+ * @close_func: the #GvdbWalkCloseFunc
+ * @user_data: data to pass to the callbacks
+ *
+ * Looks up the list at @key and iterate over the items in it.
+ *
+ * First, @open_func is called to signal that we are starting to iterate over
+ * the list.  Then the list is iterated.  When all items in the list have been
+ * iterated over, the @close_func is called.
+ *
+ * When iterating, if a given item in the list is a value then @value_func is
+ * called.
+ *
+ * If a given item in the list is itself a list then @open_func is called.  If
+ * that function returns %TRUE then the walk begins iterating the items in the
+ * sublist, until there are no more items, at which point a matching
+ * @close_func call is made.  If @open_func returns %FALSE then no iteration of
+ * the sublist occurs and no corresponding @close_func call is made.
+ **/
 void
 gvdb_table_walk (GvdbTable         *table,
                  const gchar       *key,
@@ -533,16 +675,18 @@ gvdb_table_walk (GvdbTable         *table,
   const struct gvdb_hash_item *item;
   const guint32_le *pointers[64];
   const guint32_le *enders[64];
+  gsize name_lengths[64];
   gint index = 0;
 
   item = gvdb_table_lookup (table, key, 'L');
+  name_lengths[0] = 0;
   pointers[0] = NULL;
   enders[0] = NULL;
   goto start_here;
 
   while (index)
     {
-      close_func (user_data);
+      close_func (name_lengths[index], user_data);
       index--;
 
       while (pointers[index] < enders[index])
@@ -560,7 +704,7 @@ gvdb_table_walk (GvdbTable         *table,
                 {
                   if (open_func (name, name_len, user_data))
                     {
-                      guint length;
+                      guint length = 0;
 
                       index++;
                       g_assert (index < 64);
@@ -569,6 +713,7 @@ gvdb_table_walk (GvdbTable         *table,
                                                  &pointers[index],
                                                  &length);
                       enders[index] = pointers[index] + length;
+                      name_lengths[index] = name_len;
                     }
                 }
               else if (item->type == 'v')
@@ -579,6 +724,15 @@ gvdb_table_walk (GvdbTable         *table,
 
                   if (value != NULL)
                     {
+                      if (table->byteswapped)
+                        {
+                          GVariant *tmp;
+
+                          tmp = g_variant_byteswap (value);
+                          g_variant_unref (value);
+                          value = tmp;
+                        }
+
                       value_func (name, name_len, value, user_data);
                       g_variant_unref (value);
                     }

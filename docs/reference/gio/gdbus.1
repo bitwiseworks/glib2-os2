@@ -1,13 +1,22 @@
 '\" t
 .\"     Title: gdbus
-.\"    Author: [see the "AUTHOR" section]
-.\" Generator: DocBook XSL Stylesheets v1.75.2 <http://docbook.sf.net/>
-.\"      Date: 08/30/2010
+.\"    Author: David Zeuthen <zeuthen@gmail.com>
+.\" Generator: DocBook XSL Stylesheets v1.77.1 <http://docbook.sf.net/>
+.\"      Date: 09/03/2012
 .\"    Manual: User Commands
-.\"    Source: User Commands
+.\"    Source: GIO
 .\"  Language: English
 .\"
-.TH "GDBUS" "1" "08/30/2010" "User Commands" "User Commands"
+.TH "GDBUS" "1" "" "GIO" "User Commands"
+.\" -----------------------------------------------------------------
+.\" * Define some portability stuff
+.\" -----------------------------------------------------------------
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.\" http://bugs.debian.org/507673
+.\" http://lists.gnu.org/archive/html/groff/2009-02/msg00013.html
+.\" ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
 .\" -----------------------------------------------------------------
 .\" * set default formatting
 .\" -----------------------------------------------------------------
@@ -19,28 +28,36 @@
 .\" * MAIN CONTENT STARTS HERE *
 .\" -----------------------------------------------------------------
 .SH "NAME"
-gdbus \- Introspect and call remote objects
+gdbus \- Tool for working with D\-Bus objects
 .SH "SYNOPSIS"
 .HP \w'\fBgdbus\fR\ 'u
-\fBgdbus\fR introspect [\-\-system | \-\-session | \-\-address\ \fIaddress\fR] \-\-dest\ \fIbus_name\fR \-\-object\-path\ \fI/path/to/object\fR \-\-xml
+\fBgdbus\fR introspect [\-\-system | \-\-session | \-\-address\ \fIaddress\fR] \-\-dest\ \fIbus_name\fR \-\-object\-path\ \fI/path/to/object\fR [\-\-xml] [\-\-recurse] [\-\-only\-properties]
 .HP \w'\fBgdbus\fR\ 'u
 \fBgdbus\fR monitor [\-\-system | \-\-session | \-\-address\ \fIaddress\fR] \-\-dest\ \fIbus_name\fR [\-\-object\-path\ \fI/path/to/object\fR]
 .HP \w'\fBgdbus\fR\ 'u
-\fBgdbus\fR call [\-\-system | \-\-session | \-\-address\ \fIaddress\fR] \-\-dest\ \fIbus_name\fR \-\-object\-path\ \fI/path/to/object\fR \-\-method\ \fIorg\&.project\&.InterfaceName\&.MethodName\fR ARG1 ARG2...
+\fBgdbus\fR call [\-\-system | \-\-session | \-\-address\ \fIaddress\fR] \-\-dest\ \fIbus_name\fR \-\-object\-path\ \fI/path/to/object\fR \-\-method\ \fIorg\&.project\&.InterfaceName\&.MethodName\fR [\-\-timeout\ \fIseconds\fR] ARG1 ARG2...
+.HP \w'\fBgdbus\fR\ 'u
+\fBgdbus\fR emit [\-\-system | \-\-session | \-\-address\ \fIaddress\fR] \-\-object\-path\ \fI/path/to/object\fR \-\-signal\ \fIorg\&.project\&.InterfaceName\&.SignalName\fR [\-\-dest\ \fIunique_bus_name\fR] ARG1 ARG2...
 .HP \w'\fBgdbus\fR\ 'u
 \fBgdbus\fR help
 .SH "DESCRIPTION"
 .PP
 
 \fBgdbus\fR
-offers a simple commandline utility for introspecting and calling methods on remote objects\&.
-.SS "Commands"
+is a simple tool for working with D\-Bus objects\&.
+.SH "COMMANDS"
 .PP
 \fBintrospect\fR
 .RS 4
 Prints out interfaces and property values for a remote object\&. For this to work, the owner of the object needs to implement the
 org\&.freedesktop\&.DBus\&.Introspectable
-interface\&.
+interface\&. If the
+\fB\-\-xml\fR
+option is used, the returned introspection XML is printed, otherwise a parsed pretty representation is printed\&. The
+\fB\-\-recurse\fR
+option can be used to introspect children (and their children and so on) and the
+\fB\-\-only\-properties\fR
+option can be used to only print the interfaces with properties\&.
 .RE
 .PP
 \fBmonitor\fR
@@ -56,6 +73,13 @@ Invokes a method on a remote object\&. Each argument to pass to the method must 
 except that strings do not need explicit quotes\&. The return values are printed out as serialized
 \fBGVariant\fR
 values\&.
+.RE
+.PP
+\fBemit\fR
+.RS 4
+Emits a signal\&. Each argument to include in the signal must be specified as a serialized
+\fBGVariant\fR
+except that strings do not need explicit quotes\&.
 .RE
 .PP
 \fBhelp\fR
@@ -101,7 +125,7 @@ node /org/freedesktop/NetworkManager/Devices/0 {
     properties:
       readonly b Carrier = false;
       readonly u Speed = 0;
-      readonly s HwAddress = \'00:1D:72:88:BE:97\';
+      readonly s HwAddress = \*(Aq00:1D:72:88:BE:97\*(Aq;
   };
   interface org\&.freedesktop\&.NetworkManager\&.Device {
     methods:
@@ -113,15 +137,59 @@ node /org/freedesktop/NetworkManager/Devices/0 {
     properties:
       readonly u DeviceType = 1;
       readonly b Managed = true;
-      readwrite o Ip6Config = \'/\';
-      readwrite o Dhcp4Config = \'/\';
-      readwrite o Ip4Config = \'/\';
+      readwrite o Ip6Config = \*(Aq/\*(Aq;
+      readwrite o Dhcp4Config = \*(Aq/\*(Aq;
+      readwrite o Ip4Config = \*(Aq/\*(Aq;
       readonly u State = 2;
       readwrite u Ip4Address = 0;
       readonly u Capabilities = 3;
-      readonly s Driver = \'e1000e\';
-      readwrite s Interface = \'eth0\';
-      readonly s Udi = \'/sys/devices/pci0000:00/0000:00:19\&.0/net/eth0\';
+      readonly s Driver = \*(Aqe1000e\*(Aq;
+      readwrite s Interface = \*(Aqeth0\*(Aq;
+      readonly s Udi = \*(Aq/sys/devices/pci0000:00/0000:00:19\&.0/net/eth0\*(Aq;
+  };
+};
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+The
+\fB\-\-recurse\fR
+and
+\fB\-\-only\-properties\fR
+options can be useful when wanting to inspect all objects owned by a particular process:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ gdbus introspect \-\-system \-\-dest org\&.freedesktop\&.UPower \-\-object\-path / \-\-recurse  \-\-only\-properties 
+node / {
+  node /org {
+    node /org/freedesktop {
+      node /org/freedesktop/UPower {
+        interface org\&.freedesktop\&.UPower {
+          properties:
+            readonly b IsDocked = true;
+            readonly b LidForceSleep = false;
+            readonly b LidIsPresent = false;
+            readonly b LidIsClosed = false;
+            readonly b OnLowBattery = false;
+            readonly b OnBattery = false;
+            readonly b CanHibernate = true;
+            readonly b CanSuspend = true;
+            readonly s DaemonVersion = \*(Aq0\&.9\&.10\*(Aq;
+        };
+        node /org/freedesktop/UPower/Policy {
+        };
+        node /org/freedesktop/UPower/Wakeups {
+          interface org\&.freedesktop\&.UPower\&.Wakeups {
+            properties:
+              readonly b HasCapability = true;
+          };
+        };
+      };
+    };
   };
 };
 .fi
@@ -164,7 +232,7 @@ method:
 .RE
 .\}
 .PP
-With this information, it\'s easy to use the
+With this information, it\*(Aqs easy to use the
 \fBcall\fR
 command to display a notification
 .sp
@@ -180,7 +248,7 @@ $ gdbus call \-\-session \e
              42 \e
              gtk\-dialog\-info \e
              "The Summary" \e
-             "Here\'s the body of the notification" \e
+             "Here\*(Aqs the body of the notification" \e
              [] \e
              {} \e
              5000
@@ -200,9 +268,9 @@ $ gdbus monitor \-\-system \-\-dest org\&.freedesktop\&.ConsoleKit
 Monitoring signals from all objects owned by org\&.freedesktop\&.ConsoleKit
 The name org\&.freedesktop\&.ConsoleKit is owned by :1\&.15
 /org/freedesktop/ConsoleKit/Session2: org\&.freedesktop\&.ConsoleKit\&.Session\&.ActiveChanged (false,)
-/org/freedesktop/ConsoleKit/Seat1: org\&.freedesktop\&.ConsoleKit\&.Seat\&.ActiveSessionChanged (\'\',)
+/org/freedesktop/ConsoleKit/Seat1: org\&.freedesktop\&.ConsoleKit\&.Seat\&.ActiveSessionChanged (\*(Aq\*(Aq,)
 /org/freedesktop/ConsoleKit/Session2: org\&.freedesktop\&.ConsoleKit\&.Session\&.ActiveChanged (true,)
-/org/freedesktop/ConsoleKit/Seat1: org\&.freedesktop\&.ConsoleKit\&.Seat\&.ActiveSessionChanged (\'/org/freedesktop/ConsoleKit/Session2\',)
+/org/freedesktop/ConsoleKit/Seat1: org\&.freedesktop\&.ConsoleKit\&.Seat\&.ActiveSessionChanged (\*(Aq/org/freedesktop/ConsoleKit/Session2\*(Aq,)
 .fi
 .if n \{\
 .RE
@@ -217,19 +285,38 @@ Monitoring a single object on a service:
 $ gdbus monitor \-\-system \-\-dest org\&.freedesktop\&.NetworkManager \-\-object\-path /org/freedesktop/NetworkManager/AccessPoint/4141
 Monitoring signals on object /org/freedesktop/NetworkManager/AccessPoint/4141 owned by org\&.freedesktop\&.NetworkManager
 The name org\&.freedesktop\&.NetworkManager is owned by :1\&.5
-/org/freedesktop/NetworkManager/AccessPoint/4141: org\&.freedesktop\&.NetworkManager\&.AccessPoint\&.PropertiesChanged ({\'Strength\': <byte 0x5c>},)
-/org/freedesktop/NetworkManager/AccessPoint/4141: org\&.freedesktop\&.NetworkManager\&.AccessPoint\&.PropertiesChanged ({\'Strength\': <byte 0x64>},)
-/org/freedesktop/NetworkManager/AccessPoint/4141: org\&.freedesktop\&.NetworkManager\&.AccessPoint\&.PropertiesChanged ({\'Strength\': <byte 0x5e>},)
-/org/freedesktop/NetworkManager/AccessPoint/4141: org\&.freedesktop\&.NetworkManager\&.AccessPoint\&.PropertiesChanged ({\'Strength\': <byte 0x64>},)
+/org/freedesktop/NetworkManager/AccessPoint/4141: org\&.freedesktop\&.NetworkManager\&.AccessPoint\&.PropertiesChanged ({\*(AqStrength\*(Aq: <byte 0x5c>},)
+/org/freedesktop/NetworkManager/AccessPoint/4141: org\&.freedesktop\&.NetworkManager\&.AccessPoint\&.PropertiesChanged ({\*(AqStrength\*(Aq: <byte 0x64>},)
+/org/freedesktop/NetworkManager/AccessPoint/4141: org\&.freedesktop\&.NetworkManager\&.AccessPoint\&.PropertiesChanged ({\*(AqStrength\*(Aq: <byte 0x5e>},)
+/org/freedesktop/NetworkManager/AccessPoint/4141: org\&.freedesktop\&.NetworkManager\&.AccessPoint\&.PropertiesChanged ({\*(AqStrength\*(Aq: <byte 0x64>},)
 .fi
 .if n \{\
 .RE
 .\}
-.SH "AUTHOR"
 .PP
-Written by David Zeuthen
-zeuthen@gmail\&.com
-with a lot of help from many others\&.
+Emitting a signal:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ gdbus emit \-\-session \-\-object\-path /foo \-\-signal org\&.bar\&.Foo "[\*(Aqfoo\*(Aq, \*(Aqbar\*(Aq, \*(Aqbaz\*(Aq]"
+.fi
+.if n \{\
+.RE
+.\}
+.PP
+Emitting a signal to a specific process:
+.sp
+.if n \{\
+.RS 4
+.\}
+.nf
+$ gdbus emit \-\-session \-\-object\-path /bar \-\-signal org\&.bar\&.Bar someString \-\-dest :1\&.42
+.fi
+.if n \{\
+.RE
+.\}
 .SH "BUGS"
 .PP
 Please send bug reports to either the distribution bug tracker or the upstream bug tracker at

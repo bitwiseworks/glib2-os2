@@ -160,7 +160,7 @@ struct _GTypeModuleClass
  *   };
  *   gtk_gadget_type_id = g_type_module_register_type (type_module,
  *                                                     GTK_TYPE_THING,
- *                                                     GtkGadget,
+ *                                                     "GtkGadget",
  *                                                     &g_define_type_info,
  *                                                     (GTypeFlags) flags);
  *   {
@@ -193,7 +193,7 @@ type_name##_get_type (void) \
 static void \
 type_name##_register_type (GTypeModule *type_module) \
 { \
-  GType g_define_type_id; \
+  GType g_define_type_id G_GNUC_UNUSED; \
   const GTypeInfo g_define_type_info = { \
     sizeof (TypeName##Class), \
     (GBaseInitFunc) NULL, \

@@ -1,6 +1,5 @@
-/* GIO - GLib Input, Output and Streaming Library
- *
- * Copyright © 2010 Red Hat, Inc
+/*
+ * Copyright © 2010 Codethink Limited
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published
@@ -17,8 +16,7 @@
  * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
  * Boston, MA 02111-1307, USA.
  *
- * Authors: Colin Walters <walters@verbum.org>
- *          Emmanuele Bassi <ebassi@linux.intel.com>
+ * Authors: Ryan Lortie <desrt@desrt.ca>
  */
 
 #if !defined (__GIO_GIO_H_INSIDE__) && !defined (GIO_COMPILATION)
@@ -28,29 +26,27 @@
 #ifndef __G_APPLICATION_H__
 #define __G_APPLICATION_H__
 
-#include <glib-object.h>
 #include <gio/giotypes.h>
 
 G_BEGIN_DECLS
 
-#define G_TYPE_APPLICATION              (g_application_get_type ())
-#define G_APPLICATION(obj)              (G_TYPE_CHECK_INSTANCE_CAST ((obj), G_TYPE_APPLICATION, GApplication))
-#define G_APPLICATION_CLASS(klass)      (G_TYPE_CHECK_CLASS_CAST ((klass), G_TYPE_APPLICATION, GApplicationClass))
-#define G_IS_APPLICATION(obj)           (G_TYPE_CHECK_INSTANCE_TYPE ((obj), G_TYPE_APPLICATION))
-#define G_IS_APPLICATION_CLASS(klass)   (G_TYPE_CHECK_CLASS_TYPE ((klass), G_TYPE_APPLICATION))
-#define G_APPLICATION_GET_CLASS(obj)    (G_TYPE_INSTANCE_GET_CLASS ((obj), G_TYPE_APPLICATION, GApplicationClass))
+#define G_TYPE_APPLICATION                                  (g_application_get_type ())
+#define G_APPLICATION(inst)                                 (G_TYPE_CHECK_INSTANCE_CAST ((inst),                     \
+                                                             G_TYPE_APPLICATION, GApplication))
+#define G_APPLICATION_CLASS(class)                          (G_TYPE_CHECK_CLASS_CAST ((class),                       \
+                                                             G_TYPE_APPLICATION, GApplicationClass))
+#define G_IS_APPLICATION(inst)                              (G_TYPE_CHECK_INSTANCE_TYPE ((inst), G_TYPE_APPLICATION))
+#define G_IS_APPLICATION_CLASS(class)                       (G_TYPE_CHECK_CLASS_TYPE ((class), G_TYPE_APPLICATION))
+#define G_APPLICATION_GET_CLASS(inst)                       (G_TYPE_INSTANCE_GET_CLASS ((inst),                      \
+                                                             G_TYPE_APPLICATION, GApplicationClass))
 
-typedef struct _GApplication            GApplication;
-typedef struct _GApplicationPrivate     GApplicationPrivate;
-typedef struct _GApplicationClass       GApplicationClass;
+typedef struct _GApplicationPrivate                         GApplicationPrivate;
+typedef struct _GApplicationClass                           GApplicationClass;
 
 /**
  * GApplication:
  *
- * The <structname>GApplication</structname> structure contains private
- * data and should only be accessed using the provided API
- *
- * Since: 2.26
+ * Since: 2.28
  */
 struct _GApplication
 {
@@ -60,18 +56,6 @@ struct _GApplication
   GApplicationPrivate *priv;
 };
 
-/**
- * GApplicationClass:
- * @action_with_data: class handler for the #GApplication::action-with-data signal
- * @quit_with_data: class handler for the #GApplication::quit-with-data signal
- * @prepare_activation: class handler for the #GApplication::prepare-activation signal
- * @run: virtual function, called by g_application_run()
- *
- * The <structname>GApplicationClass</structname> structure contains
- * private data only
- *
- * Since: 2.26
- */
 struct _GApplicationClass
 {
   /*< private >*/
@@ -79,70 +63,100 @@ struct _GApplicationClass
 
   /*< public >*/
   /* signals */
-  void        (* action_with_data) (GApplication *application,
-				    const gchar  *action_name,
-				    GVariant     *platform_data);
-  gboolean    (* quit_with_data)   (GApplication *application,
-				    GVariant     *platform_data);
-  void        (* prepare_activation)   (GApplication  *application,
-                                        GVariant      *arguments,
-                                        GVariant      *platform_data);
+  void                      (* startup)             (GApplication              *application);
+
+  void                      (* activate)            (GApplication              *application);
+
+  void                      (* open)                (GApplication              *application,
+                                                     GFile                    **files,
+                                                     gint                       n_files,
+                                                     const gchar               *hint);
+
+  int                       (* command_line)        (GApplication              *application,
+                                                     GApplicationCommandLine   *command_line);
 
   /* vfuncs */
-  void        (* run)    (GApplication *application);
+  gboolean                  (* local_command_line)  (GApplication              *application,
+                                                     gchar                   ***arguments,
+                                                     int                       *exit_status);
+
+  void                      (* before_emit)         (GApplication              *application,
+                                                     GVariant                  *platform_data);
+  void                      (* after_emit)          (GApplication              *application,
+                                                     GVariant                  *platform_data);
+  void                      (* add_platform_data)   (GApplication              *application,
+                                                     GVariantBuilder           *builder);
+  void                      (* quit_mainloop)       (GApplication              *application);
+  void                      (* run_mainloop)        (GApplication              *application);
+  void                      (* shutdown)            (GApplication              *application);
+
+  gboolean                  (* dbus_register)       (GApplication              *application,
+                                                     GDBusConnection           *connection,
+                                                     const gchar               *object_path,
+                                                     GError                   **error);
+  void                      (* dbus_unregister)     (GApplication              *application,
+                                                     GDBusConnection           *connection,
+                                                     const gchar               *object_path);
 
   /*< private >*/
-  /* Padding for future expansion */
-  void (*_g_reserved1) (void);
-  void (*_g_reserved2) (void);
-  void (*_g_reserved3) (void);
-  void (*_g_reserved4) (void);
-  void (*_g_reserved5) (void);
-  void (*_g_reserved6) (void);
+  gpointer padding[9];
 };
-GType                   g_application_get_type                  (void) G_GNUC_CONST;
 
-GApplication *          g_application_new                       (const gchar      *appid,
-								 int               argc,
-								 char            **argv);
+GType                   g_application_get_type                          (void) G_GNUC_CONST;
 
-GApplication *          g_application_try_new                   (const gchar      *appid,
-								 int               argc,
-								 char            **argv,
-								 GError          **error);
+gboolean                g_application_id_is_valid                       (const gchar              *application_id);
 
-GApplication *          g_application_unregistered_try_new      (const gchar      *appid,
-								 int               argc,
-								 char            **argv,
-								 GError          **error);
+GApplication *          g_application_new                               (const gchar              *application_id,
+                                                                         GApplicationFlags         flags);
 
-gboolean                g_application_register                  (GApplication      *application);
+const gchar *           g_application_get_application_id                (GApplication             *application);
+void                    g_application_set_application_id                (GApplication             *application,
+                                                                         const gchar              *application_id);
 
-GApplication *          g_application_get_instance              (void);
-G_CONST_RETURN gchar *  g_application_get_id                    (GApplication      *application);
+GLIB_AVAILABLE_IN_2_34
+GDBusConnection *       g_application_get_dbus_connection               (GApplication             *application);
+GLIB_AVAILABLE_IN_2_34
+const gchar *           g_application_get_dbus_object_path              (GApplication             *application);
 
-void                    g_application_add_action                (GApplication      *application,
-                                                                 const gchar       *name,
-                                                                 const gchar       *description);
-void                    g_application_remove_action             (GApplication      *application,
-                                                                 const gchar       *name);
-gchar **                g_application_list_actions              (GApplication      *application);
-void                    g_application_set_action_enabled        (GApplication      *application,
-                                                                 const gchar       *name,
-                                                                 gboolean           enabled);
-gboolean                g_application_get_action_enabled        (GApplication      *application,
-                                                                 const gchar       *name);
-G_CONST_RETURN gchar *  g_application_get_action_description    (GApplication      *application,
-                                                                 const gchar       *name);
-void                    g_application_invoke_action             (GApplication      *application,
-                                                                 const gchar       *name,
-                                                                 GVariant          *platform_data);
+guint                   g_application_get_inactivity_timeout            (GApplication             *application);
+void                    g_application_set_inactivity_timeout            (GApplication             *application,
+                                                                         guint                     inactivity_timeout);
 
-void                    g_application_run                       (GApplication      *application);
-gboolean                g_application_quit_with_data            (GApplication      *application,
-                                                                 GVariant          *platform_data);
+GApplicationFlags       g_application_get_flags                         (GApplication             *application);
+void                    g_application_set_flags                         (GApplication             *application,
+                                                                         GApplicationFlags         flags);
 
-gboolean                g_application_is_remote                 (GApplication      *application);
+GLIB_DEPRECATED
+void                    g_application_set_action_group                  (GApplication             *application,
+                                                                         GActionGroup             *action_group);
+
+gboolean                g_application_get_is_registered                 (GApplication             *application);
+gboolean                g_application_get_is_remote                     (GApplication             *application);
+
+gboolean                g_application_register                          (GApplication             *application,
+                                                                         GCancellable             *cancellable,
+                                                                         GError                  **error);
+
+void                    g_application_hold                              (GApplication             *application);
+void                    g_application_release                           (GApplication             *application);
+
+void                    g_application_activate                          (GApplication             *application);
+
+void                    g_application_open                              (GApplication             *application,
+                                                                         GFile                   **files,
+                                                                         gint                      n_files,
+                                                                         const gchar              *hint);
+
+int                     g_application_run                               (GApplication             *application,
+                                                                         int                       argc,
+                                                                         char                    **argv);
+
+void                    g_application_quit                              (GApplication             *application);
+
+GLIB_AVAILABLE_IN_2_32
+GApplication *          g_application_get_default                       (void);
+GLIB_AVAILABLE_IN_2_32
+void                    g_application_set_default                       (GApplication             *application);
 
 G_END_DECLS
 
