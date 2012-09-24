@@ -263,7 +263,7 @@ ensure_keyring_directory (GError **error)
               g_set_error (error,
                            G_IO_ERROR,
                            g_io_error_from_errno (errno),
-                           _("Error statting directory `%s': %s"),
+                           _("Error when getting information for directory `%s': %s"),
                            path,
                            strerror (errno));
               g_free (path);
@@ -426,6 +426,7 @@ keyring_lookup_entry (const gchar  *cookie_context,
         }
 
       line_when = g_ascii_strtoll (tokens[1], &endp, 10);
+      line_when = line_when; /* To avoid -Wunused-but-set-variable */
       if (*endp != '\0')
         {
           g_set_error (error,
@@ -560,6 +561,7 @@ keyring_acquire_lock (const gchar  *path,
             goto again;
         }
 #endif
+      num_create_tries = num_create_tries; /* To avoid -Wunused-but-set-variable */
       g_set_error (error,
                    G_IO_ERROR,
                    g_io_error_from_errno (errno),
@@ -650,6 +652,7 @@ keyring_generate_entry (const gchar  *cookie_context,
   lines = NULL;
   new_contents = NULL;
   have_id = FALSE;
+  use_id = 0;
   use_cookie = NULL;
   lock_fd = -1;
 
@@ -747,6 +750,8 @@ keyring_generate_entry (const gchar  *cookie_context,
               g_strfreev (tokens);
               goto out;
             }
+          line_when = line_when; /* To avoid -Wunused-but-set-variable */
+
 
           /* D-Bus spec says:
            *
@@ -1033,6 +1038,7 @@ mechanism_server_data_send (GDBusAuthMechanism   *mechanism,
   /* TODO: use GDBusAuthObserver here to get the cookie context to use? */
   cookie_context = "org_gtk_gdbus_general";
 
+  cookie_id = -1;
   error = NULL;
   if (!keyring_generate_entry (cookie_context,
                                &cookie_id,

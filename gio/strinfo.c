@@ -22,7 +22,7 @@
 #include <string.h>
 #include <glib.h>
 
-/**
+/*
  * The string info map is an efficient data structure designed to be
  * used with a small set of items.  It is used by GSettings schemas for
  * three purposes:
@@ -86,7 +86,7 @@
  *
  *                   xfe 'b' 'a' 'z'  x00 x00 x00 xff
  *
- * The integer immediately preceeding the match then contains the offset
+ * The integer immediately preceding the match then contains the offset
  * of the integer value of the target.  In our example, that's '3'.
  * This index is dereferenced to find the enum value of '2'.
  *
@@ -97,7 +97,7 @@
  * To lookup the enum nick for a given value, the value is searched for
  * in the array.  To ensure that the value isn't matching the inside of a
  * string, we must check that it is either the first item in the array or
- * immediately preceeded by the byte 0xff.  It must also be immediately
+ * immediately preceded by the byte 0xff.  It must also be immediately
  * followed by the byte 0xff.
  *
  * Because strings always take up a minimum of 2 words, because 0xff or
@@ -193,7 +193,7 @@ strinfo_find_integer (const guint32 *strinfo,
   guint i;
 
   for (i = 0; i < length; i++)
-    if (strinfo[i] == value)
+    if (strinfo[i] == GUINT32_TO_LE (value))
       {
         const guchar *charinfo = (const guchar *) &strinfo[i];
 
@@ -226,7 +226,7 @@ strinfo_enum_from_string (const guint32 *strinfo,
   if (index < 0)
     return FALSE;
 
-  *result = strinfo[index];
+  *result = GUINT32_FROM_LE (strinfo[index]);
   return TRUE;
 }
 
@@ -258,6 +258,37 @@ strinfo_string_from_alias (const guint32 *strinfo,
     return NULL;
 
   return 1 + (const gchar *) &strinfo[GUINT32_TO_LE (strinfo[index]) + 1];
+}
+
+G_GNUC_UNUSED static GVariant *
+strinfo_enumerate (const guint32 *strinfo,
+                   guint          length)
+{
+  GVariantBuilder builder;
+  const gchar *ptr, *end;
+
+  ptr = (gpointer) strinfo;
+  end = ptr + 4 * length;
+
+  ptr += 4;
+
+  g_variant_builder_init (&builder, G_VARIANT_TYPE_STRING_ARRAY);
+
+  while (ptr < end)
+    {
+      /* don't include aliases */
+      if (*ptr == '\xff')
+        g_variant_builder_add (&builder, "s", ptr + 1);
+
+      /* find the end of this string */
+      ptr = memchr (ptr, '\xff', end - ptr);
+      g_assert (ptr != NULL);
+
+      /* skip over the int to the next string */
+      ptr += 5;
+    }
+
+  return g_variant_builder_end (&builder);
 }
 
 G_GNUC_UNUSED static void

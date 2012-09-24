@@ -19,11 +19,21 @@
  * Author: Ryan Lortie <desrt@desrt.ca>
  */
 
+#include "config.h"
+
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <glib.h>
 
+#include "gerror.h"
+#include "gquark.h"
+#include "gstring.h"
+#include "gstrfuncs.h"
+#include "gtestutils.h"
+#include "gvariant.h"
+#include "gvarianttype.h"
+#include "gslice.h"
+#include "gthread.h"
 
 /*
  * two-pass algorithm
@@ -40,21 +50,28 @@
  **/
 /**
  * GVariantParseError:
- * @G_VARIANT_PARSE_ERROR_FAILED: generic error
+ * @G_VARIANT_PARSE_ERROR_FAILED: generic error (unused)
+ * @G_VARIANT_PARSE_ERROR_BASIC_TYPE_EXPECTED: a non-basic #GVariantType was given where a basic type was expected
+ * @G_VARIANT_PARSE_ERROR_CANNOT_INFER_TYPE: cannot infer the #GVariantType
+ * @G_VARIANT_PARSE_ERROR_DEFINITE_TYPE_EXPECTED: an indefinite #GVariantType was given where a definite type was expected
+ * @G_VARIANT_PARSE_ERROR_INPUT_NOT_AT_END: extra data after parsing finished
+ * @G_VARIANT_PARSE_ERROR_INVALID_CHARACTER: invalid character in number or unicode escape
+ * @G_VARIANT_PARSE_ERROR_INVALID_FORMAT_STRING: not a valid #GVariant format string
+ * @G_VARIANT_PARSE_ERROR_INVALID_OBJECT_PATH: not a valid object path
+ * @G_VARIANT_PARSE_ERROR_INVALID_SIGNATURE: not a valid type signature
+ * @G_VARIANT_PARSE_ERROR_INVALID_TYPE_STRING: not a valid #GVariant type string
+ * @G_VARIANT_PARSE_ERROR_NO_COMMON_TYPE: could not find a common type for array entries
+ * @G_VARIANT_PARSE_ERROR_NUMBER_OUT_OF_RANGE: the numerical value is out of range of the given type
+ * @G_VARIANT_PARSE_ERROR_NUMBER_TOO_BIG: the numerical value is out of range for any type
+ * @G_VARIANT_PARSE_ERROR_TYPE_ERROR: cannot parse as variant of the specified type
+ * @G_VARIANT_PARSE_ERROR_UNEXPECTED_TOKEN: an unexpected token was encountered
+ * @G_VARIANT_PARSE_ERROR_UNKNOWN_KEYWORD: an unknown keyword was encountered
+ * @G_VARIANT_PARSE_ERROR_UNTERMINATED_STRING_CONSTANT: unterminated string constant
+ * @G_VARIANT_PARSE_ERROR_VALUE_EXPECTED: no value given
  *
- * Error codes returned by parsing text-format GVariants.  Currently the
- * parser makes no distinction between different types of error.
+ * Error codes returned by parsing text-format GVariants.
  **/
-GQuark
-g_variant_parser_get_error_quark (void)
-{
-  static GQuark the_quark;
-
-  if (the_quark == 0)
-    the_quark = g_quark_from_static_string ("g-variant-parse-error-quark");
-
-  return the_quark;
-}
+G_DEFINE_QUARK (g-variant-parse-error-quark, g_variant_parser_get_error)
 
 typedef struct
 {
@@ -65,6 +82,7 @@ static void
 parser_set_error_va (GError      **error,
                      SourceRef    *location,
                      SourceRef    *other,
+                     gint          code,
                      const gchar  *format,
                      va_list       ap)
 {
@@ -83,7 +101,7 @@ parser_set_error_va (GError      **error,
   g_string_append_c (msg, ':');
 
   g_string_append_vprintf (msg, format, ap);
-  g_set_error_literal (error, G_VARIANT_PARSE_ERROR, 0, msg->str);
+  g_set_error_literal (error, G_VARIANT_PARSE_ERROR, code, msg->str);
   g_string_free (msg, TRUE);
 }
 
@@ -91,13 +109,14 @@ static void
 parser_set_error (GError      **error,
                   SourceRef    *location,
                   SourceRef    *other,
+                  gint          code,
                   const gchar  *format,
                   ...)
 {
   va_list ap;
 
   va_start (ap, format);
-  parser_set_error_va (error, location, other, format, ap);
+  parser_set_error_va (error, location, other, code, format, ap);
   va_end (ap);
 }
 
@@ -115,6 +134,7 @@ static void
 token_stream_set_error (TokenStream  *stream,
                         GError      **error,
                         gboolean      this_token,
+                        gint          code,
                         const gchar  *format,
                         ...)
 {
@@ -129,18 +149,18 @@ token_stream_set_error (TokenStream  *stream,
     ref.end = ref.start;
 
   va_start (ap, format);
-  parser_set_error_va (error, &ref, NULL, format, ap);
+  parser_set_error_va (error, &ref, NULL, code, format, ap);
   va_end (ap);
 }
 
-static void
+static gboolean
 token_stream_prepare (TokenStream *stream)
 {
   gint brackets = 0;
   const gchar *end;
 
   if (stream->this != NULL)
-    return;
+    return TRUE;
 
   while (stream->stream != stream->end && g_ascii_isspace (*stream->stream))
     stream->stream++;
@@ -148,7 +168,7 @@ token_stream_prepare (TokenStream *stream)
   if (stream->stream == stream->end || *stream->stream == '\0')
     {
       stream->this = stream->stream;
-      return;
+      return FALSE;
     }
 
   switch (stream->stream[0])
@@ -221,6 +241,8 @@ token_stream_prepare (TokenStream *stream)
 
   stream->this = stream->stream;
   stream->stream = end;
+
+  return TRUE;
 }
 
 static void
@@ -233,7 +255,8 @@ static gboolean
 token_stream_peek (TokenStream *stream,
                    gchar        first_char)
 {
-  token_stream_prepare (stream);
+  if (!token_stream_prepare (stream))
+    return FALSE;
 
   return stream->this[0] == first_char;
 }
@@ -243,7 +266,8 @@ token_stream_peek2 (TokenStream *stream,
                     gchar        first_char,
                     gchar        second_char)
 {
-  token_stream_prepare (stream);
+  if (!token_stream_prepare (stream))
+    return FALSE;
 
   return stream->this[0] == first_char &&
          stream->this[1] == second_char;
@@ -252,7 +276,8 @@ token_stream_peek2 (TokenStream *stream,
 static gboolean
 token_stream_is_keyword (TokenStream *stream)
 {
-  token_stream_prepare (stream);
+  if (!token_stream_prepare (stream))
+    return FALSE;
 
   return g_ascii_isalpha (stream->this[0]) &&
          g_ascii_isalpha (stream->this[1]);
@@ -261,7 +286,8 @@ token_stream_is_keyword (TokenStream *stream)
 static gboolean
 token_stream_is_numeric (TokenStream *stream)
 {
-  token_stream_prepare (stream);
+  if (!token_stream_prepare (stream))
+    return FALSE;
 
   return (g_ascii_isdigit (stream->this[0]) ||
           stream->this[0] == '-' ||
@@ -270,21 +296,25 @@ token_stream_is_numeric (TokenStream *stream)
 }
 
 static gboolean
-token_stream_consume (TokenStream *stream,
-                      const gchar *token)
+token_stream_peek_string (TokenStream *stream,
+                          const gchar *token)
 {
   gint length = strlen (token);
 
-  token_stream_prepare (stream);
+  return token_stream_prepare (stream) &&
+         stream->stream - stream->this == length &&
+         memcmp (stream->this, token, length) == 0;
+}
 
-  if (stream->stream - stream->this == length &&
-      memcmp (stream->this, token, length) == 0)
-    {
-      token_stream_next (stream);
-      return TRUE;
-    }
+static gboolean
+token_stream_consume (TokenStream *stream,
+                      const gchar *token)
+{
+  if (!token_stream_peek_string (stream, token))
+    return FALSE;
 
-  return FALSE;
+  token_stream_next (stream);
+  return TRUE;
 }
 
 static gboolean
@@ -297,6 +327,7 @@ token_stream_require (TokenStream  *stream,
   if (!token_stream_consume (stream, token))
     {
       token_stream_set_error (stream, error, FALSE,
+                              G_VARIANT_PARSE_ERROR_UNEXPECTED_TOKEN,
                               "expected `%s'%s", token, purpose);
       return FALSE;
     }
@@ -319,7 +350,8 @@ token_stream_get (TokenStream *stream)
 {
   gchar *result;
 
-  token_stream_prepare (stream);
+  if (!token_stream_prepare (stream))
+    return NULL;
 
   result = g_strndup (stream->this, stream->stream - stream->this);
 
@@ -341,7 +373,7 @@ token_stream_end_ref (TokenStream *stream,
   ref->end = stream->stream - stream->start;
 }
 
-void
+static void
 pattern_copy (gchar       **out,
               const gchar **in)
 {
@@ -497,6 +529,7 @@ static void
 ast_set_error (AST          *ast,
                GError      **error,
                AST          *other_ast,
+               gint          code,
                const gchar  *format,
                ...)
 {
@@ -505,6 +538,7 @@ ast_set_error (AST          *ast,
   va_start (ap, format);
   parser_set_error_va (error, &ast->source_ref,
                        other_ast ? & other_ast->source_ref : NULL,
+                       code,
                        format, ap);
   va_end (ap);
 }
@@ -518,6 +552,7 @@ ast_type_error (AST                 *ast,
 
   typestr = g_variant_type_dup_string (type);
   ast_set_error (ast, error, NULL,
+                 G_VARIANT_PARSE_ERROR_TYPE_ERROR,
                  "can not parse as value of type `%s'",
                  typestr);
   g_free (typestr);
@@ -548,7 +583,9 @@ ast_resolve (AST     *ast,
     switch (pattern[i])
       {
       case '*':
-        ast_set_error (ast, error, NULL, "unable to infer type");
+        ast_set_error (ast, error, NULL,
+                       G_VARIANT_PARSE_ERROR_CANNOT_INFER_TYPE,
+                       "unable to infer type");
         g_free (pattern);
         return NULL;
 
@@ -661,6 +698,7 @@ ast_array_get_pattern (AST    **array,
                    * report the error.  note: 'j' is first.
                    */
                   ast_set_error (array[j], error, array[i],
+                                 G_VARIANT_PARSE_ERROR_NO_COMMON_TYPE,
                                  "unable to find a common type");
                   g_free (tmp);
                   return NULL;
@@ -768,7 +806,9 @@ maybe_parse (TokenStream  *stream,
 
   else if (!token_stream_consume (stream, "nothing"))
     {
-      token_stream_set_error (stream, error, TRUE, "unknown keyword");
+      token_stream_set_error (stream, error, TRUE,
+                              G_VARIANT_PARSE_ERROR_UNKNOWN_KEYWORD,
+                              "unknown keyword");
       return NULL;
     }
 
@@ -978,6 +1018,12 @@ tuple_get_value (AST                 *ast,
     {
       GVariant *child;
 
+      if (childtype == NULL)
+        {
+          g_variant_builder_clear (&builder);
+          return ast_type_error (ast, type, error);
+        }
+
       if (!(child = ast_get_value (tuple->children[i], childtype, error)))
         {
           g_variant_builder_clear (&builder);
@@ -986,6 +1032,12 @@ tuple_get_value (AST                 *ast,
 
       g_variant_builder_add_value (&builder, child);
       childtype = g_variant_type_next (childtype);
+    }
+
+  if (childtype != NULL)
+    {
+      g_variant_builder_clear (&builder);
+      return ast_type_error (ast, type, error);
     }
 
   return g_variant_builder_end (&builder);
@@ -1179,6 +1231,7 @@ dictionary_get_pattern (AST     *ast,
   if (!strchr ("bynqiuxthdsogNS", key_char))
     {
       ast_set_error (ast, error, NULL,
+                     G_VARIANT_PARSE_ERROR_BASIC_TYPE_EXPECTED,
                      "dictionary keys must have basic types");
       return NULL;
     }
@@ -1414,7 +1467,9 @@ string_get_value (AST                 *ast,
     {
       if (!g_variant_is_object_path (string->string))
         {
-          ast_set_error (ast, error, NULL, "not a valid object path");
+          ast_set_error (ast, error, NULL,
+                         G_VARIANT_PARSE_ERROR_INVALID_OBJECT_PATH,
+                         "not a valid object path");
           return NULL;
         }
 
@@ -1425,7 +1480,9 @@ string_get_value (AST                 *ast,
     {
       if (!g_variant_is_signature (string->string))
         {
-          ast_set_error (ast, error, NULL, "not a valid signature");
+          ast_set_error (ast, error, NULL,
+                         G_VARIANT_PARSE_ERROR_INVALID_SIGNATURE,
+                         "not a valid signature");
           return NULL;
         }
 
@@ -1469,6 +1526,7 @@ unicode_unescape (const gchar  *src,
   if (value == 0 || end != buffer + length)
     {
       parser_set_error (error, ref, NULL,
+                        G_VARIANT_PARSE_ERROR_INVALID_CHARACTER,
                         "invalid %d-character unicode escape", length);
       return FALSE;
     }
@@ -1514,6 +1572,7 @@ string_parse (TokenStream  *stream,
       {
       case '\0':
         parser_set_error (error, &ref, NULL,
+                          G_VARIANT_PARSE_ERROR_UNTERMINATED_STRING_CONSTANT,
                           "unterminated string constant");
         g_free (token);
         g_free (str);
@@ -1524,6 +1583,7 @@ string_parse (TokenStream  *stream,
           {
           case '\0':
             parser_set_error (error, &ref, NULL,
+                              G_VARIANT_PARSE_ERROR_UNTERMINATED_STRING_CONSTANT,
                               "unterminated string constant");
             g_free (token);
             g_free (str);
@@ -1640,6 +1700,7 @@ bytestring_parse (TokenStream  *stream,
       {
       case '\0':
         parser_set_error (error, &ref, NULL,
+                          G_VARIANT_PARSE_ERROR_UNTERMINATED_STRING_CONSTANT,
                           "unterminated string constant");
         g_free (token);
         return NULL;
@@ -1649,6 +1710,7 @@ bytestring_parse (TokenStream  *stream,
           {
           case '\0':
             parser_set_error (error, &ref, NULL,
+                              G_VARIANT_PARSE_ERROR_UNTERMINATED_STRING_CONSTANT,
                               "unterminated string constant");
             g_free (token);
             return NULL;
@@ -1708,8 +1770,9 @@ number_get_pattern (AST     *ast,
   Number *number = (Number *) ast;
 
   if (strchr (number->token, '.') ||
-      (!g_str_has_prefix (number->token, "0x") &&
-       strchr (number->token, 'e')))
+      (!g_str_has_prefix (number->token, "0x") && strchr (number->token, 'e')) ||
+      strstr (number->token, "inf") ||
+      strstr (number->token, "nan"))
     return g_strdup ("Md");
 
   return g_strdup ("MN");
@@ -1720,7 +1783,9 @@ number_overflow (AST                 *ast,
                  const GVariantType  *type,
                  GError             **error)
 {
-  ast_set_error (ast, error, NULL, "number out of range for type `%c'",
+  ast_set_error (ast, error, NULL,
+                 G_VARIANT_PARSE_ERROR_NUMBER_OUT_OF_RANGE,
+                 "number out of range for type `%c'",
                  g_variant_type_peek_string (type)[0]);
   return NULL;
 }
@@ -1748,7 +1813,9 @@ number_get_value (AST                 *ast,
       dbl_val = g_ascii_strtod (token, &end);
       if (dbl_val != 0.0 && errno == ERANGE)
         {
-          ast_set_error (ast, error, NULL, "number too big for any type");
+          ast_set_error (ast, error, NULL,
+                         G_VARIANT_PARSE_ERROR_NUMBER_TOO_BIG,
+                         "number too big for any type");
           return NULL;
         }
 
@@ -1767,7 +1834,9 @@ number_get_value (AST                 *ast,
       abs_val = g_ascii_strtoull (token, &end, 0);
       if (abs_val == G_MAXUINT64 && errno == ERANGE)
         {
-          ast_set_error (ast, error, NULL, "integer too big for any type");
+          ast_set_error (ast, error, NULL,
+                         G_VARIANT_PARSE_ERROR_NUMBER_TOO_BIG,
+                         "integer too big for any type");
           return NULL;
         }
 
@@ -1787,6 +1856,7 @@ number_get_value (AST                 *ast,
       ref.end = ref.start + 1;
 
       parser_set_error (error, &ref, NULL,
+                        G_VARIANT_PARSE_ERROR_INVALID_CHARACTER,
                         "invalid character in number");
       return NULL;
      }
@@ -1809,7 +1879,7 @@ number_get_value (AST                 *ast,
     case 'q':
       if (negative || abs_val > G_MAXUINT16)
         return number_overflow (ast, type, error);
-      return g_variant_new_uint16 (negative ? -abs_val : abs_val);
+      return g_variant_new_uint16 (abs_val);
 
     case 'i':
       if (abs_val - negative > G_MAXINT32)
@@ -1819,7 +1889,7 @@ number_get_value (AST                 *ast,
     case 'u':
       if (negative || abs_val > G_MAXUINT32)
         return number_overflow (ast, type, error);
-      return g_variant_new_uint32 (negative ? -abs_val : abs_val);
+      return g_variant_new_uint32 (abs_val);
 
     case 'x':
       if (abs_val - negative > G_MAXINT64)
@@ -1829,7 +1899,7 @@ number_get_value (AST                 *ast,
     case 't':
       if (negative)
         return number_overflow (ast, type, error);
-      return g_variant_new_uint64 (negative ? -abs_val : abs_val);
+      return g_variant_new_uint64 (abs_val);
 
     case 'h':
       if (abs_val - negative > G_MAXINT32)
@@ -1997,6 +2067,7 @@ positional_parse (TokenStream  *stream,
   if (*endptr || positional->value == NULL)
     {
       token_stream_set_error (stream, error, TRUE,
+                              G_VARIANT_PARSE_ERROR_INVALID_FORMAT_STRING,
                               "invalid GVariant format string");
       /* memory management doesn't matter in case of programmer error. */
       return NULL;
@@ -2068,6 +2139,7 @@ typedecl_parse (TokenStream  *stream,
       if (!g_variant_type_string_is_valid (token + 1))
         {
           token_stream_set_error (stream, error, TRUE,
+                                  G_VARIANT_PARSE_ERROR_INVALID_TYPE_STRING,
                                   "invalid type declaration");
           g_free (token);
 
@@ -2079,6 +2151,7 @@ typedecl_parse (TokenStream  *stream,
       if (!g_variant_type_is_definite (type))
         {
           token_stream_set_error (stream, error, TRUE,
+                                  G_VARIANT_PARSE_ERROR_DEFINITE_TYPE_EXPECTED,
                                   "type declarations must be definite");
           g_variant_type_free (type);
           g_free (token);
@@ -2132,7 +2205,9 @@ typedecl_parse (TokenStream  *stream,
 
       else
         {
-          token_stream_set_error (stream, error, TRUE, "unknown keyword");
+          token_stream_set_error (stream, error, TRUE,
+                                  G_VARIANT_PARSE_ERROR_UNKNOWN_KEYWORD,
+                                  "unknown keyword");
           return NULL;
         }
     }
@@ -2183,6 +2258,11 @@ parse (TokenStream  *stream,
   else if (token_stream_consume (stream, "false"))
     result = boolean_new (FALSE);
 
+  else if (token_stream_is_numeric (stream) ||
+           token_stream_peek_string (stream, "inf") ||
+           token_stream_peek_string (stream, "nan"))
+    result = number_parse (stream, app, error);
+
   else if (token_stream_peek (stream, 'n') ||
            token_stream_peek (stream, 'j'))
     result = maybe_parse (stream, app, error);
@@ -2190,9 +2270,6 @@ parse (TokenStream  *stream,
   else if (token_stream_peek (stream, '@') ||
            token_stream_is_keyword (stream))
     result = typedecl_parse (stream, app, error);
-
-  else if (token_stream_is_numeric (stream))
-    result = number_parse (stream, app, error);
 
   else if (token_stream_peek (stream, '\'') ||
            token_stream_peek (stream, '"'))
@@ -2204,7 +2281,9 @@ parse (TokenStream  *stream,
 
   else
     {
-      token_stream_set_error (stream, error, FALSE, "expected value");
+      token_stream_set_error (stream, error, FALSE,
+                              G_VARIANT_PARSE_ERROR_VALUE_EXPECTED,
+                              "expected value");
       return NULL;
     }
 
@@ -2219,16 +2298,18 @@ parse (TokenStream  *stream,
 
 /**
  * g_variant_parse:
- * @type: a #GVariantType, or %NULL
+ * @type: (allow-none): a #GVariantType, or %NULL
  * @text: a string containing a GVariant in text form
- * @limit: a pointer to the end of @text, or %NULL
- * @endptr: a location to store the end pointer, or %NULL
- * @error: a pointer to a %NULL #GError pointer, or %NULL
+ * @limit: (allow-none): a pointer to the end of @text, or %NULL
+ * @endptr: (allow-none): a location to store the end pointer, or %NULL
+ * @error: (allow-none): a pointer to a %NULL #GError pointer, or %NULL
  * @Returns: a reference to a #GVariant, or %NULL
  *
  * Parses a #GVariant from a text representation.
  *
  * A single #GVariant is parsed from the content of @text.
+ *
+ * The format is described <link linkend='gvariant-text'>here</link>.
  *
  * The memory at @limit will never be accessed and the parser behaves as
  * if the character at @limit is the nul terminator.  This has the
@@ -2250,7 +2331,7 @@ parse (TokenStream  *stream,
  * is returned.
  *
  * In case of any error, %NULL will be returned.  If @error is non-%NULL
- * then it will be set to reflect the error that occured.
+ * then it will be set to reflect the error that occurred.
  *
  * Officially, the language understood by the parser is "any string
  * produced by g_variant_print()".
@@ -2296,6 +2377,7 @@ g_variant_parse (const GVariantType  *type,
                                     stream.stream - text };
 
                   parser_set_error (error, &ref, NULL,
+                                    G_VARIANT_PARSE_ERROR_INPUT_NOT_AT_END,
                                     "expected end of input");
                   g_variant_unref (result);
 
@@ -2316,7 +2398,6 @@ g_variant_parse (const GVariantType  *type,
  * g_variant_new_parsed_va:
  * @format: a text format #GVariant
  * @app: a pointer to a #va_list
- * @returns: a new, usually floating, #GVariant
  *
  * Parses @format and returns the result.
  *
@@ -2335,6 +2416,8 @@ g_variant_parse (const GVariantType  *type,
  * At this point, the caller will have their own full reference to the
  * result.  This can also be done by adding the result to a container,
  * or by passing it to another g_variant_new() call.
+ *
+ * Returns: a new, usually floating, #GVariant
  **/
 GVariant *
 g_variant_new_parsed_va (const gchar *format,
@@ -2371,7 +2454,6 @@ g_variant_new_parsed_va (const gchar *format,
  * g_variant_new_parsed:
  * @format: a text format #GVariant
  * @...: arguments as per @format
- * @returns: a new floating #GVariant instance
  *
  * Parses @format and returns the result.
  *
@@ -2397,8 +2479,10 @@ g_variant_new_parsed_va (const gchar *format,
  *
  * You may not use this function to return, unmodified, a single
  * #GVariant pointer from the argument list.  ie: @format may not solely
- * be anything along the lines of "%*", "%?", "%r", or anything starting
+ * be anything along the lines of "%*", "%?", "\%r", or anything starting
  * with "%@".
+ *
+ * Returns: a new floating #GVariant instance
  **/
 GVariant *
 g_variant_new_parsed (const gchar *format,

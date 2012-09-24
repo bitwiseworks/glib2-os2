@@ -26,7 +26,6 @@
 
 #include <errno.h>
 
-#include "gcontenttypeprivate.h"
 #include "ginitable.h"
 #include "gioerror.h"
 #include "glibintl.h"
@@ -451,7 +450,7 @@ g_charset_converter_initable_init (GInitable *initable,
   conv->iconv =
     g_iconv_open (conv->to, conv->from);
 
-  if (conv->iconv == NULL)
+  if (conv->iconv == (GIConv)-1)
     {
       if (errno == EINVAL)
 	g_set_error (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,

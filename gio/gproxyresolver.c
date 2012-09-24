@@ -39,7 +39,7 @@
  * @include: gio/gio.h
  *
  * #GProxyResolver provides synchronous and asynchronous network proxy
- * resolution. #GProxyResolver is used within #GClientSocket through
+ * resolution. #GProxyResolver is used within #GSocketClient through
  * the method g_socket_connectable_proxy_enumerate().
  */
 
@@ -50,67 +50,21 @@ g_proxy_resolver_default_init (GProxyResolverInterface *iface)
 {
 }
 
-static gpointer
-get_default_proxy_resolver (gpointer arg)
-{
-  const gchar *use_this;
-  GProxyResolver *resolver;
-  GList *l;
-  GIOExtensionPoint *ep;
-  GIOExtension *extension;
-  
-
-  use_this = g_getenv ("GIO_USE_PROXY_RESOLVER");
-  
-  /* Ensure proxy-resolver modules loaded */
-  _g_io_modules_ensure_loaded ();
-
-  ep = g_io_extension_point_lookup (G_PROXY_RESOLVER_EXTENSION_POINT_NAME);
-
-  if (use_this)
-    {
-      extension = g_io_extension_point_get_extension_by_name (ep, use_this);
-      if (extension)
-	{
-	   resolver = g_object_new (g_io_extension_get_type (extension), NULL);
-	  
-	   if (g_proxy_resolver_is_supported (resolver))
-	     return resolver;
-	  
-	  g_object_unref (resolver);
-	}
-    }
-
-  for (l = g_io_extension_point_get_extensions (ep); l != NULL; l = l->next)
-    {
-      extension = l->data;
-
-      resolver = g_object_new (g_io_extension_get_type (extension), NULL);
-
-      if (g_proxy_resolver_is_supported (resolver))
-	return resolver;
-
-      g_object_unref (resolver);
-    }
-  
-  return NULL;
-}
-
 /**
  * g_proxy_resolver_get_default:
  *
  * Gets the default #GProxyResolver for the system.
  *
- * Return value: the default #GProxyResolver.
+ * Return value: (transfer none): the default #GProxyResolver.
  *
  * Since: 2.26
  */
 GProxyResolver *
 g_proxy_resolver_get_default (void)
 {
-  static GOnce once_init = G_ONCE_INIT;
-
-  return g_once (&once_init, get_default_proxy_resolver, NULL);
+  return _g_io_module_get_default (G_PROXY_RESOLVER_EXTENSION_POINT_NAME,
+				   "GIO_USE_PROXY_RESOLVER",
+				   (GIOModuleVerifyFunc)g_proxy_resolver_is_supported);
 }
 
 /**
@@ -141,7 +95,7 @@ g_proxy_resolver_is_supported (GProxyResolver *resolver)
  * g_proxy_resolver_lookup:
  * @resolver: a #GProxyResolver
  * @uri: a URI representing the destination to connect to
- * @cancellable: a #GCancellable, or %NULL
+ * @cancellable: (allow-none): a #GCancellable, or %NULL
  * @error: return location for a #GError, or %NULL
  *
  * Looks into the system proxy configuration to determine what proxy,
@@ -160,8 +114,9 @@ g_proxy_resolver_is_supported (GProxyResolver *resolver)
  * Direct connection should not be attempted unless it is part of the
  * returned array of proxies.
  *
- * Return value: A NULL-terminated array of proxy URIs. Must be freed with
- *               g_strfreev().
+ * Return value: (transfer full) (array zero-terminated=1): A
+ *               NULL-terminated array of proxy URIs. Must be freed
+ *               with g_strfreev().
  *
  * Since: 2.26
  */
@@ -185,9 +140,9 @@ g_proxy_resolver_lookup (GProxyResolver  *resolver,
  * g_proxy_resolver_lookup_async:
  * @resolver: a #GProxyResolver
  * @uri: a URI representing the destination to connect to
- * @cancellable: a #GCancellable, or %NULL
- * @callback: callback to call after resolution completes
- * @user_data: data for @callback
+ * @cancellable: (allow-none): a #GCancellable, or %NULL
+ * @callback: (scope async): callback to call after resolution completes
+ * @user_data: (closure): data for @callback
  *
  * Asynchronous lookup of proxy. See g_proxy_resolver_lookup() for more
  * details.
@@ -221,8 +176,9 @@ g_proxy_resolver_lookup_async (GProxyResolver      *resolver,
  * g_proxy_resolver_lookup_async() is complete. See
  * g_proxy_resolver_lookup() for more details.
  *
- * Return value: A NULL-terminated array of proxy URIs. Must be freed with
- *               g_strfreev().
+ * Return value: (transfer full) (array zero-terminated=1): A
+ *               NULL-terminated array of proxy URIs. Must be freed
+ *               with g_strfreev().
  *
  * Since: 2.26
  */

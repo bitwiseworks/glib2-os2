@@ -22,6 +22,7 @@ test_schema (gpointer data)
       gchar *path = g_build_filename (SRCDIR, "schema-tests", filename, NULL);
       gchar *argv[] = {
         "../glib-compile-schemas",
+        "--strict",
         "--dry-run",
         "--schema-file", path,
         (gchar *)test->opt,
@@ -45,12 +46,12 @@ static const SchemaTest tests[] = {
   { "no-default",                   NULL, "*<default> is required in <key>*"                    },
   { "missing-quotes",               NULL, "*unknown keyword*"                                   },
   { "incomplete-list",              NULL, "*to follow array element*"                           },
-  { "wrong-category",               NULL, "*attribute 'l10n' invalid*"                          },
+  { "wrong-category",               NULL, "*unsupported l10n category*"                         },
   { "bad-type",                     NULL, "*invalid GVariant type string*"                      },
   { "overflow",                     NULL, "*out of range*"                                      },
   { "range-wrong-type",             NULL, "*<range> not allowed for keys of type*"              },
-  { "range-missing-min",            NULL, "*element 'range' requires attribute 'min'*"          },
-  { "range-missing-max",            NULL, "*element 'range' requires attribute 'max'*"          },
+  { "range-missing-min",            NULL, NULL                                                  },
+  { "range-missing-max",            NULL, NULL                                                  },
   { "default-out-of-range",         NULL, "*<default> is not contained in the specified range*" },
   { "choices-wrong-type",           NULL, "*<choices> not allowed for keys of type*"            },
   { "choice-missing-value",         NULL, "*element 'choice' requires attribute 'value'*"       },
@@ -75,7 +76,7 @@ static const SchemaTest tests[] = {
   { "enum-with-repeated-value",     NULL, "*value='1' already specified*"                       },
   { "enum-with-chained-alias",      NULL, "*'sausages' is not in enumerated type*"              },
   { "enum-with-shadow-alias",       NULL, "*'mash' is already a member of the enum*"            },
-  { "enum-with-choice",             NULL, "*<choices> can not be specified*"                    },
+  { "enum-with-choice",             NULL, "*<choices> cannot be specified*"                     },
   { "enum-with-bad-default",        NULL, "*<default> is not a valid member*"                   },
   { "choice",                       NULL, NULL                                                  },
   { "choice-upside-down",           NULL, NULL                                                  },
@@ -96,14 +97,14 @@ static const SchemaTest tests[] = {
   { "range-parse-error",            NULL, "*invalid character in number*"                       },
   { "from-docs",                    NULL, NULL                                                  },
   { "extending",                    NULL, NULL                                                  },
-  { "extend-missing",               NULL, "*extends not yet existing schema*"                   },
+  { "extend-missing",               NULL, "*extends not-yet-existing schema*"                   },
   { "extend-nonlist",               NULL, "*which is not a list*"                               },
-  { "extend-self",                  NULL, "*not yet existing*"                                  },
+  { "extend-self",                  NULL, "*not-yet-existing*"                                  },
   { "extend-wrong-list-indirect",   NULL, "*'y' does not extend 'x'*"                           },
   { "extend-wrong-list",            NULL, "*'y' does not extend 'x'*"                           },
-  { "key-in-list-indirect",         NULL, "*can not add keys to a 'list*"                        },
-  { "key-in-list",                  NULL, "*can not add keys to a 'list*"                        },
-  { "list-of-missing",              NULL, "*is list of not yet existing schema*"                },
+  { "key-in-list-indirect",         NULL, "*cannot add keys to a 'list*"                        },
+  { "key-in-list",                  NULL, "*cannot add keys to a 'list*"                        },
+  { "list-of-missing",              NULL, "*is list of not-yet-existing schema*"                },
   { "extend-and-shadow",            NULL, "*shadows*use <override>*"                            },
   { "extend-and-shadow-indirect",   NULL, "*shadows*use <override>*"                            },
   { "override",                     NULL, NULL                                                  },
@@ -116,8 +117,12 @@ static const SchemaTest tests[] = {
   { "flags-bad-default",            NULL, "*<default> * not in the specified flags type*"       },
   { "flags-more-than-one-bit",      NULL, "*flags values must have at most 1 bit set*"          },
   { "flags-with-enum-attr",         NULL, "*<enum id='flags'> not (yet) defined*"               },
-  { "flags-with-enum-tag",          NULL, "*<flags id='flags'> not (yet) defined*"              }
+  { "flags-with-enum-tag",          NULL, "*<flags id='flags'> not (yet) defined*"              },
+  { "inherit-gettext-domain",       NULL, NULL                                                  },
+  { "range-type-test",              NULL, NULL                                                  },
+  { "cdata",                        NULL, NULL                                                  }
 };
+
 
 int
 main (int argc, char *argv[])

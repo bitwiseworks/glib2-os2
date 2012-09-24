@@ -50,6 +50,7 @@ typedef struct _GAsyncResultIface    GAsyncResultIface;
  * @g_iface: The parent interface.
  * @get_user_data: Gets the user data passed to the callback.
  * @get_source_object: Gets the source object that issued the asynchronous operation.
+ * @is_tagged: Checks if a result is tagged with a particular source.
  *
  * Interface definition for #GAsyncResult.
  **/
@@ -59,14 +60,24 @@ struct _GAsyncResultIface
 
   /* Virtual Table */
 
-  gpointer  (* get_user_data)     (GAsyncResult *async_result);
-  GObject * (* get_source_object) (GAsyncResult *async_result);
+  gpointer  (* get_user_data)     (GAsyncResult *res);
+  GObject * (* get_source_object) (GAsyncResult *res);
+
+  gboolean  (* is_tagged)         (GAsyncResult *res,
+				   gpointer      tag);
 };
 
 GType    g_async_result_get_type          (void) G_GNUC_CONST;
 
 gpointer g_async_result_get_user_data     (GAsyncResult *res);
 GObject *g_async_result_get_source_object (GAsyncResult *res);
+
+GLIB_AVAILABLE_IN_2_34
+gboolean g_async_result_legacy_propagate_error (GAsyncResult  *res,
+						GError       **error);
+GLIB_AVAILABLE_IN_2_34
+gboolean g_async_result_is_tagged              (GAsyncResult  *res,
+						gpointer       source_tag);
 
 G_END_DECLS
 

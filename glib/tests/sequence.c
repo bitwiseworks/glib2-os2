@@ -55,7 +55,7 @@ check_node (GSequenceNode *node)
     }
 }
 
-void
+static void
 g_sequence_check (GSequence *seq)
 {
   GSequenceNode *node = seq->end_node;
@@ -81,6 +81,7 @@ enum {
   GET_BEGIN_ITER, GET_END_ITER, GET_ITER_AT_POS, APPEND, PREPEND,
   INSERT_BEFORE, MOVE, SWAP, INSERT_SORTED, INSERT_SORTED_ITER, SORT_CHANGED,
   SORT_CHANGED_ITER, REMOVE, REMOVE_RANGE, MOVE_RANGE, SEARCH, SEARCH_ITER,
+  LOOKUP, LOOKUP_ITER,
 
   /* dereferencing */
   GET, SET,
@@ -197,6 +198,42 @@ seq_foreach (gpointer data,
   item->number = g_random_int();
 
   *link = (*link)->next;
+}
+
+static gint
+simple_items_cmp (gconstpointer a,
+	          gconstpointer b,
+	          gpointer data)
+{
+  const Item *item_a = fix_pointer (a);
+  const Item *item_b = fix_pointer (b);
+
+  if (item_a->number > item_b->number)
+    return +1;
+  else if (item_a->number < item_b->number)
+    return -1;
+  else
+    return 0;
+}
+
+static gint
+simple_iters_cmp (gconstpointer a,
+	          gconstpointer b,
+	          gpointer data)
+{
+  GSequence *seq = data;
+  GSequenceIter *iter_a = (GSequenceIter *)a;
+  GSequenceIter *iter_b = (GSequenceIter *)b;
+  gpointer item_a = g_sequence_get (iter_a);
+  gpointer item_b = g_sequence_get (iter_b);
+
+  if (seq)
+    {
+      g_assert (g_sequence_iter_get_sequence (iter_a) == seq);
+      g_assert (g_sequence_iter_get_sequence (iter_b) == seq);
+    }
+
+  return simple_items_cmp (item_a, item_b, data);
 }
 
 static gint
@@ -884,6 +921,45 @@ run_random_tests (gconstpointer d)
             g_queue_insert_sorted (seq->queue, insert_iter, compare_iters, NULL);
           }
           break;
+        case LOOKUP:
+          {
+            Item *item;
+            GSequenceIter *lookup_iter;
+            GSequenceIter *insert_iter;
+
+            g_sequence_sort (seq->sequence, compare_items, NULL);
+            g_queue_sort (seq->queue, compare_iters, NULL);
+
+            check_sorted (seq);
+
+            item = new_item (seq);
+            insert_iter = g_sequence_insert_sorted (seq->sequence, item, compare_items, NULL);
+            g_queue_insert_sorted (seq->queue, insert_iter, compare_iters, NULL);
+
+            lookup_iter = g_sequence_lookup (seq->sequence, item, simple_items_cmp, NULL);
+            g_assert (simple_iters_cmp (insert_iter, lookup_iter, NULL) == 0);
+          }
+          break;
+        case LOOKUP_ITER:
+          {
+            Item *item;
+            GSequenceIter *lookup_iter;
+            GSequenceIter *insert_iter;
+
+            g_sequence_sort (seq->sequence, compare_items, NULL);
+            g_queue_sort (seq->queue, compare_iters, NULL);
+
+            check_sorted (seq);
+
+            item = new_item (seq);
+            insert_iter = g_sequence_insert_sorted (seq->sequence, item, compare_items, NULL);
+            g_queue_insert_sorted (seq->queue, insert_iter, compare_iters, NULL);
+
+            lookup_iter = g_sequence_lookup_iter (seq->sequence, item,
+                (GSequenceIterCompareFunc) simple_iters_cmp, NULL);
+            g_assert (simple_iters_cmp (insert_iter, lookup_iter, NULL) == 0);
+          }
+          break;
 
           /* dereferencing */
         case GET:
@@ -1104,6 +1180,13 @@ run_random_tests (gconstpointer d)
 
       check_integrity (seq);
     }
+
+  for (k = 0; k < N_SEQUENCES; ++k)
+    {
+      g_queue_free (sequences[k].queue);
+      g_sequence_free (sequences[k].sequence);
+      sequences[k].n_items = 0;
+    }
 }
 
 /* Random seeds known to have failed at one point
@@ -1134,6 +1217,35 @@ test_out_of_range_jump (void)
 
   g_assert (g_sequence_iter_is_begin (iter));
   g_assert (g_sequence_iter_is_end (iter));
+
+  g_sequence_free (seq);
+}
+
+static void
+test_iter_move (void)
+{
+  GSequence *seq = g_sequence_new (NULL);
+  GSequenceIter *iter;
+  gint i;
+
+  for (i = 0; i < 10; ++i)
+    g_sequence_append (seq, GINT_TO_POINTER (i));
+
+  iter = g_sequence_get_begin_iter (seq);
+  iter = g_sequence_iter_move (iter, 5);
+  g_assert_cmpint (GPOINTER_TO_INT (g_sequence_get (iter)), ==, 5);
+
+  iter = g_sequence_iter_move (iter, -10);
+  g_assert (g_sequence_iter_is_begin (iter));
+
+  iter = g_sequence_get_end_iter (seq);
+  iter = g_sequence_iter_move (iter, -5);
+  g_assert_cmpint (GPOINTER_TO_INT (g_sequence_get (iter)), ==, 5);
+
+  iter = g_sequence_iter_move (iter, 10);
+  g_assert (g_sequence_iter_is_end (iter));
+
+  g_sequence_free (seq);
 }
 
 static int
@@ -1250,6 +1362,8 @@ test_stable_sort (void)
       iter = g_sequence_iter_next (iter);
       g_sequence_check (seq);
     }
+
+  g_sequence_free (seq);
 }
 
 int
@@ -1264,6 +1378,7 @@ main (int argc,
 
   /* Standalone tests */
   g_test_add_func ("/sequence/out-of-range-jump", test_out_of_range_jump);
+  g_test_add_func ("/sequence/iter-move", test_iter_move);
   g_test_add_func ("/sequence/insert-sorted-non-pointer", test_insert_sorted_non_pointer);
   g_test_add_func ("/sequence/stable-sort", test_stable_sort);
 

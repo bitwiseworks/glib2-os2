@@ -160,10 +160,9 @@
       <para>
         If you are porting your application from GConf, most likely you already
         have a GConf schema. GConf comes with a commandline tool
-        <link linkend="gsettings-schema-convert">gsettings-schema-convert</link>
-        that can help with the task of converting a GConf schema into
-        an equivalent GSettings schema. The tool is not perfect and
-        may need assistence in some cases.
+        gsettings-schema-convert that can help with the task of converting
+        a GConf schema into an equivalent GSettings schema. The tool is not
+        perfect and may need assistence in some cases.
       </para>
       <example><title>An example for using gsettings-schema-convert</title>
         <para>Running <userinput>gsettings-schema-convert --gconf --xml --schema-id "org.gnome.font-rendering" --output org.gnome.font-rendering.gschema.xml destop_gnome_font_rendering.schemas</userinput> on the following <filename>desktop_gnome_font_rendering.schemas</filename> file:
@@ -205,14 +204,16 @@ produces a <filename>org.gnome.font-rendering.gschema.xml</filename> file with t
       </example>
 
       <para>
-        GSettings schemas are identified at runtime by their id (as specified
-        in the XML source file). It is recommended to use a dotted name as schema
-        id, similar in style to a DBus bus name, e.g. "org.gnome.font-rendering".
+       GSettings schemas are identified at runtime by their id (as specified
+       in the XML source file). It is recommended to use a dotted name as schema
+       id, similar in style to a D-Bus bus name, e.g. "org.gnome.SessionManager".
+       In cases where the settings are general and not specific to one application,
+       the id should not use StudlyCaps, e.g. "org.gnome.font-rendering".
        The filename used for the XML schema source is immaterial, but
        schema compiler expects the files to have the extension
        <filename>.gschema.xml</filename>. It is recommended to simply
        use the schema id as the filename, followed by this extension,
-       e.g. <filename>org.gnome.font-rendering.gschema.xml</filename>.
+       e.g. <filename>org.gnome.SessionManager.gschema.xml</filename>.
       </para>
 
       <para>
@@ -448,6 +449,70 @@ some-odd-key1 = /apps/myapp/some_ODD-key1
         Don't forget to require GConf 2.31.1 or newer in your configure
         script if you are making use of the GConf backend or the conversion
         utility.
+      </para>
+
+      <para>
+        If, as an application developer, you are interested in manually
+        ensuring that <command>gsettings-data-convert</command> has been
+        invoked (for example, to deal with the case where the user is
+        logged in during a distribution upgrade or for non-XDG desktop
+        environments which do not run the command as an autostart) you
+        may invoke it manually during your program initialisation.  This
+        is not recommended for all application authors -- it is your
+        choice if this use case concerns you enough.
+      </para>
+      <para>
+        Internally, <command>gsettings-data-convert</command> uses a
+        keyfile to track which settings have been migrated.  The
+        following code fragment will check that keyfile to see if your
+        data conversion script has been run yet and, if not, will
+        attempt to invoke the tool to run it.  You should adapt it to
+        your application as you see fit.
+      </para>
+      <para>
+        <programlisting>
+<![CDATA[
+static void
+ensure_migrated (const gchar *name)
+{
+  gboolean needed = TRUE;
+  GKeyFile *kf;
+  gchar **list;
+  gsize i, n;
+
+  kf = g_key_file_new ();
+
+  g_key_file_load_from_data_dirs (kf, "gsettings-data-convert",
+                                  NULL, G_KEY_FILE_NONE, NULL);
+  list = g_key_file_get_string_list (kf, "State", "converted", &n, NULL);
+
+  if (list)
+    {
+      for (i = 0; i < n; i++)
+        if (strcmp (list[i], name) == 0)
+          {
+            needed = FALSE;
+            break;
+          }
+
+      g_strfreev (list);
+    }
+
+  g_key_file_free (kf);
+
+  if (needed)
+    g_spawn_command_line_sync ("gsettings-data-convert",
+                               NULL, NULL, NULL, NULL);
+}
+
+]]>
+        </programlisting>
+      </para>
+      <para>
+        Although there is the possibility that the
+        <command>gsettings-data-convert</command> script will end up
+        running multiple times concurrently with this approach, it is
+        believed that this is safe.
       </para>
     </section>
   </chapter>

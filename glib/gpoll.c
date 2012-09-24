@@ -33,6 +33,8 @@
  */
 
 #include "config.h"
+#include "glibconfig.h"
+#include "giochannel.h"
 
 /* Uncomment the next line (and the corresponding line in gmain.c) to
  * enable debugging printouts if the environment variable
@@ -47,7 +49,6 @@
 #define G_MAIN_POLL_DEBUG
 #endif
 
-#include "glib.h"
 #include <sys/types.h>
 #include <time.h>
 #include <stdlib.h>
@@ -77,6 +78,11 @@
 #include <windows.h>
 #endif /* G_OS_WIN32 */
 
+#include "gpoll.h"
+
+#ifdef G_OS_WIN32
+#include "gprintf.h"
+#endif
 
 #ifdef G_MAIN_POLL_DEBUG
 extern gboolean _g_main_poll_debug;

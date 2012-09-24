@@ -58,6 +58,7 @@ struct _GUnixVolume {
   
   char *name;
   GIcon *icon;
+  GIcon *symbolic_icon;
 };
 
 static void g_unix_volume_volume_iface_init (GVolumeIface *iface);
@@ -81,6 +82,7 @@ g_unix_volume_finalize (GObject *object)
     _g_unix_mount_unset_volume (volume->mount, volume);
   
   g_object_unref (volume->icon);
+  g_object_unref (volume->symbolic_icon);
   g_free (volume->name);
   g_free (volume->mount_path);
   g_free (volume->device_path);
@@ -122,6 +124,7 @@ _g_unix_volume_new (GVolumeMonitor  *volume_monitor,
 
   volume->name = g_unix_mount_point_guess_name (mountpoint);
   volume->icon = g_unix_mount_point_guess_icon (mountpoint);
+  volume->symbolic_icon = g_unix_mount_point_guess_symbolic_icon (mountpoint);
 
 
   if (strcmp (g_unix_mount_point_get_fs_type (mountpoint), "nfs") == 0)
@@ -195,6 +198,13 @@ g_unix_volume_get_icon (GVolume *volume)
 {
   GUnixVolume *unix_volume = G_UNIX_VOLUME (volume);
   return g_object_ref (unix_volume->icon);
+}
+
+static GIcon *
+g_unix_volume_get_symbolic_icon (GVolume *volume)
+{
+  GUnixVolume *unix_volume = G_UNIX_VOLUME (volume);
+  return g_object_ref (unix_volume->symbolic_icon);
 }
 
 static char *
@@ -410,7 +420,7 @@ handle_error:
   if (error != NULL)
     {
       GSimpleAsyncResult *simple;
-      simple = g_simple_async_result_new_from_error (G_OBJECT (data->unix_volume),
+      simple = g_simple_async_result_new_take_error (G_OBJECT (data->unix_volume),
                                                      data->callback,
                                                      data->user_data,
                                                      error);
@@ -423,7 +433,6 @@ handle_error:
       if (data->error_channel != NULL)
         g_io_channel_unref (data->error_channel);
 
-      g_error_free (error);
       g_free (data);
     }
 }
@@ -518,6 +527,7 @@ g_unix_volume_volume_iface_init (GVolumeIface *iface)
 {
   iface->get_name = g_unix_volume_get_name;
   iface->get_icon = g_unix_volume_get_icon;
+  iface->get_symbolic_icon = g_unix_volume_get_symbolic_icon;
   iface->get_uuid = g_unix_volume_get_uuid;
   iface->get_drive = g_unix_volume_get_drive;
   iface->get_mount = g_unix_volume_get_mount;

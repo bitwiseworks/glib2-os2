@@ -3,12 +3,12 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>Bookmark file parser</title>
-<meta name="generator" content="DocBook XSL Stylesheets V1.75.2">
+<meta name="generator" content="DocBook XSL Stylesheets V1.77.1">
 <link rel="home" href="index.html" title="GLib Reference Manual">
 <link rel="up" href="glib-utilities.html" title="GLib Utilities">
 <link rel="prev" href="glib-Key-value-file-parser.html" title="Key-value file parser">
 <link rel="next" href="glib-Testing.html" title="Testing">
-<meta name="generator" content="GTK-Doc V1.15 (XML mode)">
+<meta name="generator" content="GTK-Doc V1.18.1 (XML mode)">
 <link rel="stylesheet" href="style.css" type="text/css">
 </head>
 <body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF">
@@ -26,7 +26,7 @@
                   <a href="#glib-Bookmark-file-parser.description" class="shortcut">Description</a>
 </td></tr>
 </table>
-<div class="refentry" title="Bookmark file parser">
+<div class="refentry">
 <a name="glib-Bookmark-file-parser"></a><div class="titlepage"></div>
 <div class="refnamediv"><table width="100%"><tr>
 <td valign="top">
@@ -35,7 +35,7 @@
 </td>
 <td valign="top" align="right"></td>
 </tr></table></div>
-<div class="refsynopsisdiv" title="Synopsis">
+<div class="refsynopsisdiv">
 <a name="glib-Bookmark-file-parser.synopsis"></a><h2>Synopsis</h2>
 <pre class="synopsis">
 #include &lt;glib.h&gt;
@@ -47,76 +47,76 @@ enum                <a class="link" href="glib-Bookmark-file-parser.html#GBookma
 <span class="returnvalue">void</span>                <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-free" title="g_bookmark_file_free ()">g_bookmark_file_free</a>                (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>);
 <a class="link" href="glib-Basic-Types.html#gboolean" title="gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-load-from-file" title="g_bookmark_file_load_from_file ()">g_bookmark_file_load_from_file</a>      (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *filename</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);
 <a class="link" href="glib-Basic-Types.html#gboolean" title="gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-load-from-data" title="g_bookmark_file_load_from_data ()">g_bookmark_file_load_from_data</a>      (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *data</code></em>,
                                                          <em class="parameter"><code><a class="link" href="glib-Basic-Types.html#gsize" title="gsize"><span class="type">gsize</span></a> length</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);
 <a class="link" href="glib-Basic-Types.html#gboolean" title="gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-load-from-data-dirs" title="g_bookmark_file_load_from_data_dirs ()">g_bookmark_file_load_from_data_dirs</a> (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *file</code></em>,
                                                          <em class="parameter"><code><a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> **full_path</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);
 <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="returnvalue">gchar</span></a> *             <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-to-data" title="g_bookmark_file_to_data ()">g_bookmark_file_to_data</a>             (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code><a class="link" href="glib-Basic-Types.html#gsize" title="gsize"><span class="type">gsize</span></a> *length</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);
 <a class="link" href="glib-Basic-Types.html#gboolean" title="gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-to-file" title="g_bookmark_file_to_file ()">g_bookmark_file_to_file</a>             (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *filename</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);
 <a class="link" href="glib-Basic-Types.html#gboolean" title="gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-has-item" title="g_bookmark_file_has_item ()">g_bookmark_file_has_item</a>            (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>);
 <a class="link" href="glib-Basic-Types.html#gboolean" title="gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-has-group" title="g_bookmark_file_has_group ()">g_bookmark_file_has_group</a>           (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *group</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);
 <a class="link" href="glib-Basic-Types.html#gboolean" title="gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-has-application" title="g_bookmark_file_has_application ()">g_bookmark_file_has_application</a>     (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *name</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);
 <a class="link" href="glib-Basic-Types.html#gint" title="gint"><span class="returnvalue">gint</span></a>                <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-get-size" title="g_bookmark_file_get_size ()">g_bookmark_file_get_size</a>            (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>);
 <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="returnvalue">gchar</span></a> **            <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-get-uris" title="g_bookmark_file_get_uris ()">g_bookmark_file_get_uris</a>            (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code><a class="link" href="glib-Basic-Types.html#gsize" title="gsize"><span class="type">gsize</span></a> *length</code></em>);
 
 <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="returnvalue">gchar</span></a> *             <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-get-title" title="g_bookmark_file_get_title ()">g_bookmark_file_get_title</a>           (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);
 <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="returnvalue">gchar</span></a> *             <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-get-description" title="g_bookmark_file_get_description ()">g_bookmark_file_get_description</a>     (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);
 <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="returnvalue">gchar</span></a> *             <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-get-mime-type" title="g_bookmark_file_get_mime_type ()">g_bookmark_file_get_mime_type</a>       (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);
 <a class="link" href="glib-Basic-Types.html#gboolean" title="gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-get-is-private" title="g_bookmark_file_get_is_private ()">g_bookmark_file_get_is_private</a>      (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);
 <a class="link" href="glib-Basic-Types.html#gboolean" title="gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-get-icon" title="g_bookmark_file_get_icon ()">g_bookmark_file_get_icon</a>            (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
                                                          <em class="parameter"><code><a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> **href</code></em>,
                                                          <em class="parameter"><code><a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> **mime_type</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);
 <span class="returnvalue">time_t</span>              <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-get-added" title="g_bookmark_file_get_added ()">g_bookmark_file_get_added</a>           (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);
 <span class="returnvalue">time_t</span>              <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-get-modified" title="g_bookmark_file_get_modified ()">g_bookmark_file_get_modified</a>        (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);
 <span class="returnvalue">time_t</span>              <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-get-visited" title="g_bookmark_file_get_visited ()">g_bookmark_file_get_visited</a>         (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);
 <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="returnvalue">gchar</span></a> **            <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-get-groups" title="g_bookmark_file_get_groups ()">g_bookmark_file_get_groups</a>          (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
                                                          <em class="parameter"><code><a class="link" href="glib-Basic-Types.html#gsize" title="gsize"><span class="type">gsize</span></a> *length</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);
 <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="returnvalue">gchar</span></a> **            <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-get-applications" title="g_bookmark_file_get_applications ()">g_bookmark_file_get_applications</a>    (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
                                                          <em class="parameter"><code><a class="link" href="glib-Basic-Types.html#gsize" title="gsize"><span class="type">gsize</span></a> *length</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);
 <a class="link" href="glib-Basic-Types.html#gboolean" title="gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-get-app-info" title="g_bookmark_file_get_app_info ()">g_bookmark_file_get_app_info</a>        (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *name</code></em>,
                                                          <em class="parameter"><code><a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> **exec</code></em>,
                                                          <em class="parameter"><code><a class="link" href="glib-Basic-Types.html#guint" title="guint"><span class="type">guint</span></a> *count</code></em>,
                                                          <em class="parameter"><code><span class="type">time_t</span> *stamp</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);
 
 <span class="returnvalue">void</span>                <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-set-title" title="g_bookmark_file_set_title ()">g_bookmark_file_set_title</a>           (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
@@ -153,7 +153,7 @@ enum                <a class="link" href="glib-Bookmark-file-parser.html#GBookma
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *exec</code></em>,
                                                          <em class="parameter"><code><a class="link" href="glib-Basic-Types.html#gint" title="gint"><span class="type">gint</span></a> count</code></em>,
                                                          <em class="parameter"><code><span class="type">time_t</span> stamp</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);
 <span class="returnvalue">void</span>                <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-add-group" title="g_bookmark_file_add_group ()">g_bookmark_file_add_group</a>           (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *group</code></em>);
@@ -164,21 +164,21 @@ enum                <a class="link" href="glib-Bookmark-file-parser.html#GBookma
 <a class="link" href="glib-Basic-Types.html#gboolean" title="gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-remove-group" title="g_bookmark_file_remove_group ()">g_bookmark_file_remove_group</a>        (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *group</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);
 <a class="link" href="glib-Basic-Types.html#gboolean" title="gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-remove-application" title="g_bookmark_file_remove_application ()">g_bookmark_file_remove_application</a>  (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *name</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);
 <a class="link" href="glib-Basic-Types.html#gboolean" title="gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-remove-item" title="g_bookmark_file_remove_item ()">g_bookmark_file_remove_item</a>         (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);
 <a class="link" href="glib-Basic-Types.html#gboolean" title="gboolean"><span class="returnvalue">gboolean</span></a>            <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-move-item" title="g_bookmark_file_move_item ()">g_bookmark_file_move_item</a>           (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *old_uri</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *new_uri</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);
 </pre>
 </div>
-<div class="refsect1" title="Description">
+<div class="refsect1">
 <a name="glib-Bookmark-file-parser.description"></a><h2>Description</h2>
 <p>
 GBookmarkFile lets you parse, edit or create files containing bookmarks
@@ -280,9 +280,9 @@ the on disk representation, using <a class="link" href="glib-Bookmark-file-parse
 The <a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> parser was added in GLib 2.12.
 </p>
 </div>
-<div class="refsect1" title="Details">
+<div class="refsect1">
 <a name="glib-Bookmark-file-parser.details"></a><h2>Details</h2>
-<div class="refsect2" title="GBookmarkFile">
+<div class="refsect2">
 <a name="GBookmarkFile"></a><h3>GBookmarkFile</h3>
 <pre class="programlisting">typedef struct _GBookmarkFile GBookmarkFile;</pre>
 <p>
@@ -291,21 +291,20 @@ private data and should not be directly accessed.
 </p>
 </div>
 <hr>
-<div class="refsect2" title="G_BOOKMARK_FILE_ERROR">
+<div class="refsect2">
 <a name="G-BOOKMARK-FILE-ERROR:CAPS"></a><h3>G_BOOKMARK_FILE_ERROR</h3>
 <pre class="programlisting">#define G_BOOKMARK_FILE_ERROR (g_bookmark_file_error_quark ())
 </pre>
 <p>
 Error domain for bookmark file parsing.
 Errors in this domain will be from the <a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFileError" title="enum GBookmarkFileError"><span class="type">GBookmarkFileError</span></a>
-enumeration. See <a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> for information on error domains.
+enumeration. See <a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> for information on error domains.
 </p>
 </div>
 <hr>
-<div class="refsect2" title="enum GBookmarkFileError">
+<div class="refsect2">
 <a name="GBookmarkFileError"></a><h3>enum GBookmarkFileError</h3>
-<pre class="programlisting">typedef enum
-{
+<pre class="programlisting">typedef enum {
   G_BOOKMARK_FILE_ERROR_INVALID_URI,
   G_BOOKMARK_FILE_ERROR_INVALID_VALUE,
   G_BOOKMARK_FILE_ERROR_APP_NOT_REGISTERED,
@@ -319,8 +318,11 @@ enumeration. See <a class="link" href="glib-Error-Reporting.html#GError" title="
 <p>
 Error codes returned by bookmark file parsing.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><a name="G-BOOKMARK-FILE-ERROR-INVALID-URI:CAPS"></a><span class="term"><code class="literal">G_BOOKMARK_FILE_ERROR_INVALID_URI</code></span></p></td>
@@ -368,7 +370,7 @@ Error codes returned by bookmark file parsing.
 </table></div>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_new ()">
+<div class="refsect2">
 <a name="g-bookmark-file-new"></a><h3>g_bookmark_file_new ()</h3>
 <pre class="programlisting"><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="returnvalue">GBookmarkFile</span></a> *     g_bookmark_file_new                 (<em class="parameter"><code><span class="type">void</span></code></em>);</pre>
 <p>
@@ -379,26 +381,31 @@ Use <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-load-fr
 or <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-load-from-data-dirs" title="g_bookmark_file_load_from_data_dirs ()"><code class="function">g_bookmark_file_load_from_data_dirs()</code></a> to read an existing bookmark
 file.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody><tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td> an empty <a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a>
-
+<td>an empty <a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a>
 </td>
 </tr></tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_free ()">
+<div class="refsect2">
 <a name="g-bookmark-file-free"></a><h3>g_bookmark_file_free ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                g_bookmark_file_free                (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>);</pre>
 <p>
 Frees a <a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a>.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody><tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
 <td>a <a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a>
@@ -408,96 +415,95 @@ Frees a <a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" titl
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_load_from_file ()">
+<div class="refsect2">
 <a name="g-bookmark-file-load-from-file"></a><h3>g_bookmark_file_load_from_file ()</h3>
 <pre class="programlisting"><a class="link" href="glib-Basic-Types.html#gboolean" title="gboolean"><span class="returnvalue">gboolean</span></a>            g_bookmark_file_load_from_file      (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *filename</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);</pre>
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);</pre>
 <p>
 Loads a desktop bookmark file into an empty <a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> structure.
 If the file could not be loaded then <em class="parameter"><code>error</code></em> is set to either a <a class="link" href="glib-File-Utilities.html#GFileError" title="enum GFileError"><span class="type">GFileError</span></a>
 or <a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFileError" title="enum GBookmarkFileError"><span class="type">GBookmarkFileError</span></a>.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
-<td>an empty <a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> struct
-</td>
+<td>an empty <a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> struct</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>filename</code></em> :</span></p></td>
-<td>the path of a filename to load, in the GLib file name encoding
-</td>
+<td>the path of a filename to load, in the GLib file name encoding</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>error</code></em> :</span></p></td>
-<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td> <a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if a desktop bookmark file could be loaded
-
-</td>
+<td>
+<a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if a desktop bookmark file could be loaded</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_load_from_data ()">
+<div class="refsect2">
 <a name="g-bookmark-file-load-from-data"></a><h3>g_bookmark_file_load_from_data ()</h3>
 <pre class="programlisting"><a class="link" href="glib-Basic-Types.html#gboolean" title="gboolean"><span class="returnvalue">gboolean</span></a>            g_bookmark_file_load_from_data      (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *data</code></em>,
                                                          <em class="parameter"><code><a class="link" href="glib-Basic-Types.html#gsize" title="gsize"><span class="type">gsize</span></a> length</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);</pre>
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);</pre>
 <p>
 Loads a bookmark file from memory into an empty <a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a>
 structure.  If the object cannot be created then <em class="parameter"><code>error</code></em> is set to a
 <a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFileError" title="enum GBookmarkFileError"><span class="type">GBookmarkFileError</span></a>.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
-<td>an empty <a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> struct
-</td>
+<td>an empty <a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> struct</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>data</code></em> :</span></p></td>
-<td>desktop bookmarks loaded in memory
-</td>
+<td>desktop bookmarks loaded in memory</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>length</code></em> :</span></p></td>
-<td>the length of <em class="parameter"><code>data</code></em> in bytes
-</td>
+<td>the length of <em class="parameter"><code>data</code></em> in bytes</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>error</code></em> :</span></p></td>
-<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td> <a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if a desktop bookmark could be loaded.
-
-</td>
+<td>
+<a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if a desktop bookmark could be loaded.</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_load_from_data_dirs ()">
+<div class="refsect2">
 <a name="g-bookmark-file-load-from-data-dirs"></a><h3>g_bookmark_file_load_from_data_dirs ()</h3>
 <pre class="programlisting"><a class="link" href="glib-Basic-Types.html#gboolean" title="gboolean"><span class="returnvalue">gboolean</span></a>            g_bookmark_file_load_from_data_dirs (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *file</code></em>,
                                                          <em class="parameter"><code><a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> **full_path</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);</pre>
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);</pre>
 <p>
 This function looks for a desktop bookmark file named <em class="parameter"><code>file</code></em> in the
 paths returned from <a class="link" href="glib-Miscellaneous-Utility-Functions.html#g-get-user-data-dir" title="g_get_user_data_dir ()"><code class="function">g_get_user_data_dir()</code></a> and <a class="link" href="glib-Miscellaneous-Utility-Functions.html#g-get-system-data-dirs" title="g_get_system_data_dirs ()"><code class="function">g_get_system_data_dirs()</code></a>, 
@@ -505,8 +511,11 @@ loads the file into <em class="parameter"><code>bookmark</code></em> and returns
 <em class="parameter"><code>full_path</code></em>.  If the file could not be loaded then an <code class="literal">error</code> is
 set to either a <a class="link" href="glib-File-Utilities.html#GFileError" title="enum GFileError"><span class="type">GFileError</span></a> or <a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFileError" title="enum GBookmarkFileError"><span class="type">GBookmarkFileError</span></a>.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -515,41 +524,42 @@ set to either a <a class="link" href="glib-File-Utilities.html#GFileError" title
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>file</code></em> :</span></p></td>
-<td>a relative path to a filename to open and parse
-</td>
+<td>a relative path to a filename to open and parse</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>full_path</code></em> :</span></p></td>
 <td>return location for a string containing the full path
-  of the file, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+of the file, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>error</code></em> :</span></p></td>
-<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td> <a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if a key file could be loaded, <a class="link" href="glib-Standard-Macros.html#FALSE:CAPS" title="FALSE"><code class="literal">FALSE</code></a> othewise
-
-</td>
+<td>
+<a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if a key file could be loaded, <a class="link" href="glib-Standard-Macros.html#FALSE:CAPS" title="FALSE"><code class="literal">FALSE</code></a> otherwise</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_to_data ()">
+<div class="refsect2">
 <a name="g-bookmark-file-to-data"></a><h3>g_bookmark_file_to_data ()</h3>
 <pre class="programlisting"><a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="returnvalue">gchar</span></a> *             g_bookmark_file_to_data             (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code><a class="link" href="glib-Basic-Types.html#gsize" title="gsize"><span class="type">gsize</span></a> *length</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);</pre>
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);</pre>
 <p>
 This function outputs <em class="parameter"><code>bookmark</code></em> as a string.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -558,19 +568,18 @@ This function outputs <em class="parameter"><code>bookmark</code></em> as a stri
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>length</code></em> :</span></p></td>
-<td>return location for the length of the returned string, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for the length of the returned string, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>error</code></em> :</span></p></td>
-<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td> a newly allocated string holding
-  the contents of the <a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a>
-
+<td>a newly allocated string holding
+the contents of the <a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a>
 </td>
 </tr>
 </tbody>
@@ -578,17 +587,20 @@ This function outputs <em class="parameter"><code>bookmark</code></em> as a stri
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_to_file ()">
+<div class="refsect2">
 <a name="g-bookmark-file-to-file"></a><h3>g_bookmark_file_to_file ()</h3>
 <pre class="programlisting"><a class="link" href="glib-Basic-Types.html#gboolean" title="gboolean"><span class="returnvalue">gboolean</span></a>            g_bookmark_file_to_file             (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *filename</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);</pre>
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);</pre>
 <p>
 This function outputs <em class="parameter"><code>bookmark</code></em> into a file.  The write process is
 guaranteed to be atomic by using <a class="link" href="glib-File-Utilities.html#g-file-set-contents" title="g_file_set_contents ()"><code class="function">g_file_set_contents()</code></a> internally.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -597,34 +609,35 @@ guaranteed to be atomic by using <a class="link" href="glib-File-Utilities.html#
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>filename</code></em> :</span></p></td>
-<td>path of the output file
-</td>
+<td>path of the output file</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>error</code></em> :</span></p></td>
-<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td> <a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if the file was successfully written.
-
-</td>
+<td>
+<a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if the file was successfully written.</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_has_item ()">
+<div class="refsect2">
 <a name="g-bookmark-file-has-item"></a><h3>g_bookmark_file_has_item ()</h3>
 <pre class="programlisting"><a class="link" href="glib-Basic-Types.html#gboolean" title="gboolean"><span class="returnvalue">gboolean</span></a>            g_bookmark_file_has_item            (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>);</pre>
 <p>
 Looks whether the desktop bookmark has an item with its URI set to <em class="parameter"><code>uri</code></em>.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -633,26 +646,24 @@ Looks whether the desktop bookmark has an item with its URI set to <em class="pa
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
-<td>a valid URI
-</td>
+<td>a valid URI</td>
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td> <a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if <em class="parameter"><code>uri</code></em> is inside <em class="parameter"><code>bookmark</code></em>, <a class="link" href="glib-Standard-Macros.html#FALSE:CAPS" title="FALSE"><code class="literal">FALSE</code></a> otherwise
-
-</td>
+<td>
+<a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if <em class="parameter"><code>uri</code></em> is inside <em class="parameter"><code>bookmark</code></em>, <a class="link" href="glib-Standard-Macros.html#FALSE:CAPS" title="FALSE"><code class="literal">FALSE</code></a> otherwise</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_has_group ()">
+<div class="refsect2">
 <a name="g-bookmark-file-has-group"></a><h3>g_bookmark_file_has_group ()</h3>
 <pre class="programlisting"><a class="link" href="glib-Basic-Types.html#gboolean" title="gboolean"><span class="returnvalue">gboolean</span></a>            g_bookmark_file_has_group           (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *group</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);</pre>
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);</pre>
 <p>
 Checks whether <em class="parameter"><code>group</code></em> appears in the list of groups to which
 the bookmark for <em class="parameter"><code>uri</code></em> belongs to.
@@ -661,8 +672,11 @@ the bookmark for <em class="parameter"><code>uri</code></em> belongs to.
 In the event the URI cannot be found, <a class="link" href="glib-Standard-Macros.html#FALSE:CAPS" title="FALSE"><code class="literal">FALSE</code></a> is returned and
 <em class="parameter"><code>error</code></em> is set to <a class="link" href="glib-Bookmark-file-parser.html#G-BOOKMARK-FILE-ERROR-URI-NOT-FOUND:CAPS"><span class="type">G_BOOKMARK_FILE_ERROR_URI_NOT_FOUND</span></a>.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -671,36 +685,33 @@ In the event the URI cannot be found, <a class="link" href="glib-Standard-Macros
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
-<td>a valid URI
-</td>
+<td>a valid URI</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>group</code></em> :</span></p></td>
-<td>the group name to be searched
-</td>
+<td>the group name to be searched</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>error</code></em> :</span></p></td>
-<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td> <a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if <em class="parameter"><code>group</code></em> was found.
-
-</td>
+<td>
+<a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if <em class="parameter"><code>group</code></em> was found.</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_has_application ()">
+<div class="refsect2">
 <a name="g-bookmark-file-has-application"></a><h3>g_bookmark_file_has_application ()</h3>
 <pre class="programlisting"><a class="link" href="glib-Basic-Types.html#gboolean" title="gboolean"><span class="returnvalue">gboolean</span></a>            g_bookmark_file_has_application     (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *name</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);</pre>
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);</pre>
 <p>
 Checks whether the bookmark for <em class="parameter"><code>uri</code></em> inside <em class="parameter"><code>bookmark</code></em> has been
 registered by application <em class="parameter"><code>name</code></em>.
@@ -709,8 +720,11 @@ registered by application <em class="parameter"><code>name</code></em>.
 In the event the URI cannot be found, <a class="link" href="glib-Standard-Macros.html#FALSE:CAPS" title="FALSE"><code class="literal">FALSE</code></a> is returned and
 <em class="parameter"><code>error</code></em> is set to <a class="link" href="glib-Bookmark-file-parser.html#G-BOOKMARK-FILE-ERROR-URI-NOT-FOUND:CAPS"><span class="type">G_BOOKMARK_FILE_ERROR_URI_NOT_FOUND</span></a>.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -719,38 +733,38 @@ In the event the URI cannot be found, <a class="link" href="glib-Standard-Macros
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
-<td>a valid URI
-</td>
+<td>a valid URI</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>name</code></em> :</span></p></td>
-<td>the name of the application
-</td>
+<td>the name of the application</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>error</code></em> :</span></p></td>
-<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td> <a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if the application <em class="parameter"><code>name</code></em> was found
-
-</td>
+<td>
+<a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if the application <em class="parameter"><code>name</code></em> was found</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_get_size ()">
+<div class="refsect2">
 <a name="g-bookmark-file-get-size"></a><h3>g_bookmark_file_get_size ()</h3>
 <pre class="programlisting"><a class="link" href="glib-Basic-Types.html#gint" title="gint"><span class="returnvalue">gint</span></a>                g_bookmark_file_get_size            (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>);</pre>
 <p>
 Gets the number of bookmarks inside <em class="parameter"><code>bookmark</code></em>.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -759,16 +773,14 @@ Gets the number of bookmarks inside <em class="parameter"><code>bookmark</code><
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td> the number of bookmarks
-
-</td>
+<td>the number of bookmarks</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_get_uris ()">
+<div class="refsect2">
 <a name="g-bookmark-file-get-uris"></a><h3>g_bookmark_file_get_uris ()</h3>
 <pre class="programlisting"><a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="returnvalue">gchar</span></a> **            g_bookmark_file_get_uris            (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code><a class="link" href="glib-Basic-Types.html#gsize" title="gsize"><span class="type">gsize</span></a> *length</code></em>);</pre>
@@ -777,8 +789,11 @@ Returns all URIs of the bookmarks in the bookmark file <em class="parameter"><co
 The array of returned URIs will be <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>-terminated, so <em class="parameter"><code>length</code></em> may
 optionally be <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -787,26 +802,24 @@ optionally be <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>length</code></em> :</span></p></td>
-<td>return location for the number of returned URIs, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for the number of returned URIs, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td> a newly allocated <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>-terminated array of strings.
-  Use <a class="link" href="glib-String-Utility-Functions.html#g-strfreev" title="g_strfreev ()"><code class="function">g_strfreev()</code></a> to free it.
-
-</td>
+<td>a newly allocated <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>-terminated array of strings.
+Use <a class="link" href="glib-String-Utility-Functions.html#g-strfreev" title="g_strfreev ()"><code class="function">g_strfreev()</code></a> to free it.</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_get_title ()">
+<div class="refsect2">
 <a name="g-bookmark-file-get-title"></a><h3>g_bookmark_file_get_title ()</h3>
 <pre class="programlisting"><a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="returnvalue">gchar</span></a> *             g_bookmark_file_get_title           (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);</pre>
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);</pre>
 <p>
 Returns the title of the bookmark for <em class="parameter"><code>uri</code></em>.
 </p>
@@ -817,8 +830,11 @@ If <em class="parameter"><code>uri</code></em> is <a class="link" href="glib-Sta
 In the event the URI cannot be found, <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a> is returned and
 <em class="parameter"><code>error</code></em> is set to <a class="link" href="glib-Bookmark-file-parser.html#G-BOOKMARK-FILE-ERROR-URI-NOT-FOUND:CAPS"><span class="type">G_BOOKMARK_FILE_ERROR_URI_NOT_FOUND</span></a>.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -827,31 +843,29 @@ In the event the URI cannot be found, <a class="link" href="glib-Standard-Macros
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
-<td>a valid URI or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>a valid URI or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>error</code></em> :</span></p></td>
-<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td> a newly allocated string or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a> if the specified
-  URI cannot be found.
-
-</td>
+<td>a newly allocated string or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a> if the specified
+URI cannot be found.</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_get_description ()">
+<div class="refsect2">
 <a name="g-bookmark-file-get-description"></a><h3>g_bookmark_file_get_description ()</h3>
 <pre class="programlisting"><a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="returnvalue">gchar</span></a> *             g_bookmark_file_get_description     (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);</pre>
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);</pre>
 <p>
 Retrieves the description of the bookmark for <em class="parameter"><code>uri</code></em>.
 </p>
@@ -859,8 +873,11 @@ Retrieves the description of the bookmark for <em class="parameter"><code>uri</c
 In the event the URI cannot be found, <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a> is returned and
 <em class="parameter"><code>error</code></em> is set to <a class="link" href="glib-Bookmark-file-parser.html#G-BOOKMARK-FILE-ERROR-URI-NOT-FOUND:CAPS"><span class="type">G_BOOKMARK_FILE_ERROR_URI_NOT_FOUND</span></a>.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -869,31 +886,28 @@ In the event the URI cannot be found, <a class="link" href="glib-Standard-Macros
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
-<td>a valid URI
-</td>
+<td>a valid URI</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>error</code></em> :</span></p></td>
-<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td> a newly allocated string or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a> if the specified
-  URI cannot be found.
-
-</td>
+<td>a newly allocated string or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a> if the specified
+URI cannot be found.</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_get_mime_type ()">
+<div class="refsect2">
 <a name="g-bookmark-file-get-mime-type"></a><h3>g_bookmark_file_get_mime_type ()</h3>
 <pre class="programlisting"><a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="returnvalue">gchar</span></a> *             g_bookmark_file_get_mime_type       (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);</pre>
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);</pre>
 <p>
 Retrieves the MIME type of the resource pointed by <em class="parameter"><code>uri</code></em>.
 </p>
@@ -903,8 +917,11 @@ In the event the URI cannot be found, <a class="link" href="glib-Standard-Macros
 event that the MIME type cannot be found, <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a> is returned and
 <em class="parameter"><code>error</code></em> is set to <a class="link" href="glib-Bookmark-file-parser.html#G-BOOKMARK-FILE-ERROR-INVALID-VALUE:CAPS"><span class="type">G_BOOKMARK_FILE_ERROR_INVALID_VALUE</span></a>.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -913,31 +930,28 @@ event that the MIME type cannot be found, <a class="link" href="glib-Standard-Ma
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
-<td>a valid URI
-</td>
+<td>a valid URI</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>error</code></em> :</span></p></td>
-<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td> a newly allocated string or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a> if the specified
-  URI cannot be found.
-
-</td>
+<td>a newly allocated string or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a> if the specified
+URI cannot be found.</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_get_is_private ()">
+<div class="refsect2">
 <a name="g-bookmark-file-get-is-private"></a><h3>g_bookmark_file_get_is_private ()</h3>
 <pre class="programlisting"><a class="link" href="glib-Basic-Types.html#gboolean" title="gboolean"><span class="returnvalue">gboolean</span></a>            g_bookmark_file_get_is_private      (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);</pre>
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);</pre>
 <p>
 Gets whether the private flag of the bookmark for <em class="parameter"><code>uri</code></em> is set.
 </p>
@@ -947,8 +961,11 @@ In the event the URI cannot be found, <a class="link" href="glib-Standard-Macros
 event that the private flag cannot be found, <a class="link" href="glib-Standard-Macros.html#FALSE:CAPS" title="FALSE"><code class="literal">FALSE</code></a> is returned and
 <em class="parameter"><code>error</code></em> is set to <a class="link" href="glib-Bookmark-file-parser.html#G-BOOKMARK-FILE-ERROR-INVALID-VALUE:CAPS"><span class="type">G_BOOKMARK_FILE_ERROR_INVALID_VALUE</span></a>.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -957,32 +974,30 @@ event that the private flag cannot be found, <a class="link" href="glib-Standard
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
-<td>a valid URI
-</td>
+<td>a valid URI</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>error</code></em> :</span></p></td>
-<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td> <a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if the private flag is set, <a class="link" href="glib-Standard-Macros.html#FALSE:CAPS" title="FALSE"><code class="literal">FALSE</code></a> otherwise.
-
-</td>
+<td>
+<a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if the private flag is set, <a class="link" href="glib-Standard-Macros.html#FALSE:CAPS" title="FALSE"><code class="literal">FALSE</code></a> otherwise.</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_get_icon ()">
+<div class="refsect2">
 <a name="g-bookmark-file-get-icon"></a><h3>g_bookmark_file_get_icon ()</h3>
 <pre class="programlisting"><a class="link" href="glib-Basic-Types.html#gboolean" title="gboolean"><span class="returnvalue">gboolean</span></a>            g_bookmark_file_get_icon            (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
                                                          <em class="parameter"><code><a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> **href</code></em>,
                                                          <em class="parameter"><code><a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> **mime_type</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);</pre>
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);</pre>
 <p>
 Gets the icon of the bookmark for <em class="parameter"><code>uri</code></em>.
 </p>
@@ -990,8 +1005,11 @@ Gets the icon of the bookmark for <em class="parameter"><code>uri</code></em>.
 In the event the URI cannot be found, <a class="link" href="glib-Standard-Macros.html#FALSE:CAPS" title="FALSE"><code class="literal">FALSE</code></a> is returned and
 <em class="parameter"><code>error</code></em> is set to <a class="link" href="glib-Bookmark-file-parser.html#G-BOOKMARK-FILE-ERROR-URI-NOT-FOUND:CAPS"><span class="type">G_BOOKMARK_FILE_ERROR_URI_NOT_FOUND</span></a>.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -1000,41 +1018,39 @@ In the event the URI cannot be found, <a class="link" href="glib-Standard-Macros
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
-<td>a valid URI
-</td>
+<td>a valid URI</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>href</code></em> :</span></p></td>
-<td>return location for the icon's location or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for the icon's location or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>mime_type</code></em> :</span></p></td>
-<td>return location for the icon's MIME type or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for the icon's MIME type or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>error</code></em> :</span></p></td>
-<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td> <a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if the icon for the bookmark for the URI was found.
-  You should free the returned strings.
-
-</td>
+<td>
+<a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if the icon for the bookmark for the URI was found.
+You should free the returned strings.</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_get_added ()">
+<div class="refsect2">
 <a name="g-bookmark-file-get-added"></a><h3>g_bookmark_file_get_added ()</h3>
 <pre class="programlisting"><span class="returnvalue">time_t</span>              g_bookmark_file_get_added           (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);</pre>
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);</pre>
 <p>
 Gets the time the bookmark for <em class="parameter"><code>uri</code></em> was added to <em class="parameter"><code>bookmark</code></em>
 </p>
@@ -1042,8 +1058,11 @@ Gets the time the bookmark for <em class="parameter"><code>uri</code></em> was a
 In the event the URI cannot be found, -1 is returned and
 <em class="parameter"><code>error</code></em> is set to <a class="link" href="glib-Bookmark-file-parser.html#G-BOOKMARK-FILE-ERROR-URI-NOT-FOUND:CAPS"><span class="type">G_BOOKMARK_FILE_ERROR_URI_NOT_FOUND</span></a>.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -1052,30 +1071,27 @@ In the event the URI cannot be found, -1 is returned and
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
-<td>a valid URI
-</td>
+<td>a valid URI</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>error</code></em> :</span></p></td>
-<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td> a timestamp
-
-</td>
+<td>a timestamp</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_get_modified ()">
+<div class="refsect2">
 <a name="g-bookmark-file-get-modified"></a><h3>g_bookmark_file_get_modified ()</h3>
 <pre class="programlisting"><span class="returnvalue">time_t</span>              g_bookmark_file_get_modified        (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);</pre>
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);</pre>
 <p>
 Gets the time when the bookmark for <em class="parameter"><code>uri</code></em> was last modified.
 </p>
@@ -1083,8 +1099,11 @@ Gets the time when the bookmark for <em class="parameter"><code>uri</code></em> 
 In the event the URI cannot be found, -1 is returned and
 <em class="parameter"><code>error</code></em> is set to <a class="link" href="glib-Bookmark-file-parser.html#G-BOOKMARK-FILE-ERROR-URI-NOT-FOUND:CAPS"><span class="type">G_BOOKMARK_FILE_ERROR_URI_NOT_FOUND</span></a>.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -1093,30 +1112,27 @@ In the event the URI cannot be found, -1 is returned and
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
-<td>a valid URI
-</td>
+<td>a valid URI</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>error</code></em> :</span></p></td>
-<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td> a timestamp
-
-</td>
+<td>a timestamp</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_get_visited ()">
+<div class="refsect2">
 <a name="g-bookmark-file-get-visited"></a><h3>g_bookmark_file_get_visited ()</h3>
 <pre class="programlisting"><span class="returnvalue">time_t</span>              g_bookmark_file_get_visited         (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);</pre>
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);</pre>
 <p>
 Gets the time the bookmark for <em class="parameter"><code>uri</code></em> was last visited.
 </p>
@@ -1124,8 +1140,11 @@ Gets the time the bookmark for <em class="parameter"><code>uri</code></em> was l
 In the event the URI cannot be found, -1 is returned and
 <em class="parameter"><code>error</code></em> is set to <a class="link" href="glib-Bookmark-file-parser.html#G-BOOKMARK-FILE-ERROR-URI-NOT-FOUND:CAPS"><span class="type">G_BOOKMARK_FILE_ERROR_URI_NOT_FOUND</span></a>.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -1134,31 +1153,28 @@ In the event the URI cannot be found, -1 is returned and
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
-<td>a valid URI
-</td>
+<td>a valid URI</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>error</code></em> :</span></p></td>
-<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td> a timestamp.
-
-</td>
+<td>a timestamp.</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_get_groups ()">
+<div class="refsect2">
 <a name="g-bookmark-file-get-groups"></a><h3>g_bookmark_file_get_groups ()</h3>
 <pre class="programlisting"><a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="returnvalue">gchar</span></a> **            g_bookmark_file_get_groups          (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
                                                          <em class="parameter"><code><a class="link" href="glib-Basic-Types.html#gsize" title="gsize"><span class="type">gsize</span></a> *length</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);</pre>
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);</pre>
 <p>
 Retrieves the list of group names of the bookmark for <em class="parameter"><code>uri</code></em>.
 </p>
@@ -1170,8 +1186,11 @@ In the event the URI cannot be found, <a class="link" href="glib-Standard-Macros
 The returned array is <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a> terminated, so <em class="parameter"><code>length</code></em> may optionally
 be <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -1180,37 +1199,34 @@ be <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
-<td>a valid URI
-</td>
+<td>a valid URI</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>length</code></em> :</span></p></td>
-<td>return location for the length of the returned string, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for the length of the returned string, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>error</code></em> :</span></p></td>
-<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td> a newly allocated <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>-terminated array of group names.
-  Use <a class="link" href="glib-String-Utility-Functions.html#g-strfreev" title="g_strfreev ()"><code class="function">g_strfreev()</code></a> to free it.
-
-</td>
+<td>a newly allocated <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>-terminated array of group names.
+Use <a class="link" href="glib-String-Utility-Functions.html#g-strfreev" title="g_strfreev ()"><code class="function">g_strfreev()</code></a> to free it.</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_get_applications ()">
+<div class="refsect2">
 <a name="g-bookmark-file-get-applications"></a><h3>g_bookmark_file_get_applications ()</h3>
 <pre class="programlisting"><a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="returnvalue">gchar</span></a> **            g_bookmark_file_get_applications    (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
                                                          <em class="parameter"><code><a class="link" href="glib-Basic-Types.html#gsize" title="gsize"><span class="type">gsize</span></a> *length</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);</pre>
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);</pre>
 <p>
 Retrieves the names of the applications that have registered the
 bookmark for <em class="parameter"><code>uri</code></em>.
@@ -1219,8 +1235,11 @@ bookmark for <em class="parameter"><code>uri</code></em>.
 In the event the URI cannot be found, <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a> is returned and
 <em class="parameter"><code>error</code></em> is set to <a class="link" href="glib-Bookmark-file-parser.html#G-BOOKMARK-FILE-ERROR-URI-NOT-FOUND:CAPS"><span class="type">G_BOOKMARK_FILE_ERROR_URI_NOT_FOUND</span></a>.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -1229,32 +1248,29 @@ In the event the URI cannot be found, <a class="link" href="glib-Standard-Macros
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
-<td>a valid URI
-</td>
+<td>a valid URI</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>length</code></em> :</span></p></td>
-<td>return location of the length of the returned list, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location of the length of the returned list, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>error</code></em> :</span></p></td>
-<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td> a newly allocated <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>-terminated array of strings.
-  Use <a class="link" href="glib-String-Utility-Functions.html#g-strfreev" title="g_strfreev ()"><code class="function">g_strfreev()</code></a> to free it.
-
-</td>
+<td>a newly allocated <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>-terminated array of strings.
+Use <a class="link" href="glib-String-Utility-Functions.html#g-strfreev" title="g_strfreev ()"><code class="function">g_strfreev()</code></a> to free it.</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_get_app_info ()">
+<div class="refsect2">
 <a name="g-bookmark-file-get-app-info"></a><h3>g_bookmark_file_get_app_info ()</h3>
 <pre class="programlisting"><a class="link" href="glib-Basic-Types.html#gboolean" title="gboolean"><span class="returnvalue">gboolean</span></a>            g_bookmark_file_get_app_info        (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
@@ -1262,7 +1278,7 @@ In the event the URI cannot be found, <a class="link" href="glib-Standard-Macros
                                                          <em class="parameter"><code><a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> **exec</code></em>,
                                                          <em class="parameter"><code><a class="link" href="glib-Basic-Types.html#guint" title="guint"><span class="type">guint</span></a> *count</code></em>,
                                                          <em class="parameter"><code><span class="type">time_t</span> *stamp</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);</pre>
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);</pre>
 <p>
 Gets the registration informations of <em class="parameter"><code>app_name</code></em> for the bookmark for
 <em class="parameter"><code>uri</code></em>.  See <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-set-app-info" title="g_bookmark_file_set_app_info ()"><code class="function">g_bookmark_file_set_app_info()</code></a> for more informations about
@@ -1280,8 +1296,11 @@ for <em class="parameter"><code>uri</code></em>,  <a class="link" href="glib-Sta
 the command line fails, an error of the <a class="link" href="glib-Shell-related-Utilities.html#G-SHELL-ERROR:CAPS" title="G_SHELL_ERROR"><span class="type">G_SHELL_ERROR</span></a> domain is
 set and <a class="link" href="glib-Standard-Macros.html#FALSE:CAPS" title="FALSE"><code class="literal">FALSE</code></a> is returned.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -1290,46 +1309,43 @@ set and <a class="link" href="glib-Standard-Macros.html#FALSE:CAPS" title="FALSE
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
-<td>a valid URI
-</td>
+<td>a valid URI</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>name</code></em> :</span></p></td>
-<td>an application's name
-</td>
+<td>an application's name</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>exec</code></em> :</span></p></td>
-<td>location for the command line of the application, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>location for the command line of the application, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>count</code></em> :</span></p></td>
-<td>return location for the registration count, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for the registration count, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>stamp</code></em> :</span></p></td>
-<td>return location for the last registration time, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for the last registration time, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>error</code></em> :</span></p></td>
-<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td> <a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> on success.
-
-</td>
+<td>
+<a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> on success.</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_set_title ()">
+<div class="refsect2">
 <a name="g-bookmark-file-set-title"></a><h3>g_bookmark_file_set_title ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                g_bookmark_file_set_title           (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
@@ -1344,8 +1360,11 @@ If <em class="parameter"><code>uri</code></em> is <a class="link" href="glib-Sta
 <p>
 If a bookmark for <em class="parameter"><code>uri</code></em> cannot be found then it is created.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -1354,20 +1373,19 @@ If a bookmark for <em class="parameter"><code>uri</code></em> cannot be found th
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
-<td>a valid URI or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>a valid URI or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>title</code></em> :</span></p></td>
-<td>a UTF-8 encoded string
-</td>
+<td>a UTF-8 encoded string</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_set_description ()">
+<div class="refsect2">
 <a name="g-bookmark-file-set-description"></a><h3>g_bookmark_file_set_description ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                g_bookmark_file_set_description     (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
@@ -1381,8 +1399,11 @@ If <em class="parameter"><code>uri</code></em> is <a class="link" href="glib-Sta
 <p>
 If a bookmark for <em class="parameter"><code>uri</code></em> cannot be found then it is created.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -1391,20 +1412,19 @@ If a bookmark for <em class="parameter"><code>uri</code></em> cannot be found th
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
-<td>a valid URI or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>a valid URI or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>description</code></em> :</span></p></td>
-<td>a string
-</td>
+<td>a string</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_set_mime_type ()">
+<div class="refsect2">
 <a name="g-bookmark-file-set-mime-type"></a><h3>g_bookmark_file_set_mime_type ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                g_bookmark_file_set_mime_type       (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
@@ -1415,8 +1435,11 @@ Sets <em class="parameter"><code>mime_type</code></em> as the MIME type of the b
 <p>
 If a bookmark for <em class="parameter"><code>uri</code></em> cannot be found then it is created.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -1425,20 +1448,18 @@ If a bookmark for <em class="parameter"><code>uri</code></em> cannot be found th
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
-<td>a valid URI
-</td>
+<td>a valid URI</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>mime_type</code></em> :</span></p></td>
-<td>a MIME type
-</td>
+<td>a MIME type</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_set_is_private ()">
+<div class="refsect2">
 <a name="g-bookmark-file-set-is-private"></a><h3>g_bookmark_file_set_is_private ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                g_bookmark_file_set_is_private      (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
@@ -1449,8 +1470,11 @@ Sets the private flag of the bookmark for <em class="parameter"><code>uri</code>
 <p>
 If a bookmark for <em class="parameter"><code>uri</code></em> cannot be found then it is created.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -1459,21 +1483,19 @@ If a bookmark for <em class="parameter"><code>uri</code></em> cannot be found th
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
-<td>a valid URI
-</td>
+<td>a valid URI</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>is_private</code></em> :</span></p></td>
 <td>
-<a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if the bookmark should be marked as private
-</td>
+<a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if the bookmark should be marked as private</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_set_icon ()">
+<div class="refsect2">
 <a name="g-bookmark-file-set-icon"></a><h3>g_bookmark_file_set_icon ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                g_bookmark_file_set_icon            (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
@@ -1487,8 +1509,11 @@ file or the icon name following the Icon Naming specification.
 <p>
 If no bookmark for <em class="parameter"><code>uri</code></em> is found one is created.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -1497,25 +1522,23 @@ If no bookmark for <em class="parameter"><code>uri</code></em> is found one is c
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
-<td>a valid URI
-</td>
+<td>a valid URI</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>href</code></em> :</span></p></td>
-<td>the URI of the icon for the bookmark, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>the URI of the icon for the bookmark, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>mime_type</code></em> :</span></p></td>
-<td>the MIME type of the icon for the bookmark
-</td>
+<td>the MIME type of the icon for the bookmark</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_set_added ()">
+<div class="refsect2">
 <a name="g-bookmark-file-set-added"></a><h3>g_bookmark_file_set_added ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                g_bookmark_file_set_added           (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
@@ -1526,8 +1549,11 @@ Sets the time the bookmark for <em class="parameter"><code>uri</code></em> was a
 <p>
 If no bookmark for <em class="parameter"><code>uri</code></em> is found then it is created.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -1536,20 +1562,18 @@ If no bookmark for <em class="parameter"><code>uri</code></em> is found then it 
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
-<td>a valid URI
-</td>
+<td>a valid URI</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>added</code></em> :</span></p></td>
-<td>a timestamp or -1 to use the current time
-</td>
+<td>a timestamp or -1 to use the current time</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_set_groups ()">
+<div class="refsect2">
 <a name="g-bookmark-file-set-groups"></a><h3>g_bookmark_file_set_groups ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                g_bookmark_file_set_groups          (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
@@ -1562,8 +1586,11 @@ set group name list is removed.
 <p>
 If <em class="parameter"><code>uri</code></em> cannot be found then an item for it is created.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -1572,12 +1599,11 @@ If <em class="parameter"><code>uri</code></em> cannot be found then an item for 
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
-<td>an item's URI
-</td>
+<td>an item's URI</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>groups</code></em> :</span></p></td>
-<td>an array of group names, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a> to remove all groups
+<td>an array of group names, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a> to remove all groups. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
 </td>
 </tr>
 <tr>
@@ -1590,7 +1616,7 @@ If <em class="parameter"><code>uri</code></em> cannot be found then an item for 
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_set_modified ()">
+<div class="refsect2">
 <a name="g-bookmark-file-set-modified"></a><h3>g_bookmark_file_set_modified ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                g_bookmark_file_set_modified        (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
@@ -1607,8 +1633,11 @@ was actually changed.  Every function of <a class="link" href="glib-Bookmark-fil
 modifies a bookmark also changes the modification time, except for
 <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-set-visited" title="g_bookmark_file_set_visited ()"><code class="function">g_bookmark_file_set_visited()</code></a>.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -1617,20 +1646,18 @@ modifies a bookmark also changes the modification time, except for
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
-<td>a valid URI
-</td>
+<td>a valid URI</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>modified</code></em> :</span></p></td>
-<td>a timestamp or -1 to use the current time
-</td>
+<td>a timestamp or -1 to use the current time</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_set_visited ()">
+<div class="refsect2">
 <a name="g-bookmark-file-set-visited"></a><h3>g_bookmark_file_set_visited ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                g_bookmark_file_set_visited         (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
@@ -1648,8 +1675,11 @@ or by the default application for the bookmark's MIME type, retrieved
 using <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-get-mime-type" title="g_bookmark_file_get_mime_type ()"><code class="function">g_bookmark_file_get_mime_type()</code></a>.  Changing the "visited" time
 does not affect the "modified" time.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -1658,20 +1688,18 @@ does not affect the "modified" time.
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
-<td>a valid URI
-</td>
+<td>a valid URI</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>visited</code></em> :</span></p></td>
-<td>a timestamp or -1 to use the current time
-</td>
+<td>a timestamp or -1 to use the current time</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_set_app_info ()">
+<div class="refsect2">
 <a name="g-bookmark-file-set-app-info"></a><h3>g_bookmark_file_set_app_info ()</h3>
 <pre class="programlisting"><a class="link" href="glib-Basic-Types.html#gboolean" title="gboolean"><span class="returnvalue">gboolean</span></a>            g_bookmark_file_set_app_info        (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
@@ -1679,7 +1707,7 @@ does not affect the "modified" time.
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *exec</code></em>,
                                                          <em class="parameter"><code><a class="link" href="glib-Basic-Types.html#gint" title="gint"><span class="type">gint</span></a> count</code></em>,
                                                          <em class="parameter"><code><span class="type">time_t</span> stamp</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);</pre>
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);</pre>
 <p>
 Sets the meta-data of application <em class="parameter"><code>name</code></em> inside the list of
 applications that have registered a bookmark for <em class="parameter"><code>uri</code></em> inside
@@ -1692,9 +1720,9 @@ and <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-remove-
 <p>
 <em class="parameter"><code>name</code></em> can be any UTF-8 encoded string used to identify an
 application.
-<em class="parameter"><code>exec</code></em> can have one of these two modifiers: "<code class="literal">f</code>", which will
+<em class="parameter"><code>exec</code></em> can have one of these two modifiers: "%f", which will
 be expanded as the local file name retrieved from the bookmark's
-URI; "<code class="literal">u</code>", which will be expanded as the bookmark's URI.
+URI; "%u", which will be expanded as the bookmark's URI.
 The expansion is done automatically when retrieving the stored
 command line using the <a class="link" href="glib-Bookmark-file-parser.html#g-bookmark-file-get-app-info" title="g_bookmark_file_get_app_info ()"><code class="function">g_bookmark_file_get_app_info()</code></a> function.
 <em class="parameter"><code>count</code></em> is the number of times the application has registered the
@@ -1713,8 +1741,11 @@ for <em class="parameter"><code>uri</code></em>,  <a class="link" href="glib-Sta
 <a class="link" href="glib-Bookmark-file-parser.html#G-BOOKMARK-FILE-ERROR-APP-NOT-REGISTERED:CAPS"><span class="type">G_BOOKMARK_FILE_ERROR_APP_NOT_REGISTERED</span></a>.  Otherwise, if no bookmark
 for <em class="parameter"><code>uri</code></em> is found, one is created.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -1723,47 +1754,41 @@ for <em class="parameter"><code>uri</code></em> is found, one is created.
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
-<td>a valid URI
-</td>
+<td>a valid URI</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>name</code></em> :</span></p></td>
-<td>an application's name
-</td>
+<td>an application's name</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>exec</code></em> :</span></p></td>
-<td>an application's command line
-</td>
+<td>an application's command line</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>count</code></em> :</span></p></td>
-<td>the number of registrations done for this application
-</td>
+<td>the number of registrations done for this application</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>stamp</code></em> :</span></p></td>
-<td>the time of the last registration for this application
-</td>
+<td>the time of the last registration for this application</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>error</code></em> :</span></p></td>
-<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td> <a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if the application's meta-data was successfully
-  changed.
-
-</td>
+<td>
+<a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if the application's meta-data was successfully
+changed.</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_add_group ()">
+<div class="refsect2">
 <a name="g-bookmark-file-add-group"></a><h3>g_bookmark_file_add_group ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                g_bookmark_file_add_group           (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
@@ -1775,8 +1800,11 @@ belongs to.
 <p>
 If no bookmark for <em class="parameter"><code>uri</code></em> is found then it is created.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -1785,20 +1813,18 @@ If no bookmark for <em class="parameter"><code>uri</code></em> is found then it 
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
-<td>a valid URI
-</td>
+<td>a valid URI</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>group</code></em> :</span></p></td>
-<td>the group name to be added
-</td>
+<td>the group name to be added</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_add_application ()">
+<div class="refsect2">
 <a name="g-bookmark-file-add-application"></a><h3>g_bookmark_file_add_application ()</h3>
 <pre class="programlisting"><span class="returnvalue">void</span>                g_bookmark_file_add_application     (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
@@ -1820,7 +1846,7 @@ time the application registered this bookmark.
 If <em class="parameter"><code>name</code></em> is <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>, the name of the application will be the
 same returned by <a class="link" href="glib-Miscellaneous-Utility-Functions.html#g-get-application-name" title="g_get_application_name ()"><code class="function">g_get_application_name()</code></a>; if <em class="parameter"><code>exec</code></em> is <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>, the
 command line will be a composition of the program name as
-returned by <a class="link" href="glib-Miscellaneous-Utility-Functions.html#g-get-prgname" title="g_get_prgname ()"><code class="function">g_get_prgname()</code></a> and the "<code class="literal">u</code>" modifier, which will be
+returned by <a class="link" href="glib-Miscellaneous-Utility-Functions.html#g-get-prgname" title="g_get_prgname ()"><code class="function">g_get_prgname()</code></a> and the "%u" modifier, which will be
 expanded to the bookmark's URI.
 </p>
 <p>
@@ -1832,8 +1858,11 @@ with the same <em class="parameter"><code>name</code></em> had already registere
 <p>
 If no bookmark for <em class="parameter"><code>uri</code></em> is found, one is created.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -1842,18 +1871,17 @@ If no bookmark for <em class="parameter"><code>uri</code></em> is found, one is 
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
-<td>a valid URI
-</td>
+<td>a valid URI</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>name</code></em> :</span></p></td>
 <td>the name of the application registering the bookmark
-  or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>exec</code></em> :</span></p></td>
-<td>command line to be used to launch the bookmark or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>command line to be used to launch the bookmark or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
 </td>
 </tr>
 </tbody>
@@ -1861,12 +1889,12 @@ If no bookmark for <em class="parameter"><code>uri</code></em> is found, one is 
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_remove_group ()">
+<div class="refsect2">
 <a name="g-bookmark-file-remove-group"></a><h3>g_bookmark_file_remove_group ()</h3>
 <pre class="programlisting"><a class="link" href="glib-Basic-Types.html#gboolean" title="gboolean"><span class="returnvalue">gboolean</span></a>            g_bookmark_file_remove_group        (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *group</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);</pre>
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);</pre>
 <p>
 Removes <em class="parameter"><code>group</code></em> from the list of groups to which the bookmark
 for <em class="parameter"><code>uri</code></em> belongs to.
@@ -1877,8 +1905,11 @@ In the event the URI cannot be found, <a class="link" href="glib-Standard-Macros
 In the event no group was defined, <a class="link" href="glib-Standard-Macros.html#FALSE:CAPS" title="FALSE"><code class="literal">FALSE</code></a> is returned and
 <em class="parameter"><code>error</code></em> is set to <a class="link" href="glib-Bookmark-file-parser.html#G-BOOKMARK-FILE-ERROR-INVALID-VALUE:CAPS"><span class="type">G_BOOKMARK_FILE_ERROR_INVALID_VALUE</span></a>.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -1887,36 +1918,33 @@ In the event no group was defined, <a class="link" href="glib-Standard-Macros.ht
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
-<td>a valid URI
-</td>
+<td>a valid URI</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>group</code></em> :</span></p></td>
-<td>the group name to be removed
-</td>
+<td>the group name to be removed</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>error</code></em> :</span></p></td>
-<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td> <a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if <em class="parameter"><code>group</code></em> was successfully removed.
-
-</td>
+<td>
+<a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if <em class="parameter"><code>group</code></em> was successfully removed.</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_remove_application ()">
+<div class="refsect2">
 <a name="g-bookmark-file-remove-application"></a><h3>g_bookmark_file_remove_application ()</h3>
 <pre class="programlisting"><a class="link" href="glib-Basic-Types.html#gboolean" title="gboolean"><span class="returnvalue">gboolean</span></a>            g_bookmark_file_remove_application  (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *name</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);</pre>
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);</pre>
 <p>
 Removes application registered with <em class="parameter"><code>name</code></em> from the list of applications
 that have registered a bookmark for <em class="parameter"><code>uri</code></em> inside <em class="parameter"><code>bookmark</code></em>.
@@ -1928,8 +1956,11 @@ In the event that no application with name <em class="parameter"><code>app_name<
 a bookmark for <em class="parameter"><code>uri</code></em>,  <a class="link" href="glib-Standard-Macros.html#FALSE:CAPS" title="FALSE"><code class="literal">FALSE</code></a> is returned and error is set to
 <a class="link" href="glib-Bookmark-file-parser.html#G-BOOKMARK-FILE-ERROR-APP-NOT-REGISTERED:CAPS"><span class="type">G_BOOKMARK_FILE_ERROR_APP_NOT_REGISTERED</span></a>.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -1938,40 +1969,40 @@ a bookmark for <em class="parameter"><code>uri</code></em>,  <a class="link" hre
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
-<td>a valid URI
-</td>
+<td>a valid URI</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>name</code></em> :</span></p></td>
-<td>the name of the application
-</td>
+<td>the name of the application</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>error</code></em> :</span></p></td>
-<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td> <a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if the application was successfully removed.
-
-</td>
+<td>
+<a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if the application was successfully removed.</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_remove_item ()">
+<div class="refsect2">
 <a name="g-bookmark-file-remove-item"></a><h3>g_bookmark_file_remove_item ()</h3>
 <pre class="programlisting"><a class="link" href="glib-Basic-Types.html#gboolean" title="gboolean"><span class="returnvalue">gboolean</span></a>            g_bookmark_file_remove_item         (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *uri</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);</pre>
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);</pre>
 <p>
 Removes the bookmark for <em class="parameter"><code>uri</code></em> from the bookmark file <em class="parameter"><code>bookmark</code></em>.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -1980,31 +2011,29 @@ Removes the bookmark for <em class="parameter"><code>uri</code></em> from the bo
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>uri</code></em> :</span></p></td>
-<td>a valid URI
-</td>
+<td>a valid URI</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>error</code></em> :</span></p></td>
-<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a>, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td> <a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if the bookmark was removed successfully.
-
-</td>
+<td>
+<a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if the bookmark was removed successfully.</td>
 </tr>
 </tbody>
 </table></div>
 <p class="since">Since 2.12</p>
 </div>
 <hr>
-<div class="refsect2" title="g_bookmark_file_move_item ()">
+<div class="refsect2">
 <a name="g-bookmark-file-move-item"></a><h3>g_bookmark_file_move_item ()</h3>
 <pre class="programlisting"><a class="link" href="glib-Basic-Types.html#gboolean" title="gboolean"><span class="returnvalue">gboolean</span></a>            g_bookmark_file_move_item           (<em class="parameter"><code><a class="link" href="glib-Bookmark-file-parser.html#GBookmarkFile" title="GBookmarkFile"><span class="type">GBookmarkFile</span></a> *bookmark</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *old_uri</code></em>,
                                                          <em class="parameter"><code>const <a class="link" href="glib-Basic-Types.html#gchar" title="gchar"><span class="type">gchar</span></a> *new_uri</code></em>,
-                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> **error</code></em>);</pre>
+                                                         <em class="parameter"><code><a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> **error</code></em>);</pre>
 <p>
 Changes the URI of a bookmark item from <em class="parameter"><code>old_uri</code></em> to <em class="parameter"><code>new_uri</code></em>.  Any
 existing bookmark for <em class="parameter"><code>new_uri</code></em> will be overwritten.  If <em class="parameter"><code>new_uri</code></em> is
@@ -2014,8 +2043,11 @@ existing bookmark for <em class="parameter"><code>new_uri</code></em> will be ov
 In the event the URI cannot be found, <a class="link" href="glib-Standard-Macros.html#FALSE:CAPS" title="FALSE"><code class="literal">FALSE</code></a> is returned and
 <em class="parameter"><code>error</code></em> is set to <a class="link" href="glib-Bookmark-file-parser.html#G-BOOKMARK-FILE-ERROR-URI-NOT-FOUND:CAPS"><span class="type">G_BOOKMARK_FILE_ERROR_URI_NOT_FOUND</span></a>.
 </p>
-<div class="variablelist"><table border="0">
+<div class="variablelist"><table border="0" class="variablelist">
+<colgroup>
 <col align="left" valign="top">
+<col>
+</colgroup>
 <tbody>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>bookmark</code></em> :</span></p></td>
@@ -2024,24 +2056,22 @@ In the event the URI cannot be found, <a class="link" href="glib-Standard-Macros
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>old_uri</code></em> :</span></p></td>
-<td>a valid URI
-</td>
+<td>a valid URI</td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>new_uri</code></em> :</span></p></td>
-<td>a valid URI, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>a valid URI, or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>. <span class="annotation">[<acronym title="NULL is ok, both for passing and for returning."><span class="acronym">allow-none</span></acronym>]</span>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><em class="parameter"><code>error</code></em> :</span></p></td>
-<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="GError"><span class="type">GError</span></a> or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
+<td>return location for a <a class="link" href="glib-Error-Reporting.html#GError" title="struct GError"><span class="type">GError</span></a> or <a class="link" href="glib-Standard-Macros.html#NULL:CAPS" title="NULL"><code class="literal">NULL</code></a>
 </td>
 </tr>
 <tr>
 <td><p><span class="term"><span class="emphasis"><em>Returns</em></span> :</span></p></td>
-<td> <a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if the URI was successfully changed
-
-</td>
+<td>
+<a class="link" href="glib-Standard-Macros.html#TRUE:CAPS" title="TRUE"><code class="literal">TRUE</code></a> if the URI was successfully changed</td>
 </tr>
 </tbody>
 </table></div>
@@ -2051,6 +2081,6 @@ In the event the URI cannot be found, <a class="link" href="glib-Standard-Macros
 </div>
 <div class="footer">
 <hr>
-          Generated by GTK-Doc V1.15</div>
+          Generated by GTK-Doc V1.18.1</div>
 </body>
 </html>

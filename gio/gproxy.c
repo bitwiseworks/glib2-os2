@@ -56,7 +56,8 @@ g_proxy_default_init (GProxyInterface *iface)
  * Lookup "gio-proxy" extension point for a proxy implementation that supports
  * specified protocol.
  *
- * Return value: return a #GProxy or NULL if protocol is not supported.
+ * Return value: (transfer full): return a #GProxy or NULL if protocol
+ *               is not supported.
  *
  * Since: 2.26
  **/
@@ -84,7 +85,7 @@ g_proxy_get_default_for_protocol (const gchar *protocol)
  * @proxy: a #GProxy
  * @connection: a #GIOStream
  * @proxy_address: a #GProxyAddress
- * @cancellable: a #GCancellable
+ * @cancellable: (allow-none): a #GCancellable
  * @error: return #GError
  *
  * Given @connection to communicate with a proxy (eg, a
@@ -92,7 +93,7 @@ g_proxy_get_default_for_protocol (const gchar *protocol)
  * does the necessary handshake to connect to @proxy_address, and if
  * required, wraps the #GIOStream to handle proxy payload.
  *
- * Return value: a #GIOStream that will replace @connection. This might
+ * Return value: (transfer full): a #GIOStream that will replace @connection. This might
  *               be the same as @connection, in which case a reference
  *               will be added.
  *
@@ -123,9 +124,9 @@ g_proxy_connect (GProxy            *proxy,
  * @proxy: a #GProxy
  * @connection: a #GIOStream
  * @proxy_address: a #GProxyAddress
- * @cancellable: a #GCancellable
- * @callback: a #GAsyncReadyCallback
- * @user_data: callback data
+ * @cancellable: (allow-none): a #GCancellable
+ * @callback: (scope async): a #GAsyncReadyCallback
+ * @user_data: (closure): callback data
  *
  * Asynchronous version of g_proxy_connect().
  *
@@ -156,12 +157,12 @@ g_proxy_connect_async (GProxy               *proxy,
 /**
  * g_proxy_connect_finish:
  * @proxy: a #GProxy
- * @result: a #GAsyncRetult
+ * @result: a #GAsyncResult
  * @error: return #GError
  *
  * See g_proxy_connect().
  *
- * Return value: a #GIOStream.
+ * Return value: (transfer full): a #GIOStream.
  *
  * Since: 2.26
  */

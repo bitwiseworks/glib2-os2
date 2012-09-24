@@ -40,12 +40,23 @@ static GWinHttpDllFuncs funcs;
 static void
 lookup_funcs (void)
 {
-  HMODULE winhttp;
+  HMODULE winhttp = NULL;
+  char winhttp_dll[MAX_PATH + 100];
+  int n;
 
   if (lookup_done)
     return;
 
-  winhttp = LoadLibrary ("winhttp.dll");
+  n = GetSystemDirectory (winhttp_dll, MAX_PATH);
+  if (n > 0 && n < MAX_PATH)
+    {
+        if (winhttp_dll[n-1] != '\\' &&
+            winhttp_dll[n-1] != '/')
+            strcat (winhttp_dll, "\\");
+        strcat (winhttp_dll, "winhttp.dll");
+        winhttp = LoadLibrary (winhttp_dll);
+    }
+
   if (winhttp != NULL)
     {
       funcs.pWinHttpCloseHandle = (BOOL (WINAPI *) (HINTERNET)) GetProcAddress (winhttp, "WinHttpCloseHandle");
@@ -126,6 +137,8 @@ g_winhttp_vfs_init (GWinHttpVfs *vfs)
      WINHTTP_NO_PROXY_NAME,
      WINHTTP_NO_PROXY_BYPASS,
      0);
+
+  g_free (wagent);
 }
 
 /*
