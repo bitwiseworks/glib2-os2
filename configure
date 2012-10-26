@@ -27236,7 +27236,7 @@ __GCC_HAVE_SYNC_COMPARE_AND_SWAP_4;
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  as_fn_error $? "GLib must be build with -march=i486 or later." "$LINENO" 5
+  echo as_fn_error $? "GLib must be build with -march=i486 or later." "$LINENO" 5
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
   CFLAGS="${SAVE_CFLAGS}"

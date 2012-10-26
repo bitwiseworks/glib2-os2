@@ -34,6 +34,9 @@
 #include "gsimpleasyncresult.h"
 #include "gsocketaddress.h"
 
+#ifdef __KLIBC__
+int	lwres_h_errno;
+#endif
 
 G_DEFINE_TYPE (GThreadedResolver, g_threaded_resolver, G_TYPE_RESOLVER)
 

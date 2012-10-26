@@ -76,6 +76,8 @@ g_spawn_error_quark (void)
   return g_quark_from_static_string ("g-exec-error-quark");
 }
 
+G_DEFINE_QUARK (g-spawn-exit-error-quark, g_spawn_exit_error)
+
 /**
  * g_spawn_async:
  * @working_directory: child's current working directory, or %NULL to inherit parent's
@@ -1188,3 +1190,94 @@ void
 g_spawn_close_pid (GPid pid)
 {
 }
+
+/**
+ * g_spawn_check_exit_status:
+ * @exit_status: An exit code as returned from g_spawn_sync()
+ * @error: a #GError
+ *
+ * Set @error if @exit_status indicates the child exited abnormally
+ * (e.g. with a nonzero exit code, or via a fatal signal).
+ *
+ * The g_spawn_sync() and g_child_watch_add() family of APIs return an
+ * exit status for subprocesses encoded in a platform-specific way.
+ * On Unix, this is guaranteed to be in the same format
+ * <literal>waitpid(2)</literal> returns, and on Windows it is
+ * guaranteed to be the result of
+ * <literal>GetExitCodeProcess()</literal>.  Prior to the introduction
+ * of this function in GLib 2.34, interpreting @exit_status required
+ * use of platform-specific APIs, which is problematic for software
+ * using GLib as a cross-platform layer.
+ *
+ * Additionally, many programs simply want to determine whether or not
+ * the child exited successfully, and either propagate a #GError or
+ * print a message to standard error.  In that common case, this
+ * function can be used.  Note that the error message in @error will
+ * contain human-readable information about the exit status.
+ *
+ * The <literal>domain</literal> and <literal>code</literal> of @error
+ * have special semantics in the case where the process has an "exit
+ * code", as opposed to being killed by a signal.  On Unix, this
+ * happens if <literal>WIFEXITED</literal> would be true of
+ * @exit_status.  On Windows, it is always the case.
+ *
+ * The special semantics are that the actual exit code will be the
+ * code set in @error, and the domain will be %G_SPAWN_EXIT_ERROR.
+ * This allows you to differentiate between different exit codes.
+ *
+ * If the process was terminated by some means other than an exit
+ * status, the domain will be %G_SPAWN_ERROR, and the code will be
+ * %G_SPAWN_ERROR_FAILED.
+ *
+ * This function just offers convenience; you can of course also check
+ * the available platform via a macro such as %G_OS_UNIX, and use
+ * <literal>WIFEXITED()</literal> and <literal>WEXITSTATUS()</literal>
+ * on @exit_status directly.  Do not attempt to scan or parse the
+ * error message string; it may be translated and/or change in future
+ * versions of GLib.
+ *
+ * Returns: %TRUE if child exited successfully, %FALSE otherwise (and @error will be set)
+ * Since: 2.34
+ */
+gboolean
+g_spawn_check_exit_status (gint      exit_status,
+			   GError  **error)
+{
+  gboolean ret = FALSE;
+
+  if (WIFEXITED (exit_status))
+    {
+      if (WEXITSTATUS (exit_status) != 0)
+	{
+	  g_set_error (error, G_SPAWN_EXIT_ERROR, WEXITSTATUS (exit_status),
+		       _("Child process exited with code %ld"),
+		       (long) WEXITSTATUS (exit_status));
+	  goto out;
+	}
+    }
+  else if (WIFSIGNALED (exit_status))
+    {
+      g_set_error (error, G_SPAWN_ERROR, G_SPAWN_ERROR_FAILED,
+		   _("Child process killed by signal %ld"),
+		   (long) WTERMSIG (exit_status));
+      goto out;
+    }
+  else if (WIFSTOPPED (exit_status))
+    {
+      g_set_error (error, G_SPAWN_ERROR, G_SPAWN_ERROR_FAILED,
+		   _("Child process stopped by signal %ld"),
+		   (long) WSTOPSIG (exit_status));
+      goto out;
+    }
+  else
+    {
+      g_set_error (error, G_SPAWN_ERROR, G_SPAWN_ERROR_FAILED,
+		   _("Child process exited abnormally"));
+      goto out;
+    }
+
+  ret = TRUE;
+ out:
+  return ret;
+}
+

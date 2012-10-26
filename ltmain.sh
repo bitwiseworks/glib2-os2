@@ -2974,8 +2974,8 @@ func_mode_install ()
 	    relink_command=`$ECHO "$relink_command" | $SED "s%@inst_prefix_dir@%%"`
 	  fi
 
-	  func_warning "relinking \`$file'"
-	  func_show_eval "$relink_command" \
+	  echo func_warning "relinking \`$file'"
+	  echo func_show_eval "$relink_command" \
 	    'func_fatal_error "error: relink \`$file'\'' with the above command before installing it"'
 	fi
 
@@ -2987,6 +2987,7 @@ func_mode_install ()
 
 	  srcname="$realname"
 	  test -n "$relink_command" && srcname="$realname"T
+	  test -n "$relink_command" && srcname="$realname"
 
 	  # Install the shared library and build the symlinks.
 	  func_show_eval "$install_shared_prog $dir/$srcname $destdir/$realname" \

@@ -1143,7 +1143,11 @@ g_system_thread_new (GThreadFunc   thread_func,
 void
 g_thread_yield (void)
 {
+#ifdef __KLIBC__
+  pthread_yield ();
+#else
   sched_yield ();
+#endif
 }
 
 void

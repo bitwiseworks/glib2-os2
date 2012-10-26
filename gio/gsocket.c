@@ -1298,12 +1298,14 @@ g_socket_get_ttl (GSocket *socket)
 			   &optval, &optlen);
       value = optval;
     }
+#ifndef __KLIBC__
   else if (socket->priv->family == G_SOCKET_FAMILY_IPV6)
     {
       optlen = sizeof (value);
       result = getsockopt (socket->priv->fd, IPPROTO_IPV6, IPV6_UNICAST_HOPS,
 			   &value, &optlen);
     }
+#endif
   else
     g_return_val_if_reached (FALSE);
 
@@ -1342,11 +1344,13 @@ g_socket_set_ttl (GSocket  *socket,
       result = setsockopt (socket->priv->fd, IPPROTO_IP, IP_TTL,
 			   &optval, sizeof (optval));
     }
+#ifndef __KLIBC__
   else if (socket->priv->family == G_SOCKET_FAMILY_IPV6)
     {
       result = setsockopt (socket->priv->fd, IPPROTO_IPV6, IPV6_UNICAST_HOPS,
 			   &ttl, sizeof (ttl));
     }
+#endif
   else
     g_return_if_reached ();
 
@@ -1456,12 +1460,14 @@ g_socket_get_multicast_loopback (GSocket *socket)
       result = getsockopt (socket->priv->fd, IPPROTO_IP, IP_MULTICAST_LOOP,
 			   &value, &optlen);
     }
+#ifndef __KLIBC__
   else if (socket->priv->family == G_SOCKET_FAMILY_IPV6)
     {
       optlen = sizeof (guint);
       result = getsockopt (socket->priv->fd, IPPROTO_IPV6, IPV6_MULTICAST_LOOP,
 			   &value, &optlen);
     }
+#endif
   else
     g_return_val_if_reached (FALSE);
 
@@ -1504,6 +1510,7 @@ g_socket_set_multicast_loopback (GSocket    *socket,
       result = setsockopt (socket->priv->fd, IPPROTO_IP, IP_MULTICAST_LOOP,
 			   &value, sizeof (value));
     }
+#ifndef __KLIBC__
   else if (socket->priv->family == G_SOCKET_FAMILY_IPV6)
     {
       guint value = (guint)loopback;
@@ -1511,6 +1518,7 @@ g_socket_set_multicast_loopback (GSocket    *socket,
       result = setsockopt (socket->priv->fd, IPPROTO_IPV6, IPV6_MULTICAST_LOOP,
 			   &value, sizeof (value));
     }
+#endif
   else
     g_return_if_reached ();
 
@@ -1552,12 +1560,14 @@ g_socket_get_multicast_ttl (GSocket *socket)
 			   &optval, &optlen);
       value = optval;
     }
+#ifndef __KLIBC__
   else if (socket->priv->family == G_SOCKET_FAMILY_IPV6)
     {
       optlen = sizeof (value);
       result = getsockopt (socket->priv->fd, IPPROTO_IPV6, IPV6_MULTICAST_HOPS,
 			   &value, &optlen);
     }
+#endif
   else
     g_return_val_if_reached (FALSE);
 
@@ -1597,11 +1607,13 @@ g_socket_set_multicast_ttl (GSocket  *socket,
       result = setsockopt (socket->priv->fd, IPPROTO_IP, IP_MULTICAST_TTL,
 			   &optval, sizeof (optval));
     }
+#ifndef __KLIBC__
   else if (socket->priv->family == G_SOCKET_FAMILY_IPV6)
     {
       result = setsockopt (socket->priv->fd, IPPROTO_IPV6, IPV6_MULTICAST_HOPS,
 			   &ttl, sizeof (ttl));
     }
+#endif
   else
     g_return_if_reached ();
 
@@ -1961,6 +1973,7 @@ g_socket_multicast_group_operation (GSocket       *socket,
       result = setsockopt (socket->priv->fd, IPPROTO_IP, optname,
 			   &mc_req, sizeof (mc_req));
     }
+#ifndef __KLIBC__
   else if (socket->priv->family == G_SOCKET_FAMILY_IPV6)
     {
       struct ipv6_mreq mc_req_ipv6;
@@ -1977,6 +1990,7 @@ g_socket_multicast_group_operation (GSocket       *socket,
       result = setsockopt (socket->priv->fd, IPPROTO_IPV6, optname,
 			   &mc_req_ipv6, sizeof (mc_req_ipv6));
     }
+#endif
   else
     g_return_val_if_reached (FALSE);
 
@@ -2084,6 +2098,7 @@ g_socket_speaks_ipv4 (GSocket *socket)
     case G_SOCKET_FAMILY_IPV4:
       return TRUE;
 
+#ifndef __KLIBC__
     case G_SOCKET_FAMILY_IPV6:
 #if defined (IPPROTO_IPV6) && defined (IPV6_V6ONLY)
       {
@@ -2099,6 +2114,7 @@ g_socket_speaks_ipv4 (GSocket *socket)
       }
 #else
       return FALSE;
+#endif
 #endif
 
     default:
