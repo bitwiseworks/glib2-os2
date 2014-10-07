@@ -71,15 +71,17 @@ AC_CACHE_VAL(ac_cv_path_$1,
   ac_cv_path_$1="[$]$1" # Let the user override the test with a path.
   ;;
   *)
-  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}:"
+  IFS="${IFS= 	}"; ac_save_ifs="$IFS"; IFS="${IFS}$PATH_SEPARATOR"
   for ac_dir in ifelse([$5], , $PATH, [$5]); do
     test -z "$ac_dir" && ac_dir=.
-    if test -f $ac_dir/$ac_word; then
-      if [$3]; then
-	ac_cv_path_$1="$ac_dir/$ac_word"
-	break
+    for ac_exec_ext in '' $ac_executable_extensions; do
+      if test -f $ac_dir/$ac_word$ac_exec_ext; then
+        if [$3]; then
+           ac_cv_path_$1="$ac_dir/$ac_word$ac_exec_ext"
+           break 2
+        fi
       fi
-    fi
+    done
   done
   IFS="$ac_save_ifs"
 dnl If no 4th arg is given, leave the cache variable unset,
@@ -200,7 +202,7 @@ glib_DEFUN([GLIB_WITH_NLS],
 	AC_DEFINE(HAVE_GETTEXT,1,
 	  [Define if the GNU gettext() function is already present or preinstalled.])
 	GLIB_PATH_PROG_WITH_TEST(MSGFMT, msgfmt,
-	  [test -z "`$ac_dir/$ac_word -h 2>&1 | grep 'dv '`"], no)dnl
+	  [test -z "`$ac_dir/$ac_word$ac_exec_ext -h 2>&1 | grep 'dv '`"], no)dnl
 	if test "$MSGFMT" != "no"; then
           glib_save_LIBS="$LIBS"
           LIBS="$LIBS $INTLLIBS"
