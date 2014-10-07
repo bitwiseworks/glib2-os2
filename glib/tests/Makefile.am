@@ -267,7 +267,9 @@ gwakeup_fallback_LDADD    = $(progs_ldadd)
 endif
 
 if OS_UNIX
+if ! OS_OS2
 private_LDFLAGS = -pthread
+endif
 
 TEST_PROGS += unix-multithreaded
 unix_multithreaded_SOURCES = $(top_srcdir)/glib/tests/unix.c
