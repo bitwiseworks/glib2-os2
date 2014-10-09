@@ -228,7 +228,7 @@ if test "$glib_native_win32" != yes; then
     LIBTOOL_EXPORT_OPTIONS='-export-symbols-regex "^g.*"'
   else
     # On OS/2 libtool filters out emxexp output
-    LIBTOOL_EXPORT_OPTIONS='-export-symbols-regex "^[[:space:]]*\\\"?_g.*"'
+    LIBTOOL_EXPORT_OPTIONS='-export-symbols-regex "^[[[:space:]]]*\\\"?_g.*"'
   fi
 else
     # We currently use .def files on Windows
