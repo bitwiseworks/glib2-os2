@@ -30,7 +30,7 @@ libtestgobject_la_SOURCES =	\
 if CROSS_COMPILING
   glib_genmarshal=$(GLIB_GENMARSHAL)
 else
-  glib_genmarshal=$(top_builddir)/gobject/glib-genmarshal
+  glib_genmarshal=$(LIBTOOL) --mode=execute $(foreach lib,$(LDADD),--dlopen $(lib)) $(top_builddir)/gobject/glib-genmarshal
 endif
 
 testmarshal.h: stamp-testmarshal.h

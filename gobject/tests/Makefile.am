@@ -8,7 +8,7 @@ INCLUDES = -g $(gobject_INCLUDES) $(GLIB_DEBUG_FLAGS)
 if CROSS_COMPILING
   glib_genmarshal=$(GLIB_GENMARSHAL)
 else
-  glib_genmarshal=$(top_builddir)/gobject/glib-genmarshal
+  glib_genmarshal=$(LIBTOOL) --mode=execute $(foreach lib,$(LDADD),--dlopen $(lib)) $(top_builddir)/gobject/glib-genmarshal
 endif
 
 noinst_PROGRAMS  = $(TEST_PROGS)

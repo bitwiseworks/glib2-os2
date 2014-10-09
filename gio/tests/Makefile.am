@@ -619,7 +619,7 @@ test.mo: de.po
 if CROSS_COMPILING
   glib_compile_resources=$(GLIB_COMPILE_RESOURCES)
 else
-  glib_compile_resources=$(top_builddir)/gio/glib-compile-resources
+  glib_compile_resources=$(LIBTOOL) --mode=execute $(foreach lib,$(progs_ldadd),--dlopen $(lib)) $(top_builddir)/gio/glib-compile-resources
 endif
 
 BUILT_SOURCES += test_resources.c test_resources2.c test_resources2.h
