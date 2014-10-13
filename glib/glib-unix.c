@@ -28,6 +28,10 @@
 
 #include <string.h>
 
+#ifdef G_PLATFORM_OS2
+#include <sys/socket.h>
+#endif
+
 /**
  * SECTION:gunix
  * @title: UNIX-specific utilities and integration
@@ -102,7 +106,11 @@ g_unix_open_pipe (int     *fds,
     /* Fall through on -ENOSYS, we must be running on an old kernel */
   }
 #endif
+#ifdef G_PLATFORM_OS2
+  ecode = socketpair (AF_LOCAL, SOCK_STREAM, 0, fds);
+#else
   ecode = pipe (fds);
+#endif
   if (ecode == -1)
     return g_unix_set_error_from_errno (error, errno);
   ecode = fcntl (fds[0], flags);
