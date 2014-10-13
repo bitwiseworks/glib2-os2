@@ -375,11 +375,22 @@ glib_DEFUN([GLIB_GNU_GETTEXT],
    dnl be included in po/Makefile.
    test -d po || mkdir po
    if test "x$srcdir" != "x."; then
-     if test "x`echo $srcdir | sed 's@/.*@@'`" = "x"; then
-       posrcprefix="$srcdir/"
-     else
-       posrcprefix="../$srcdir/"
-     fi
+     case $host_os in
+       os2*)
+         if test "x`echo $srcdir | sed 's@\(.\?:\)\?/.*@@'`" = "x"; then
+           posrcprefix="$srcdir/"
+         else
+           posrcprefix="../$srcdir/"
+         fi
+       ;;
+       *)
+         if test "x`echo $srcdir | sed 's@/.*@@'`" = "x"; then
+           posrcprefix="$srcdir/"
+         else
+           posrcprefix="../$srcdir/"
+         fi
+       ;;
+     esac
    else
      posrcprefix="../"
    fi
