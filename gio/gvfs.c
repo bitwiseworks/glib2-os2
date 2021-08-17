@@ -13,9 +13,7 @@
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
- * Boston, MA 02111-1307, USA.
+ * Public License along with this library; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Alexander Larsson <alexl@redhat.com>
  */
@@ -23,6 +21,7 @@
 #include "config.h"
 #include <string.h>
 #include "gvfs.h"
+#include "glib-private.h"
 #include "glocalvfs.h"
 #include "gresourcefile.h"
 #include "giomodule-priv.h"
@@ -193,6 +192,8 @@ g_vfs_parse_name (GVfs       *vfs,
 GVfs *
 g_vfs_get_default (void)
 {
+  if (GLIB_PRIVATE_CALL (g_check_setuid) ())
+    return g_vfs_get_local ();
   return _g_io_module_get_default (G_VFS_EXTENSION_POINT_NAME,
                                    "GIO_USE_VFS",
                                    (GIOModuleVerifyFunc)g_vfs_is_active);

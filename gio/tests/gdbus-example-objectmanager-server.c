@@ -1,5 +1,5 @@
 
-#include "gdbus-example-objectmanager-generated.h"
+#include "gdbus-object-manager-example/gdbus-example-objectmanager-generated.h"
 
 /* ---------------------------------------------------------------------------------------------------- */
 
@@ -138,8 +138,6 @@ main (gint argc, gchar *argv[])
 {
   GMainLoop *loop;
   guint id;
-
-  g_type_init ();
 
   loop = g_main_loop_new (NULL, FALSE);
 

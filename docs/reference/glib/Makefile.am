@@ -1,5 +1,4 @@
 ## Process this file with automake to produce Makefile.in
-include $(top_srcdir)/Makefile.decl
 
 AUTOMAKE_OPTIONS = 1.6
 
@@ -10,17 +9,22 @@ DOC_MODULE=glib
 DOC_MAIN_SGML_FILE=glib-docs.xml
 
 # The directory containing the source code. Relative to $(srcdir)
-DOC_SOURCE_DIR=$(top_srcdir)/glib $(top_srcdir)/gmodule
+DOC_SOURCE_DIR = \
+    $(top_srcdir)/glib $(top_srcdir)/gmodule \
+    $(top_builddir)/glib $(top_builddir)/gmodule
 
 # Extra options to supply to gtkdoc-scan
 SCAN_OPTIONS=--deprecated-guards="G_DISABLE_DEPRECATED" --ignore-decorators="GLIB_VAR|G_GNUC_WARN_UNUSED_RESULT"
 
 # Extra options to supply to gtkdoc-mkdb
-MKDB_OPTIONS=--sgml-mode --output-format=xml --name-space=g
+MKDB_OPTIONS=--output-format=xml --name-space=g
 
 # Used for dependencies
-HFILE_GLOB=$(top_srcdir)/glib/*.h $(top_srcdir)/gmodule/*.h
-CFILE_GLOB=$(top_srcdir)/glib/*.c $(top_srcdir)/gmodule/*.c
+HFILE_GLOB = \
+    $(top_srcdir)/glib/*.h \
+    $(top_srcdir)/gmodule/*.h \
+    $(top_builddir)/glib/glibconfig.h
+CFILE_GLOB= $(top_srcdir)/glib/*.c $(top_srcdir)/gmodule/*.c
 
 # Ignore some private headers
 IGNORE_HFILES = \
@@ -51,12 +55,20 @@ IGNORE_HFILES = \
 	gvariant-serialiser.h	\
 	gvariant-core.h		\
 	gvarianttypeinfo.h	\
-	gwakeup.h
+	gwakeup.h		\
+	gtranslit-data.h	\
+	glib-init.h		\
+	gconstructor.h		\
+	valgrind.h
 
 # Images to copy into HTML directory
-HTML_IMAGES =  				\
-	file-name-encodings.png		\
-	mainloop-states.gif
+HTML_IMAGES =  						\
+	file-name-encodings.png				\
+	mainloop-states.gif				\
+	Sorted_binary_tree_breadth-first_traversal.svg 	\
+	Sorted_binary_tree_inorder.svg 			\
+	Sorted_binary_tree_postorder.svg 		\
+	Sorted_binary_tree_preorder.svg
 
 # Extra SGML files that are included by $(DOC_MAIN_SGML_FILE)
 content_files =				\
@@ -65,6 +77,7 @@ content_files =				\
 	building.xml			\
 	changes.xml			\
 	compiling.xml			\
+	programming.xml			\
 	resources.xml			\
 	regex-syntax.xml		\
 	version.xml			\
@@ -90,6 +103,10 @@ EXTRA_DIST +=				\
 	mainloop-states.fig		\
 	mainloop-states.png		\
 	mainloop-states.eps		\
+	Sorted_binary_tree_breadth-first_traversal.svg 	\
+	Sorted_binary_tree_inorder.svg 			\
+	Sorted_binary_tree_postorder.svg 		\
+	Sorted_binary_tree_preorder.svg			\
 	version.xml.in
 
 ########################################################################
