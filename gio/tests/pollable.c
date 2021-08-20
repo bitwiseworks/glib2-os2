@@ -13,9 +13,7 @@
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
- * Boston, MA 02111-1307, USA.
+ * Public License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <gio/gio.h>
@@ -70,6 +68,9 @@ write_callback (gpointer user_data)
   nwrote = g_output_stream_write (out, buf, 2, NULL, &error);
   g_assert_no_error (error);
   g_assert_cmpint (nwrote, ==, 2);
+/* Give the pipe a few ticks to propagate the write for sockets. On my
+ * iMac i7, 40 works, 30 doesn't. */
+  g_usleep (80L);
 
   check_source_readability_callback (GINT_TO_POINTER (TRUE));
 
@@ -274,7 +275,6 @@ int
 main (int   argc,
       char *argv[])
 {
-  g_type_init ();
   g_test_init (&argc, &argv, NULL);
 
 #ifdef G_OS_UNIX

@@ -14,9 +14,7 @@
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 59 Temple Place, Suite 330,
- * Boston, MA 02111-1307, USA.
+ * Public License along with this library; if not, see <http://www.gnu.org/licenses/>.
  *
  * Author: Alexander Larsson <alexl@redhat.com>
  *         David Zeuthen <davidz@redhat.com>
@@ -37,7 +35,6 @@
 #include "gmountprivate.h"
 #include "gvolumemonitor.h"
 #include "gthemedicon.h"
-#include "gsimpleasyncresult.h"
 #include "glibintl.h"
 
 
@@ -106,7 +103,7 @@ g_win32_mount_init (GWin32Mount *win32_mount)
 {
 }
 
-gchar *
+static gchar *
 _win32_get_displayname (const char *drive)
 {
   gunichar2 *wdrive = g_utf8_to_utf16 (drive, -1, NULL, NULL, NULL);
@@ -194,7 +191,7 @@ g_win32_mount_get_root (GMount *mount)
   return g_file_new_for_path (win32_mount->mount_path);
 }
 
-const char *
+static const char *
 _win32_drive_type_to_icon (int type, gboolean use_symbolic)
 {
   switch (type)
@@ -230,7 +227,7 @@ g_win32_mount_get_icon (GMount *mount)
 	}
       else
         {
-          win32_mount->icon = g_themed_icon_new_with_default_fallbacks (_win32_drive_type_to_icon (win32_mount->drive_type, FALSE);
+          win32_mount->icon = g_themed_icon_new_with_default_fallbacks (_win32_drive_type_to_icon (win32_mount->drive_type, FALSE));
 	}
     }
 
@@ -247,7 +244,7 @@ g_win32_mount_get_symbolic_icon (GMount *mount)
   /* lazy creation */
   if (!win32_mount->symbolic_icon)
     {
-      win32_mount->symbolic_icon = g_themed_icon_new_with_default_fallbacks (_win32_drive_type_to_icon (win32_mount->drive_type, TRUE);
+      win32_mount->symbolic_icon = g_themed_icon_new_with_default_fallbacks (_win32_drive_type_to_icon (win32_mount->drive_type, TRUE));
     }
 
   return g_object_ref (win32_mount->symbolic_icon);

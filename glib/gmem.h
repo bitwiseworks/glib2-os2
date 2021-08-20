@@ -12,9 +12,7 @@
  * Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
 /*
@@ -24,14 +22,14 @@
  * GLib at ftp://ftp.gtk.org/pub/gtk/.
  */
 
+#ifndef __G_MEM_H__
+#define __G_MEM_H__
+
 #if !defined (__GLIB_H_INSIDE__) && !defined (GLIB_COMPILATION)
 #error "Only <glib.h> can be included directly."
 #endif
 
-#ifndef __G_MEM_H__
-#define __G_MEM_H__
-
-#include <glib/gtypes.h>
+#include <glib/gutils.h>
 
 G_BEGIN_DECLS
 
@@ -47,6 +45,8 @@ G_BEGIN_DECLS
  * A set of functions used to perform memory allocation. The same #GMemVTable must
  * be used for all allocations in the same program; a call to g_mem_set_vtable(),
  * if it exists, should be prior to any use of GLib.
+ *
+ * This functions related to this has been deprecated in 2.46, and no longer work.
  */
 typedef struct _GMemVTable GMemVTable;
 
@@ -67,32 +67,45 @@ typedef struct _GMemVTable GMemVTable;
 /* Memory allocation functions
  */
 
+GLIB_AVAILABLE_IN_ALL
 void	 g_free	          (gpointer	 mem);
 
 GLIB_AVAILABLE_IN_2_34
 void     g_clear_pointer  (gpointer      *pp,
                            GDestroyNotify destroy);
 
+GLIB_AVAILABLE_IN_ALL
 gpointer g_malloc         (gsize	 n_bytes) G_GNUC_MALLOC G_GNUC_ALLOC_SIZE(1);
+GLIB_AVAILABLE_IN_ALL
 gpointer g_malloc0        (gsize	 n_bytes) G_GNUC_MALLOC G_GNUC_ALLOC_SIZE(1);
+GLIB_AVAILABLE_IN_ALL
 gpointer g_realloc        (gpointer	 mem,
 			   gsize	 n_bytes) G_GNUC_WARN_UNUSED_RESULT;
+GLIB_AVAILABLE_IN_ALL
 gpointer g_try_malloc     (gsize	 n_bytes) G_GNUC_MALLOC G_GNUC_ALLOC_SIZE(1);
+GLIB_AVAILABLE_IN_ALL
 gpointer g_try_malloc0    (gsize	 n_bytes) G_GNUC_MALLOC G_GNUC_ALLOC_SIZE(1);
+GLIB_AVAILABLE_IN_ALL
 gpointer g_try_realloc    (gpointer	 mem,
 			   gsize	 n_bytes) G_GNUC_WARN_UNUSED_RESULT;
 
+GLIB_AVAILABLE_IN_ALL
 gpointer g_malloc_n       (gsize	 n_blocks,
 			   gsize	 n_block_bytes) G_GNUC_MALLOC G_GNUC_ALLOC_SIZE2(1,2);
+GLIB_AVAILABLE_IN_ALL
 gpointer g_malloc0_n      (gsize	 n_blocks,
 			   gsize	 n_block_bytes) G_GNUC_MALLOC G_GNUC_ALLOC_SIZE2(1,2);
+GLIB_AVAILABLE_IN_ALL
 gpointer g_realloc_n      (gpointer	 mem,
 			   gsize	 n_blocks,
 			   gsize	 n_block_bytes) G_GNUC_WARN_UNUSED_RESULT;
+GLIB_AVAILABLE_IN_ALL
 gpointer g_try_malloc_n   (gsize	 n_blocks,
 			   gsize	 n_block_bytes) G_GNUC_MALLOC G_GNUC_ALLOC_SIZE2(1,2);
+GLIB_AVAILABLE_IN_ALL
 gpointer g_try_malloc0_n  (gsize	 n_blocks,
 			   gsize	 n_block_bytes) G_GNUC_MALLOC G_GNUC_ALLOC_SIZE2(1,2);
+GLIB_AVAILABLE_IN_ALL
 gpointer g_try_realloc_n  (gpointer	 mem,
 			   gsize	 n_blocks,
 			   gsize	 n_block_bytes) G_GNUC_WARN_UNUSED_RESULT;
@@ -106,14 +119,84 @@ gpointer g_try_realloc_n  (gpointer	 mem,
     /* This assignment is needed to avoid a gcc warning */                     \
     GDestroyNotify _destroy = (GDestroyNotify) (destroy);                      \
                                                                                \
-    (void) (0 ? (gpointer) *(pp) : 0);                                         \
-    do                                                                         \
-      _p = g_atomic_pointer_get (_pp);                                         \
-    while G_UNLIKELY (!g_atomic_pointer_compare_and_exchange (_pp, _p, NULL)); \
-                                                                               \
-    if (_p)                                                                    \
-      _destroy (_p);                                                           \
+    _p = *_pp;                                                                 \
+    if (_p) 								       \
+      { 								       \
+        *_pp = NULL;							       \
+        _destroy (_p);                                                         \
+      }                                                                        \
   } G_STMT_END
+
+/**
+ * g_steal_pointer:
+ * @pp: a pointer to a pointer
+ *
+ * Sets @pp to %NULL, returning the value that was there before.
+ *
+ * Conceptually, this transfers the ownership of the pointer from the
+ * referenced variable to the "caller" of the macro (ie: "steals" the
+ * reference).
+ *
+ * The return value will be properly typed, according to the type of
+ * @pp.
+ *
+ * This can be very useful when combined with g_autoptr() to prevent the
+ * return value of a function from being automatically freed.  Consider
+ * the following example (which only works on GCC and clang):
+ *
+ * |[
+ * GObject *
+ * create_object (void)
+ * {
+ *   g_autoptr(GObject) obj = g_object_new (G_TYPE_OBJECT, NULL);
+ *
+ *   if (early_error_case)
+ *     return NULL;
+ *
+ *   return g_steal_pointer (&obj);
+ * }
+ * ]|
+ *
+ * It can also be used in similar ways for 'out' parameters and is
+ * particularly useful for dealing with optional out parameters:
+ *
+ * |[
+ * gboolean
+ * get_object (GObject **obj_out)
+ * {
+ *   g_autoptr(GObject) obj = g_object_new (G_TYPE_OBJECT, NULL);
+ *
+ *   if (early_error_case)
+ *     return FALSE;
+ *
+ *   if (obj_out)
+ *     *obj_out = g_steal_pointer (&obj);
+ *
+ *   return TRUE;
+ * }
+ * ]|
+ *
+ * In the above example, the object will be automatically freed in the
+ * early error case and also in the case that %NULL was given for
+ * @obj_out.
+ *
+ * Since: 2.44
+ */
+static inline gpointer
+g_steal_pointer (gpointer pp)
+{
+  gpointer *ptr = (gpointer *) pp;
+  gpointer ref;
+
+  ref = *ptr;
+  *ptr = NULL;
+
+  return ref;
+}
+
+/* type safety */
+#define g_steal_pointer(pp) \
+  (0 ? (*(pp)) : (g_steal_pointer) (pp))
 
 /* Optimise: avoid the call to the (slower) _n function if we can
  * determine at compile-time that no overflow happens.
@@ -230,7 +313,7 @@ gpointer g_try_realloc_n  (gpointer	 mem,
  * to 0's, and returns %NULL on failure. Contrast with g_new0(), which aborts
  * the program on failure.
  * The returned pointer is cast to a pointer to the given type.
- * The function returns %NULL when @n_structs is 0 of if an overflow occurs.
+ * The function returns %NULL when @n_structs is 0 or if an overflow occurs.
  * 
  * Since: 2.8
  * Returns: a pointer to the allocated memory, cast to a pointer to @struct_type
@@ -270,7 +353,9 @@ struct _GMemVTable {
   gpointer (*try_realloc) (gpointer mem,
 			   gsize    n_bytes);
 };
+GLIB_DEPRECATED_IN_2_46
 void	 g_mem_set_vtable (GMemVTable	*vtable);
+GLIB_DEPRECATED_IN_2_46
 gboolean g_mem_is_system_malloc (void);
 
 GLIB_VAR gboolean g_mem_gc_friendly;
@@ -278,6 +363,7 @@ GLIB_VAR gboolean g_mem_gc_friendly;
 /* Memory profiler and checker, has to be enabled via g_mem_set_vtable()
  */
 GLIB_VAR GMemVTable	*glib_mem_profiler_table;
+GLIB_DEPRECATED_IN_2_46
 void	g_mem_profile	(void);
 
 G_END_DECLS

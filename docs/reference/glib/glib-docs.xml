@@ -10,7 +10,7 @@
     <releaseinfo>
       for GLib &version;
       The latest version of this documentation can be found on-line at
-      <ulink role="online-location" url="http://library.gnome.org/devel/glib/unstable/">http://library.gnome.org/devel/glib/unstable/</ulink>.
+      <ulink role="online-location" url="https://developer.gnome.org/glib/unstable/">https://developer.gnome.org/glib/unstable/</ulink>.
     </releaseinfo>
   </bookinfo>
 
@@ -20,18 +20,13 @@
       GLib is a general-purpose utility library, which provides many useful
       data types, macros, type conversions, string utilities, file utilities,
       a mainloop abstraction, and so on. It works on many UNIX-like platforms,
-      Windows, OS/2 and BeOS. GLib is released under the GNU Library General
-      Public License (GNU LGPL).
-    </para>
-    <para>
-      The general policy of GLib is that all functions are invisibly threadsafe
-      with the exception of data structure manipulation functions, where, if
-      you have two threads manipulating the <emphasis>same</emphasis> data
-      structure, they must use a lock to synchronize their operation.
+      as well as Windows and OS X. GLib is released under the GNU Library
+      General Public License (GNU LGPL).
     </para>
 
     <xi:include href="building.xml" />
     <xi:include href="cross.xml" />
+    <xi:include href="programming.xml" />
     <xi:include href="xml/compiling.xml" />
     <xi:include href="running.xml" />
     <xi:include href="changes.xml" />
@@ -214,6 +209,30 @@
   <index id="api-index-2-34" role="2.34">
     <title>Index of new symbols in 2.34</title>
     <xi:include href="xml/api-index-2.34.xml"><xi:fallback /></xi:include>
+  </index>
+  <index id="api-index-2-36" role="2.36">
+    <title>Index of new symbols in 2.36</title>
+    <xi:include href="xml/api-index-2.36.xml"><xi:fallback /></xi:include>
+  </index>
+  <index id="api-index-2-38" role="2.38">
+    <title>Index of new symbols in 2.38</title>
+    <xi:include href="xml/api-index-2.38.xml"><xi:fallback /></xi:include>
+  </index>
+  <index id="api-index-2-40" role="2.40">
+    <title>Index of new symbols in 2.40</title>
+    <xi:include href="xml/api-index-2.40.xml"><xi:fallback /></xi:include>
+  </index>
+  <index id="api-index-2-42" role="2.42">
+    <title>Index of new symbols in 2.42</title>
+    <xi:include href="xml/api-index-2.42.xml"><xi:fallback /></xi:include>
+  </index>
+  <index id="api-index-2-44" role="2.44">
+    <title>Index of new symbols in 2.44</title>
+    <xi:include href="xml/api-index-2.44.xml"><xi:fallback /></xi:include>
+  </index>
+  <index id="api-index-2-46" role="2.46">
+    <title>Index of new symbols in 2.46</title>
+    <xi:include href="xml/api-index-2.46.xml"><xi:fallback /></xi:include>
   </index>
 
   <xi:include href="xml/annotation-glossary.xml"><xi:fallback /></xi:include>

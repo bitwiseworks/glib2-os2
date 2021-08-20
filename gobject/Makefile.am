@@ -2,39 +2,26 @@
 # Copyright (C) 1997,98,99,2000 Tim Janik and Red Hat, Inc.
 #
 ## Process this file with automake to produce Makefile.in
-include $(top_srcdir)/Makefile.decl
+include $(top_srcdir)/glib.mk
 
-SUBDIRS = .
-if BUILD_MODULAR_TESTS
-SUBDIRS += tests 
-endif
-
-BUILT_SOURCES=
-CLEANFILES=
+SUBDIRS = . tests
 
 AM_CPPFLAGS = 					\
 	-DG_LOG_DOMAIN=\"GLib-GObject\"		\
-	$(gthread_INCLUDES) 			\
+	$(glib_INCLUDES)			\
 	$(GLIB_DEBUG_FLAGS)			\
 	-DGOBJECT_COMPILATION
 
-gobject.def: gobject.symbols
-	$(AM_V_GEN) (echo EXPORTS; $(CPP) -P -DINCLUDE_VARIABLES -DINCLUDE_INTERNAL_SYMBOLS -DG_OS_WIN32 -DALL_FILES - <$(srcdir)/gobject.symbols | $(SED) -e '/^$$/d' -e 's/^/	/' -e 's/G_GNUC_[^ ]*//g' | sort) > $(builddir)/gobject.def
+AM_CFLAGS = $(GLIB_WARN_CFLAGS)
 
-if OS_LINUX
-if HAVE_GNUC_VISIBILITY
-TESTS = abicheck.sh
-endif
-endif
-
-libglib = $(top_builddir)/glib/libglib-2.0.la $(top_builddir)/gthread/libgthread-2.0.la
+libglib = $(top_builddir)/glib/libglib-2.0.la
 
 # libraries to compile and install
 lib_LTLIBRARIES = libgobject-2.0.la
 
 if OS_WIN32_AND_DLL_COMPILATION
 if MS_LIB_AVAILABLE
-noinst_DATA = gobject-2.0.lib
+noinst_DATA += gobject-2.0.lib
 
 install_ms_lib_cmd = $(INSTALL) gobject-2.0.lib $(DESTDIR)$(libdir)
 uninstall_ms_lib_cmd = -rm $(DESTDIR)$(libdir)/gobject-2.0.lib
@@ -52,46 +39,32 @@ no_undefined = -no-undefined
 endif
 
 if OS_WIN32_AND_DLL_COMPILATION
-export_symbols = -export-symbols $(builddir)/gobject.def
-gobject_def = gobject.def
-
 gobject_win32_res = gobject-win32-res.o
 gobject_win32_res_ldflag = -Wl,$(gobject_win32_res)
-
-install-def-file:
-	$(INSTALL) $(builddir)/gobject.def $(DESTDIR)$(libdir)/gobject-2.0.def
-
-uninstall-def-file:
-	-rm $(DESTDIR)$(libdir)/gobject-2.0.def
-else
-install-def-file:
-uninstall-def-file:
-
-export_symbols = $(LIBTOOL_EXPORT_OPTIONS)
 endif
 
 if OS_OS2
 gobject_os2_shortname_ldflag = -shortname gobj2
 endif
 
-# libtool stuff: set version and export symbols for resolving
 libgobjectincludedir = $(includedir)/glib-2.0/gobject
 libgobject_2_0_la_LDFLAGS = $(GLIB_LINK_FLAGS) \
   $(gobject_win32_res_ldflag) $(gobject_os2_shortname_ldflag) \
   -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) \
-  -export-dynamic $(no_undefined) $(export_symbols)
+  -export-dynamic $(no_undefined)
 
-libgobject_2_0_la_CFLAGS = $(LIBFFI_CFLAGS)
+libgobject_2_0_la_CFLAGS = $(AM_CFLAGS) $(LIBFFI_CFLAGS) $(GLIB_HIDDEN_VISIBILITY_CFLAGS)
 
 libgobject_2_0_la_LIBADD = $(libglib) $(LIBFFI_LIBS)
 
-libgobject_2_0_la_DEPENDENCIES = $(gobject_win32_res) $(gobject_def)
+libgobject_2_0_la_DEPENDENCIES = $(gobject_win32_res)
 
 #
 # setup source file variables
 #
 # GObject library header files for public installation
 gobject_public_h_sources = \
+	gobject-autocleanups.h	\
 	glib-types.h		\
 	gbinding.h		\
 	gboxed.h		\
@@ -141,14 +114,19 @@ gobject_c_sources = \
 	gvaluetypes.c
 
 if ENABLE_DTRACE
-gobject_probes.h: gobject_probes.d Makefile
+DTCOMPILE = $(patsubst -W%,,$(LTCOMPILE))
+DTCFLAGS = $(patsubst -W%,,$(CFLAGS))
+
+gobject_probes.h: gobject_probes.d
 	$(AM_V_GEN) $(DTRACE) -C -h -s $< -o $@.tmp
 	@$(SED) -e "s,define STAP_HAS_SEMAPHORES 1,undef STAP_HAS_SEMAPHORES," < $@.tmp > $@ && rm -f $@.tmp
-gobject_probes.o: gobject_probes.d Makefile
-	$(AM_V_GEN) $(DTRACE) -G -s $< -o $@
-BUILT_SOURCES += gobject_probes.h gobject_probes.o
+
+gobject_probes.lo: gobject_probes.d
+	$(AM_V_GEN) env CC="$(DTCOMPILE)" CFLAGS="$(DTCFLAGS)" $(DTRACE) -G -s $< -o $@
+
+BUILT_SOURCES += gobject_probes.h gobject_probes.lo
 CLEANFILES += gobject_probes.h
-libgobject_2_0_la_LIBADD += gobject_probes.o
+libgobject_2_0_la_LIBADD += gobject_probes.lo
 endif
 
 if ENABLE_SYSTEMTAP
@@ -163,8 +141,7 @@ endif
 # their own .lo rules and don't get publically installed
 gobject_extra_sources = \
 	gmarshal.list		\
-	gmarshal.strings	\
-	gobject.symbols
+	gmarshal.strings
 
 
 #
@@ -180,7 +157,7 @@ EXTRA_DIST += \
 
 # This is read by gobject-introspection/misc/ and gtk-doc
 gobject-public-headers.txt: Makefile
-	echo $(gobject_public_h_sources) > $@.tmp && mv $@.tmp $@
+	$(AM_V_GEN) echo $(gobject_public_h_sources) > $@.tmp && mv $@.tmp $@
 
 CLEANFILES += gobject-public-headers.txt
 
@@ -218,16 +195,13 @@ libgobject_2_0_la_SOURCES = $(gobject_target_sources)
 #
 bin_PROGRAMS = gobject-query glib-genmarshal
 bin_SCRIPTS = glib-mkenums
-noinst_PROGRAMS = testgobject
 # source files
 gobject_query_SOURCES = gobject-query.c
 glib_genmarshal_SOURCES = glib-genmarshal.c
-testgobject_SOURCES = testgobject.c
 # link programs against libgobject
 progs_LDADD = ./libgobject-2.0.la $(libglib)
 glib_genmarshal_LDADD = $(libglib)
 gobject_query_LDADD = $(progs_LDADD)
-testgobject_LDADD = $(progs_LDADD)
 
 #
 # auxillary files
@@ -236,60 +210,44 @@ EXTRA_DIST += 			\
 	makefile.msc.in 	\
 	gobject.rc.in		\
 	libgobject-gdb.py.in	\
-	glib-mkenums.in		\
-	abicheck.sh
+	glib-mkenums.in
 
 CLEANFILES += libgobject-gdb.py
 
-BUILT_EXTRA_DIST = \
+BUILT_EXTRA_DIST += \
 	makefile.msc		\
 	gobject.rc
 
 gobject-win32-res.o: gobject.rc
 	$(AM_V_GEN) $(WINDRES) gobject.rc $@
 
-gobject-2.0.lib: libgobject-2.0.la gobject.def
-	lib -machine:@LIB_EXE_MACHINE_FLAG@ -name:libgobject-2.0-$(LT_CURRENT_MINUS_AGE).dll -def:$(builddir)/gobject.def -out:$@
+gobject.def: libgobject-2.0.la
+	$(AM_V_GEN) dumpbin.exe -exports .libs/libgobject-2.0-0.dll | awk 'BEGIN { print "EXPORTS" } / +[[:digit:]]+ +[[:xdigit:]]+ +[[:xdigit:]]+/{ print $$4 }' > gobject.def.tmp && mv gobject.def.tmp gobject.def
 
-dist-hook: $(BUILT_EXTRA_DIST) ../build/win32/vs9/gobject.vcproj ../build/win32/vs10/gobject.vcxproj ../build/win32/vs10/gobject.vcxproj.filters
+gobject-2.0.lib: libgobject-2.0.la gobject.def
+	$(AM_V_GEN) lib.exe -machine:@LIB_EXE_MACHINE_FLAG@ -name:libgobject-2.0-$(LT_CURRENT_MINUS_AGE).dll -def:$(builddir)/gobject.def -out:$@
+
+# ------ MSVC Project File Generation ------
+MSVCPROJS = gobject
+
+gobject_FILES = $(libgobject_2_0_la_SOURCES)
+gobject_EXCLUDES = dummy
+
+gobject_HEADERS_DIR = $(libgobjectincludedir)
+gobject_HEADERS_INST = $(gobject_public_h_sources)
+gobject_HEADERS_EXCLUDES = dummy
+
+include $(top_srcdir)/build/Makefile.msvcproj
+
+dist-hook: $(BUILT_EXTRA_DIST) $(top_builddir)/build/win32/vs9/gobject.vcproj $(top_builddir)/build/win32/vs9/gobject.headers
 	files='$(BUILT_EXTRA_DIST)'; \
 	for f in $$files; do \
 	  if test -f $$f; then d=.; else d=$(srcdir); fi; \
 	  cp $$d/$$f $(distdir) || exit 1; done
 
-../build/win32/vs9/gobject.vcproj: $(top_srcdir)/build/win32/vs9/gobject.vcprojin
-	for F in $(libgobject_2_0_la_SOURCES); do \
-		case $$F in \
-		*.c) echo '   <File RelativePath="..\..\..\gobject\'$$F'" />' \
-		     ;; \
-		esac; \
-	done >libgobject.sourcefiles
-	$(CPP) -P - <$(top_srcdir)/build/win32/vs9/gobject.vcprojin >$@
-	rm libgobject.sourcefiles
+install-data-local: install-ms-lib
 
-../build/win32/vs10/gobject.vcxproj: $(top_srcdir)/build/win32/vs10/gobject.vcxprojin
-	for F in $(libgobject_2_0_la_SOURCES); do \
-		case $$F in \
-		*.c) echo '    <ClCompile Include="..\..\..\gobject\'$$F'" />' \
-		     ;; \
-		esac; \
-	done >libgobject.vs10.sourcefiles
-	$(CPP) -P - <$(top_srcdir)/build/win32/vs10/gobject.vcxprojin >$@
-	rm libgobject.vs10.sourcefiles
-
-../build/win32/vs10/gobject.vcxproj.filters: $(top_srcdir)/build/win32/vs10/gobject.vcxproj.filtersin
-	for F in $(libgobject_2_0_la_SOURCES); do \
-		case $$F in \
-		*.c) echo '    <ClCompile Include="..\..\..\gobject\'$$F'"><Filter>Source Files</Filter></ClCompile>' \
-		     ;; \
-		esac; \
-	done >libgobject.vs10.sourcefiles.filters
-	$(CPP) -P - <$(top_srcdir)/build/win32/vs10/gobject.vcxproj.filtersin >$@
-	rm libgobject.vs10.sourcefiles.filters
-
-install-data-local: install-ms-lib install-def-file
-
-uninstall-local: uninstall-ms-lib uninstall-def-file uninstall-gdb
+uninstall-local: uninstall-ms-lib uninstall-gdb
 
 distclean-local:
 	if test $(srcdir) = .; then :; else \

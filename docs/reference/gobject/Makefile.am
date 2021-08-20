@@ -1,5 +1,4 @@
 ## Process this file with automake to produce Makefile.in
-include $(top_srcdir)/Makefile.decl
 
 AUTOMAKE_OPTIONS = 1.6
 
@@ -10,14 +9,14 @@ DOC_MODULE=gobject
 DOC_MAIN_SGML_FILE=gobject-docs.xml
 
 # The directory containing the source code. Relative to $(srcdir)
-DOC_SOURCE_DIR=$(top_srcdir)/gobject
+DOC_SOURCE_DIR =$(top_srcdir)/gobject $(top_builddir)/gobject
 
 # Extra options to supply to gtkdoc-scan
 SCAN_OPTIONS=--deprecated-guards="G_DISABLE_DEPRECATED" \
              --ignore-decorators="G_GNUC_INTERNAL|G_GNUC_WARN_UNUSED_RESULT"
 
 # Extra options to supply to gtkdoc-mkdb
-MKDB_OPTIONS=--sgml-mode --output-format=xml --name-space=g
+MKDB_OPTIONS=--output-format=xml --name-space=g
 
 # Used for dependencies
 HFILE_GLOB=$(top_srcdir)/gobject/*.h
@@ -26,18 +25,18 @@ CFILE_GLOB=$(top_srcdir)/gobject/*.c
 # Headers to ignore
 IGNORE_HFILES = \
 	tests			\
+	gatomicarray.h		\
 	gobject_trace.h		\
-	gtype-private.h		\
-	gatomicarray.h
-
+	gtype-private.h
 
 # CFLAGS and LDFLAGS for compiling scan program. Only needed
 # if $(DOC_MODULE).types is non-empty.
-INCLUDES = \
+AM_CPPFLAGS = 				\
 	-I$(srcdir) 			\
 	$(gobject_INCLUDES) 		\
 	$(GLIB_DEBUG_FLAGS)
-GTKDOC_LIBS = \
+
+GTKDOC_LIBS = 					\
 	$(top_builddir)/glib/libglib-2.0.la	\
 	$(top_builddir)/gobject/libgobject-2.0.la
 
