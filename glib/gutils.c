@@ -863,7 +863,7 @@ g_get_home_dir (void)
 
       if (!tmp)
         tmp = get_windows_directory_root ();
-#elif G_PLATFORM_OS2
+#elif defined(G_PLATFORM_OS2)
       /* change '\\' in %HOME% to '/' */
       if (tmp)
         {
