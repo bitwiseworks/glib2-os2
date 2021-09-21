@@ -4600,6 +4600,9 @@ g_main_context_os2_start_pm_integration (GMainContext *context)
 #ifdef G_THREADS_ENABLED
   static gboolean initialized = FALSE;
 
+  HWND hwnd;
+  GThread *thread;
+
   if (!initialized)
     {
       if (!g_thread_supported())
@@ -4630,7 +4633,7 @@ g_main_context_os2_start_pm_integration (GMainContext *context)
       return FALSE;
     }
 
-  HWND hwnd = WinCreateWindow (HWND_OBJECT, "GLib.OS2ContextPMWnd",
+  hwnd = WinCreateWindow (HWND_OBJECT, "GLib.OS2ContextPMWnd",
                                NULL, 0, 0, 0, 0, 0, NULLHANDLE, HWND_BOTTOM,
                                0, NULL, NULL);
   if (hwnd == NULLHANDLE)
@@ -4642,7 +4645,7 @@ g_main_context_os2_start_pm_integration (GMainContext *context)
 
   WinSetWindowULong (hwnd, QWL_USER, (ULONG) context);
 
-  GThread *thread = g_thread_create (pm_integration_thread, context, TRUE, NULL);
+  thread = g_thread_create (pm_integration_thread, context, TRUE, NULL);
   if (thread == NULL)
     {
       g_warning ("PM integration: failed to create context polling thread");
@@ -4674,6 +4677,8 @@ void
 g_main_context_os2_stop_pm_integration (GMainContext *context)
 {
 #ifdef G_THREADS_ENABLED
+  GThread *thread;
+
   if (!context)
     context = g_main_context_default();
 
@@ -4686,7 +4691,7 @@ g_main_context_os2_stop_pm_integration (GMainContext *context)
       return;
     }
 
-  GThread *thread = context->pm_integration_thread;
+  thread = context->pm_integration_thread;
   /* request termination */
   context->pm_integration_thread = NULL;
 
