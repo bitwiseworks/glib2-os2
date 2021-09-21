@@ -473,7 +473,7 @@ dnl
 dnl gettext support
 dnl
 
-ALL_LINGUAS="`grep -v '^#' "$srcdir/po/LINGUAS" | tr '\n' ' '`"
+ALL_LINGUAS="`grep -v '^#' "$srcdir/po/LINGUAS" | tr '\r\n' ' '`"
 AC_SUBST([CONFIG_STATUS_DEPENDENCIES],['$(top_srcdir)/po/LINGUAS'])
 GLIB_GNU_GETTEXT
 
