@@ -21,6 +21,9 @@
 #include "config.h"
 #include <glib.h>
 #include "glibintl.h"
+#ifdef __OS2__
+#include <libcx/net.h>
+#endif
 
 #include "gresolver.h"
 #include "gnetworkingprivate.h"

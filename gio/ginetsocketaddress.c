@@ -22,6 +22,9 @@
 #include <config.h>
 #include <glib.h>
 #include <string.h>
+#ifdef __OS2__
+#include <libcx/net.h>
+#endif
 
 #include "ginetsocketaddress.h"
 #include "ginetaddress.h"
@@ -376,6 +379,7 @@ g_inet_socket_address_new_from_string (const char *address,
       if (status != 0)
         return NULL;
 
+#ifndef __KLIBC__
       if (res->ai_family == AF_INET6 &&
           res->ai_addrlen == sizeof (struct sockaddr_in6))
         {
@@ -383,6 +387,7 @@ g_inet_socket_address_new_from_string (const char *address,
           saddr = g_socket_address_new_from_native (res->ai_addr, res->ai_addrlen);
         }
       else
+#endif
         saddr = NULL;
 
       freeaddrinfo (res);

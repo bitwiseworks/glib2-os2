@@ -24,6 +24,9 @@
 
 #include <stdio.h>
 #include <string.h>
+#ifdef __OS2__
+#include <libcx/net.h>
+#endif
 
 #include "gthreadedresolver.h"
 #include "gnetworkingprivate.h"
