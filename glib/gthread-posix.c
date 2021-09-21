@@ -655,6 +655,7 @@ g_cond_impl_new (void)
 #elif defined (HAVE_PTHREAD_CONDATTR_SETCLOCK) && defined (CLOCK_MONOTONIC)
   if G_UNLIKELY ((status = pthread_condattr_setclock (&attr, CLOCK_MONOTONIC)) != 0)
     g_thread_abort (status, "pthread_condattr_setclock");
+#elif defined(G_PLATFORM_OS2) //fixme !!!!
 #else
 #error Cannot support GCond on your platform.
 #endif
@@ -891,7 +892,7 @@ g_cond_wait_until (GCond  *cond,
     if ((status = pthread_cond_timedwait_relative_np (g_cond_get_impl (cond), g_mutex_get_impl (mutex), &ts)) == 0)
       return TRUE;
   }
-#elif defined (HAVE_PTHREAD_CONDATTR_SETCLOCK) && defined (CLOCK_MONOTONIC)
+#elif defined (HAVE_PTHREAD_CONDATTR_SETCLOCK) && defined (CLOCK_MONOTONIC) || defined(G_PLATFORM_OS2) //fixme !!!!
   /* This is the exact check we used during init to set the clock to
    * monotonic, so if we're in this branch, timedwait() will already be
    * expecting a monotonic clock.
