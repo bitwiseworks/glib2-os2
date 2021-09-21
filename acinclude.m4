@@ -146,7 +146,7 @@ AC_DEFUN([JH_PATH_XML_CATALOG],
   AC_ARG_WITH([xml-catalog],
               AC_HELP_STRING([--with-xml-catalog=CATALOG],
                              [path to xml catalog to use]),,
-              [with_xml_catalog=/etc/xml/catalog])
+              [with_xml_catalog=/@unixroot/etc/xml/catalog])
   jh_found_xmlcatalog=true
   XML_CATALOG_FILE="$with_xml_catalog"
   AC_SUBST([XML_CATALOG_FILE])

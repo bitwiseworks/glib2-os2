@@ -80,6 +80,7 @@ AC_CACHE_VAL(ac_cv_path_$1,
            ac_cv_path_$1="$ac_dir/$ac_word$ac_exec_ext"
            break 2
         fi
+      fi
     done
   done
   IFS="$ac_save_ifs"
