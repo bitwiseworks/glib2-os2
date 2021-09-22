@@ -410,7 +410,11 @@ zone_info_unix (const gchar *identifier)
 
       tzdir = getenv ("TZDIR");
       if (tzdir == NULL)
+#ifndef G_PLATFORM_OS2
         tzdir = "/usr/share/zoneinfo";
+#else
+        tzdir = "/@unixroot/usr/share/zoneinfo";
+#endif
 
       if (*identifier == ':')
         identifier ++;
@@ -421,7 +425,11 @@ zone_info_unix (const gchar *identifier)
         filename = g_build_filename (tzdir, identifier, NULL);
     }
   else
+#ifndef G_PLATFORM_OS2
     filename = g_strdup ("/etc/localtime");
+#else
+    filename = g_strdup ("/@unixroot/etc/localtime");
+#endif
 
   file = g_mapped_file_new (filename, FALSE, NULL);
   if (file != NULL)

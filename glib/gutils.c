@@ -379,7 +379,11 @@ g_find_program_in_path (const gchar *program)
        * what to search if PATH is unset. POSIX may, dunno.
        */
       
+#ifndef _G_PLATFROM_OS2
       path = "/bin:/usr/bin:.";
+#else
+      path = "/@unixroot/usr/bin;.";
+#endif
     }
 #else
   n = GetModuleFileNameW (NULL, wfilename, MAXPATHLEN);
@@ -934,6 +938,14 @@ g_get_tmp_dir (void)
 #else /* G_OS_WIN32 */
       tmp = g_strdup (g_getenv ("TMPDIR"));
 
+#ifdef G_PLATFORM_OS2
+      if (tmp == NULL || *tmp == '\0')
+        {
+          g_free (tmp);
+          tmp = g_strdup (g_getenv ("TEMP"));
+        }
+#endif
+
 #ifdef P_tmpdir
       if (tmp == NULL || *tmp == '\0')
         {
@@ -949,7 +961,11 @@ g_get_tmp_dir (void)
       if (tmp == NULL || *tmp == '\0')
         {
           g_free (tmp);
+#ifndef G_PLATFORM_OS2
           tmp = g_strdup ("/tmp");
+#else
+          tmp = g_strdup ("/@unixroot/var/tmp");
+#endif
         }
 #endif /* !G_OS_WIN32 */
 
@@ -1948,7 +1964,11 @@ g_get_system_data_dirs (void)
       gchar *data_dirs = (gchar *) g_getenv ("XDG_DATA_DIRS");
 
       if (!data_dirs || !data_dirs[0])
+#ifndef G_PLATFORM_OS2
           data_dirs = "/usr/local/share/:/usr/share/";
+#else
+          data_dirs = "/@unixroot/usr/local/share/;/@unixroot/usr/share/";
+#endif
 
       data_dir_vector = g_strsplit (data_dirs, G_SEARCHPATH_SEPARATOR_S, 0);
 #endif
@@ -2010,7 +2030,11 @@ g_get_system_config_dirs (void)
       conf_dirs = (gchar *) g_getenv ("XDG_CONFIG_DIRS");
 
       if (!conf_dirs || !conf_dirs[0])
+#ifndef G_PLATFORM_OS2
           conf_dirs = "/etc/xdg";
+#else
+          conf_dirs = "/@unixroot/etc/xdg";
+#endif
 
       conf_dir_vector = g_strsplit (conf_dirs, G_SEARCHPATH_SEPARATOR_S, 0);
 #endif

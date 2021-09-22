@@ -293,7 +293,11 @@ unalias_lang (char *lang)
   int i;
 
   if (!alias_table)
+#ifndef G_PLATFORM_OS2
     read_aliases ("/usr/share/locale/locale.alias");
+#else
+    read_aliases ("/@unixroot/usr/share/locale/locale.alias");
+#endif
 
   i = 0;
   while ((p = g_hash_table_lookup (alias_table, lang)) && (strcmp (p, lang) != 0))
