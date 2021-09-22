@@ -1,5 +1,9 @@
 # GLIB - Library of useful C routines
 
+VENDOR ?=community
+BUILD_INFO=\#\#1\#\# $(shell date +'%d %b %Y %H:%M:%S')     $(shell uname -n)
+BUILDLEVEL_INFO=@\#$(VENDOR):$(VERSION)\#@$(BUILD_INFO)::::0::
+
 #GTESTER = gtester 			# for non-GLIB packages
 #GTESTER_REPORT = gtester-report        # for non-GLIB packages
 GTESTER = $(top_builddir)/glib/gtester			# for the GLIB package

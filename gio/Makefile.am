@@ -513,10 +513,6 @@ gio_win32_res = gio-win32-res.o
 gio_win32_res_ldflag = -Wl,$(gio_win32_res)
 endif
 
-if OS_OS2
-gio_os2_shortname_ldflag = -shortname gio2
-endif
-
 install-data-local: install-ms-lib
 	$(mkinstalldirs) $(DESTDIR)$(GIO_MODULE_DIR)
 
@@ -524,9 +520,13 @@ uninstall-local: uninstall-ms-lib
 
 libgio_2_0_la_CFLAGS = $(AM_CFLAGS) $(GLIB_HIDDEN_VISIBILITY_CFLAGS)
 libgio_2_0_la_LDFLAGS = $(GLIB_LINK_FLAGS) \
-	$(gio_win32_res_ldflag) $(gio_os2_shortname_ldflag) \
+	$(gio_win32_res_ldflag) \
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) \
 	-export-dynamic $(no_undefined)
+
+if OS_OS2
+libgio_2_0_la_LDFLAGS += -shortname gio2 -buildlevel '$(BUILDLEVEL_INFO)'
+endif
 
 if OS_COCOA
 # This is dumb.  The ObjC source file should be properly named .m

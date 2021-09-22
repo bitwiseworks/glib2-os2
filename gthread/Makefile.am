@@ -62,16 +62,16 @@ gthread_win32_res = gthread-win32-res.o
 gthread_win32_res_ldflag = -Wl,$(gthread_win32_res)
 endif
 
-if OS_OS2
-gthread_os2_shortname_ldflag = -shortname gthr2
-endif
-
 libgthread_2_0_la_CFLAGS = $(AM_CFLAGS) $(GLIB_HIDDEN_VISIBILITY_CFLAGS)
 libgthread_2_0_la_SOURCES = gthread-impl.c
 libgthread_2_0_la_LDFLAGS = $(GLIB_LINK_FLAGS) \
-	$(gthread_win32_res_ldflag) $(gthread_os2_shortname_ldflag) \
+	$(gthread_win32_res_ldflag) \
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) \
 	-export-dynamic $(no_undefined) $(export_symbols)
+
+if OS_OS2
+libgthread_2_0_la_LDFLAGS += -shortname gthr2 -buildlevel '$(BUILDLEVEL_INFO)'
+endif
 
 libgthread_2_0_la_LIBADD = $(G_THREAD_LIBS_EXTRA) $(G_THREAD_LIBS_FOR_GTHREAD) $(libglib)
 

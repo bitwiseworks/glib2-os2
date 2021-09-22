@@ -60,17 +60,17 @@ gmodule_win32_res = gmodule-win32-res.o
 gmodule_win32_res_ldflag = -Wl,$(gmodule_win32_res)
 endif
 
-if OS_OS2
-gmodule_os2_shortname_ldflag = -shortname gmod2
-endif
-
 libgmodule_2_0_la_CFLAGS = $(AM_CFLAGS) $(GLIB_HIDDEN_VISIBILITY_CFLAGS)
 libgmodule_2_0_la_SOURCES = gmodule.c
 libgmodule_2_0_la_LDFLAGS = $(GLIB_LINK_FLAGS) \
-	$(gmodule_win32_res_ldflag) $(gmodule_os2_shortname_ldflag) \
+	$(gmodule_win32_res_ldflag) \
 	$(G_MODULE_LDFLAGS) \
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) \
 	-export-dynamic $(no_undefined)
+
+if OS_OS2
+libgmodule_2_0_la_LDFLAGS += -shortname gmod2 -buildlevel '$(BUILDLEVEL_INFO)'
+endif
 
 libgmodule_2_0_la_LIBADD = $(G_MODULE_LIBS_EXTRA) $(G_MODULE_LIBS) $(libglib)
 

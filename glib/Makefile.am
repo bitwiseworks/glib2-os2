@@ -343,10 +343,6 @@ glib_win32_res = glib-win32-res.o
 glib_win32_res_ldflag = -Wl,$(glib_win32_res)
 endif
 
-if OS_OS2
-glib_os2_shortname_ldflag = -shortname glib2
-endif
-
 if USE_SYSTEM_PCRE
 pcre_lib = $(PCRE_LIBS)
 pcre_inc = $(PCRE_CFLAGS)
@@ -360,9 +356,13 @@ libglib_2_0_la_LIBADD = libcharset/libcharset.la $(printf_la) @GIO@ @GSPAWN@ @PL
 libglib_2_0_la_DEPENDENCIES = libcharset/libcharset.la $(printf_la) @GIO@ @GSPAWN@ @PLATFORMDEP@ $(glib_win32_res) $(glib_def)
 
 libglib_2_0_la_LDFLAGS = $(GLIB_LINK_FLAGS) \
-	 $(glib_win32_res_ldflag) $(glib_os2_shortname_ldflag) \
+	 $(glib_win32_res_ldflag) \
 	-version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) \
 	-export-dynamic $(no_undefined)
+
+if OS_OS2
+libglib_2_0_la_LDFLAGS += -shortname glib2 -buildlevel '$(BUILDLEVEL_INFO)'
+endif
 
 INSTALL_PROGS=
 

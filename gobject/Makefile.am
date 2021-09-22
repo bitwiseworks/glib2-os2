@@ -43,15 +43,15 @@ gobject_win32_res = gobject-win32-res.o
 gobject_win32_res_ldflag = -Wl,$(gobject_win32_res)
 endif
 
-if OS_OS2
-gobject_os2_shortname_ldflag = -shortname gobj2
-endif
-
 libgobjectincludedir = $(includedir)/glib-2.0/gobject
 libgobject_2_0_la_LDFLAGS = $(GLIB_LINK_FLAGS) \
-  $(gobject_win32_res_ldflag) $(gobject_os2_shortname_ldflag) \
+  $(gobject_win32_res_ldflag) \
   -version-info $(LT_CURRENT):$(LT_REVISION):$(LT_AGE) \
   -export-dynamic $(no_undefined)
+
+if OS_OS2
+libgobject_2_0_la_LDFLAGS += -shortname gobj2 -buildlevel '$(BUILDLEVEL_INFO)'
+endif
 
 libgobject_2_0_la_CFLAGS = $(AM_CFLAGS) $(LIBFFI_CFLAGS) $(GLIB_HIDDEN_VISIBILITY_CFLAGS)
 
