@@ -524,6 +524,10 @@ g_io_channel_new_file (const gchar *filename,
 
   create_mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
 
+#ifdef G_PLATFORM_OS2
+  flags |= O_BINARY;
+#endif
+
   fid = g_open (filename, flags, create_mode);
   if (fid == -1)
     {

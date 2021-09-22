@@ -62,6 +62,10 @@
 #define	TRUE	(!FALSE)
 #endif
 
+#ifdef G_PLATFORM_OS2
+#define _O_BINARY O_BINARY
+#endif
+
 #ifndef _O_BINARY
 #define _O_BINARY 0
 #endif
