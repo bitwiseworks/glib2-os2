@@ -55,12 +55,12 @@ glib_genmarshal=$(LIBTOOL) --mode=execute $(foreach lib,$(LDADD),--dlopen $(lib)
 
 testmarshal.h: stamp-testmarshal.h
 	@true
-stamp-testmarshal.h: @REBUILD@ testmarshal.list $(glib_genmarshal)
+stamp-testmarshal.h: @REBUILD@ testmarshal.list
 	$(AM_V_GEN) $(glib_genmarshal) --prefix=test_marshal $(srcdir)/testmarshal.list --header >> xgen-gmh \
 	&& (cmp -s xgen-gmh testmarshal.h 2>/dev/null || cp xgen-gmh testmarshal.h) \
 	&& rm -f xgen-gmh xgen-gmh~ \
 	&& echo timestamp > $@
-testmarshal.c: @REBUILD@ testmarshal.h testmarshal.list $(glib_genmarshal)
+testmarshal.c: @REBUILD@ testmarshal.h testmarshal.list
 	$(AM_V_GEN) (echo "#include \"testmarshal.h\""; $(glib_genmarshal) --prefix=test_marshal $(srcdir)/testmarshal.list --body) >> xgen-gmc \
 	&& cp xgen-gmc testmarshal.c \
 	&& rm -f xgen-gmc xgen-gmc~
