@@ -147,6 +147,13 @@ _g_module_symbol (gpointer     handle,
 
   fetch_dlerror (FALSE);
   p = dlsym (handle, symbol_name);
+#ifdef G_PLATFORM_OS2
+  if (p == NULL) {
+       char sym_name[256];
+       snprintf(sym_name, sizeof(sym_name), "_%s", symbol_name);
+       p = dlsym(handle, sym_name);
+    }
+#endif
   msg = fetch_dlerror (FALSE);
   if (msg)
     g_module_set_error (msg);
