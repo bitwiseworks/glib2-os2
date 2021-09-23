@@ -250,7 +250,7 @@ my_strchrnul (const gchar *str,
   return p;
 }
 
-#ifdef G_OS_WIN32
+#if defined(G_OS_WIN32) || defined(G_PLATFORM_OS2)
 
 static gchar *inner_find_program_in_path (const gchar *program);
 
@@ -325,7 +325,7 @@ g_find_program_in_path (const gchar *program)
  *
  * Returns: a newly-allocated string with the absolute path, or %NULL
  **/
-#ifdef G_OS_WIN32
+#if defined(G_OS_WIN32) || defined(G_PLATFORM_OS2)
 static gchar *
 inner_find_program_in_path (const gchar *program)
 #else
@@ -353,7 +353,7 @@ g_find_program_in_path (const gchar *program)
    */
   if (g_path_is_absolute (program)
       || strchr (program, G_DIR_SEPARATOR) != NULL
-#ifdef G_OS_WIN32
+#if defined(G_OS_WIN32) || defined(G_PLATFORM_OS2)
       || strchr (program, '/') != NULL
 #endif
       )
