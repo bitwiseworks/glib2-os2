@@ -36,7 +36,7 @@ ifaceproperties_SOURCES = ifaceproperties.c testcommon.h
 # cross-compiling
 
 if !CROSS_COMPILING
-glib_genmarshal=$(LIBTOOL) --mode=execute $(foreach lib,$(LDADD),--dlopen $(lib)) $(top_builddir)/gobject/glib-genmarshal
+glib_genmarshal=$(top_builddir)/gobject/glib-genmarshal
 
 test_programs += signals
 signals_SOURCES = signals.c

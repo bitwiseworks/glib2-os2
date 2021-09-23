@@ -51,16 +51,16 @@ endif
 # The marshal test requires running a binary, which means we cannot
 # build it when cross-compiling
 if !CROSS_COMPILING
-glib_genmarshal=$(LIBTOOL) --mode=execute $(foreach lib,$(LDADD),--dlopen $(lib)) $(top_builddir)/gobject/glib-genmarshal
+glib_genmarshal=$(top_builddir)/gobject/glib-genmarshal
 
 testmarshal.h: stamp-testmarshal.h
 	@true
-stamp-testmarshal.h: @REBUILD@ testmarshal.list
+stamp-testmarshal.h: @REBUILD@ testmarshal.list $(glib_genmarshal)
 	$(AM_V_GEN) $(glib_genmarshal) --prefix=test_marshal $(srcdir)/testmarshal.list --header >> xgen-gmh \
 	&& (cmp -s xgen-gmh testmarshal.h 2>/dev/null || cp xgen-gmh testmarshal.h) \
 	&& rm -f xgen-gmh xgen-gmh~ \
 	&& echo timestamp > $@
-testmarshal.c: @REBUILD@ testmarshal.h testmarshal.list
+testmarshal.c: @REBUILD@ testmarshal.h testmarshal.list $(glib_genmarshal)
 	$(AM_V_GEN) (echo "#include \"testmarshal.h\""; $(glib_genmarshal) --prefix=test_marshal $(srcdir)/testmarshal.list --body) >> xgen-gmc \
 	&& cp xgen-gmc testmarshal.c \
 	&& rm -f xgen-gmc xgen-gmc~

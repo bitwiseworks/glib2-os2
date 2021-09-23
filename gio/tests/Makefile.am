@@ -532,7 +532,7 @@ if !ENABLE_INSTALLED_TESTS
 libresourceplugin_la_LDFLAGS += -rpath /
 endif
 
-glib_compile_resources=$(LIBTOOL) --mode=execute $(foreach lib,$(progs_ldadd),--dlopen $(lib)) $(top_builddir)/gio/glib-compile-resources
+glib_compile_resources=$(top_builddir)/gio/glib-compile-resources
 
 resources.o: test_resources2.h
 test_resources.c: test2.gresource.xml Makefile $(shell $(glib_compile_resources) --sourcedir=$(srcdir) --generate-dependencies $(srcdir)/test2.gresource.xml)
