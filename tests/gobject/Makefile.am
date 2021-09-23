@@ -51,7 +51,7 @@ endif
 # The marshal test requires running a binary, which means we cannot
 # build it when cross-compiling
 if !CROSS_COMPILING
-glib_genmarshal=$(top_builddir)/gobject/glib-genmarshal
+glib_genmarshal=$(top_builddir)/gobject/glib-genmarshal$(EXEEXT)
 
 testmarshal.h: stamp-testmarshal.h
 	@true
