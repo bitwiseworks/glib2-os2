@@ -596,7 +596,7 @@ g_unlink (const gchar *filename)
  * Windows, it is in general not possible to remove a file that is
  * open to some process, or mapped into memory.
  *
- * If this function fails on Windows you can't infer too much from the
+ * If this function fails on Windows or OS2 you can't infer too much from the
  * errno value. rmdir() is tried regardless of what caused remove() to
  * fail. Any errno value set by remove() will be overwritten by that
  * set by rmdir().
@@ -628,6 +628,13 @@ g_remove (const gchar *filename)
   g_free (wfilename);
 
   errno = save_errno;
+  return retval;
+#elif defined(G_PLATFORM_OS2)
+  int retval;
+
+  retval = remove (filename);
+  if (retval == -1)
+    retval = rmdir (filename);
   return retval;
 #else
   return remove (filename);
