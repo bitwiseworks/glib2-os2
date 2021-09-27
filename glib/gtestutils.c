@@ -54,6 +54,10 @@
 #include "gspawn.h"
 #include "glib-private.h"
 
+#ifdef G_PLATFORM_OS2
+#include <sys/socket.h>
+#define pipe(x) socketpair (AF_LOCAL, SOCK_STREAM, 0, x)
+#endif
 
 /**
  * SECTION:testing
