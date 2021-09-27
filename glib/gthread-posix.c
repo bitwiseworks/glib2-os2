@@ -655,7 +655,6 @@ g_cond_impl_new (void)
 #elif defined (HAVE_PTHREAD_CONDATTR_SETCLOCK) && defined (CLOCK_MONOTONIC)
   if G_UNLIKELY ((status = pthread_condattr_setclock (&attr, CLOCK_MONOTONIC)) != 0)
     g_thread_abort (status, "pthread_condattr_setclock");
-#elif defined(G_PLATFORM_OS2) //fixme !!!!
 #else
 #error Cannot support GCond on your platform.
 #endif
