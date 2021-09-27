@@ -1096,6 +1096,11 @@ test_unref_while_pending (void)
 
 #include <glib-unix.h>
 #include <unistd.h>
+#ifdef G_PLATFORM_OS2
+#include <sys/socket.h>
+#define pipe(x) socketpair (AF_LOCAL, SOCK_STREAM, 0, x)
+#endif
+
 
 static gchar zeros[1024];
 
@@ -1750,7 +1755,9 @@ main (int argc, char *argv[])
   g_test_add_func ("/mainloop/unix-fd-source", test_unix_fd_source);
   g_test_add_func ("/mainloop/source-unix-fd-api", test_source_unix_fd_api);
   g_test_add_func ("/mainloop/wait", test_mainloop_wait);
+#ifndef G_PLATFORM_OS2
   g_test_add_func ("/mainloop/unix-file-poll", test_unix_file_poll);
+#endif
 #endif
   g_test_add_func ("/mainloop/nfds", test_nfds);
 
