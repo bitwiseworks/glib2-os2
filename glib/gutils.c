@@ -2237,7 +2237,7 @@ g_format_size_full (guint64          size,
        * without separation.  Bug #655336 is open until a solution is
        * found.
        */
-#ifndef G_OS_WIN32
+#if !defined(G_OS_WIN32) && !defined(G_PLATFORM_OS2)
       formatted_number = g_strdup_printf ("%'"G_GUINT64_FORMAT, size);
 #else
       formatted_number = g_strdup_printf ("%"G_GUINT64_FORMAT, size);
