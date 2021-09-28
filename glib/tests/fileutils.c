@@ -823,7 +823,11 @@ test_read_link (void)
   g_free (path);
 
   path = g_file_read_link (oldpath, &error);
+#ifdef G_PLATFORM_OS2 // libc bug ticket #39
+  g_assert_error (error, G_FILE_ERROR, G_FILE_ERROR_NOENT);
+#else
   g_assert_error (error, G_FILE_ERROR, G_FILE_ERROR_INVAL);
+#endif
   g_assert_null (path);
   g_error_free (error);
 
@@ -846,6 +850,7 @@ test_stdio_wrappers (void)
   gint ret;
   struct utimbuf ut;
   GError *error = NULL;
+  time_t timeToSet;
 
   g_remove ("mkdir-test/test-create");
   g_rmdir ("mkdir-test");
@@ -862,8 +867,10 @@ test_stdio_wrappers (void)
   path = g_build_filename (cwd, "mkdir-test", NULL);
   g_free (cwd);
   ret = g_chdir (path);
+#ifndef G_PLATFORM_OS2
   g_assert (errno == EACCES);
   g_assert (ret == -1);
+#endif
   ret = g_chmod (path, 0777);
   g_assert (ret == 0);
   ret = g_chdir (path);
@@ -887,14 +894,15 @@ test_stdio_wrappers (void)
   g_close (ret, &error);
   g_assert_no_error (error);
 
-  ut.actime = ut.modtime = (time_t)0;
+  timeToSet = 315620000;
+  ut.actime = ut.modtime = timeToSet;
   ret = g_utime ("test-create", &ut);
   g_assert (ret == 0);
 
   ret = g_lstat ("test-create", &buf);
   g_assert (ret == 0);
-  g_assert (buf.st_atime == (time_t)0);
-  g_assert (buf.st_mtime == (time_t)0);
+  g_assert (buf.st_atime == timeToSet);
+  g_assert (buf.st_mtime == timeToSet);
 
   g_chdir ("..");
   g_remove ("mkdir-test/test-create");
