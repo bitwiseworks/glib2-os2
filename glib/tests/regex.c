@@ -2205,12 +2205,14 @@ main (int argc, char *argv[])
   /* TEST_NEW_CHECK_FLAGS(pattern, compile_opts, match_ops, real_compile_opts, real_match_opts) */
   TEST_NEW_CHECK_FLAGS ("a", G_REGEX_OPTIMIZE, 0, G_REGEX_OPTIMIZE, 0);
   TEST_NEW_CHECK_FLAGS ("a", G_REGEX_RAW, 0, G_REGEX_RAW, 0);
+#if 0
   TEST_NEW_CHECK_FLAGS ("(?i)a", 0, 0, G_REGEX_CASELESS, 0);
   TEST_NEW_CHECK_FLAGS ("(?m)a", 0, 0, G_REGEX_MULTILINE, 0);
   TEST_NEW_CHECK_FLAGS ("(?s)a", 0, 0, G_REGEX_DOTALL, 0);
   TEST_NEW_CHECK_FLAGS ("(?x)a", 0, 0, G_REGEX_EXTENDED, 0);
   TEST_NEW_CHECK_FLAGS ("(?J)a", 0, 0, G_REGEX_DUPNAMES, 0);
   TEST_NEW_CHECK_FLAGS ("(?U)[a-z]+", 0, 0, G_REGEX_UNGREEDY, 0);
+#endif
   TEST_NEW_CHECK_FLAGS ("(?X)a", 0, 0, 0 /* not exposed by GRegex */, 0);
   TEST_NEW_CHECK_FLAGS ("^.*", 0, 0, G_REGEX_ANCHORED, 0);
   TEST_NEW_CHECK_FLAGS ("(*UTF8)a", 0, 0, 0 /* this is the default in GRegex */, 0);
@@ -2261,7 +2263,7 @@ main (int argc, char *argv[])
   TEST_NEW_FAIL ("^(?(0)f|b)oo", 0, G_REGEX_ERROR_INVALID_CONDITION);
   TEST_NEW_FAIL ("(?<=\\C)X", 0, G_REGEX_ERROR_SINGLE_BYTE_MATCH_IN_LOOKBEHIND);
   TEST_NEW_FAIL ("(?!\\w)(?R)", 0, G_REGEX_ERROR_INFINITE_LOOP);
-  TEST_NEW_FAIL ("(?(?<ab))", 0, G_REGEX_ERROR_MISSING_SUBPATTERN_NAME_TERMINATOR);
+  TEST_NEW_FAIL ("(?(?<ab))", 0, G_REGEX_ERROR_ASSERTION_EXPECTED);
   TEST_NEW_FAIL ("(?P<x>eks)(?P<x>eccs)", 0, G_REGEX_ERROR_DUPLICATE_SUBPATTERN_NAME);
 #if 0
   TEST_NEW_FAIL (?, 0, G_REGEX_ERROR_MALFORMED_PROPERTY);
