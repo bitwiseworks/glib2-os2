@@ -30,6 +30,10 @@
 #include <fcntl.h>
 #define pipe(fds) _pipe(fds, 4096, _O_BINARY)
 #endif
+#ifdef G_PLATFORM_OS2
+#include <sys/socket.h>
+#define pipe(x) socketpair (AF_LOCAL, SOCK_STREAM, 0, x)
+#endif
 
 static const char *argv0;
 
