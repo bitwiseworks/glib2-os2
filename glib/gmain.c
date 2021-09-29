@@ -95,7 +95,6 @@
 #define OS2EMX_PLAIN_CHAR
 #define INCL_PM
 #include <os2.h>
-#include <sys/socket.h> // for socketpair
 #endif
 
 #ifdef  G_MAIN_POLL_DEBUG
