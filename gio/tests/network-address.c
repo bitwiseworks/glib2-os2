@@ -2,6 +2,9 @@
 
 #include <gio/gio.h>
 #include <gio/gnetworking.h>
+#ifdef G_PLATFORM_OS2
+#include <libcx/net.h>
+#endif
 
 static void
 test_basic (void)
