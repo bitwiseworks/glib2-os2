@@ -1026,6 +1026,7 @@ test_fd_reuse (void)
   g_slice_free (IPTestData, data);
 }
 
+#ifndef G_PLATFORM_OS2
 static void
 test_sockaddr (void)
 {
@@ -1064,6 +1065,7 @@ test_sockaddr (void)
 
   g_object_unref (saddr);
 }
+#endif
 
 #ifdef G_OS_UNIX
 static void
@@ -1454,7 +1456,9 @@ main (int   argc,
   g_test_add_func ("/socket/close_graceful", test_close_graceful);
   g_test_add_func ("/socket/timed_wait", test_timed_wait);
   g_test_add_func ("/socket/fd_reuse", test_fd_reuse);
+#ifndef G_PLATFORM_OS2
   g_test_add_func ("/socket/address", test_sockaddr);
+#endif
 #ifdef G_OS_UNIX
   g_test_add_func ("/socket/unix-from-fd", test_unix_from_fd);
   g_test_add_func ("/socket/unix-connection", test_unix_connection);
