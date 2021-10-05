@@ -2099,7 +2099,7 @@ g_path_is_absolute (const gchar *file_name)
   if (G_IS_DIR_SEPARATOR (file_name[0]))
     return TRUE;
 
-#ifdef G_OS_WIN32
+#if defined(G_OS_WIN32) || defined(G_PLATFORM_OS2)
   /* Recognize drive letter on native Windows */
   if (g_ascii_isalpha (file_name[0]) &&
       file_name[1] == ':' && G_IS_DIR_SEPARATOR (file_name[2]))
@@ -2168,7 +2168,7 @@ g_path_skip_root (const gchar *file_name)
       return (gchar *)file_name;
     }
 
-#ifdef G_OS_WIN32
+#if defined(G_OS_WIN32) || defined(G_PLATFROM_OS2)
   /* Skip X:\ */
   if (g_ascii_isalpha (file_name[0]) &&
       file_name[1] == ':' &&
@@ -2211,12 +2211,19 @@ g_basename (const gchar *file_name)
     if (base == NULL || (q != NULL && q > base))
       base = q;
   }
+#elif defined(G_PLATFORM_OS2)
+  {
+    gchar *q;
+    q = strrchr (file_name, '\\');
+    if (base == NULL || (q != NULL && q > base))
+      base = q;
+  }
 #endif
 
   if (base)
     return base + 1;
 
-#ifdef G_OS_WIN32
+#if defined(G_OS_WIN32) || defined(G_PLATFORM_OS2)
   if (g_ascii_isalpha (file_name[0]) && file_name[1] == ':')
     return (gchar*) file_name + 2;
 #endif
@@ -2260,7 +2267,7 @@ g_path_get_basename (const gchar *file_name)
     /* string only containing slashes */
     return g_strdup (G_DIR_SEPARATOR_S);
 
-#ifdef G_OS_WIN32
+#if defined(G_OS_WIN32) || defined(G_PLATFORM_OS2)
   if (last_nonslash == 1 &&
       g_ascii_isalpha (file_name[0]) &&
       file_name[1] == ':')
@@ -2272,7 +2279,7 @@ g_path_get_basename (const gchar *file_name)
   while (base >=0 && !G_IS_DIR_SEPARATOR (file_name [base]))
     base--;
 
-#ifdef G_OS_WIN32
+#if defined(G_OS_WIN32) || defined(G_PLATFORM_OS2)
   if (base == -1 &&
       g_ascii_isalpha (file_name[0]) &&
       file_name[1] == ':')
@@ -2329,11 +2336,18 @@ g_path_get_dirname (const gchar *file_name)
     if (base == NULL || (q != NULL && q > base))
       base = q;
   }
+#elif defined(G_PLATFORM_OS2)
+  {
+    gchar *q;
+    q = strrchr (file_name, '\\');
+    if (base == NULL || (q != NULL && q > base))
+      base = q;
+  }
 #endif
 
   if (!base)
     {
-#ifdef G_OS_WIN32
+#ifdef G_OS_WIN32)
       if (g_ascii_isalpha (file_name[0]) && file_name[1] == ':')
         {
           gchar drive_colon_dot[4];
@@ -2352,7 +2366,7 @@ g_path_get_dirname (const gchar *file_name)
   while (base > file_name && G_IS_DIR_SEPARATOR (*base))
     base--;
 
-#ifdef G_OS_WIN32
+#if defined(G_OS_WIN32) || defined(G_PLATFORM_OS2)
   /* base points to the char before the last slash.
    *
    * In case file_name is the root of a drive (X:\) or a child of the
