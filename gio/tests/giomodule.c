@@ -108,7 +108,11 @@ test_module_scan_all_with_scope (void)
 
       ep = g_io_extension_point_register ("test-extension-point");
       scope = g_io_module_scope_new (G_IO_MODULE_SCOPE_BLOCK_DUPLICATES);
+#ifndef G_PLATFORM_OS2
       g_io_module_scope_block (scope, "libtestmoduleb." G_MODULE_SUFFIX);
+#else
+      g_io_module_scope_block (scope, "testmodb." G_MODULE_SUFFIX);
+#endif
       g_io_modules_scan_all_in_directory_with_scope (g_test_get_filename (G_TEST_BUILT, "modules", NULL), scope);
       list = g_io_extension_point_get_extensions (ep);
       g_io_modules_scan_all_in_directory_with_scope (g_test_get_filename (G_TEST_BUILT, "modules/.libs", NULL), scope);
