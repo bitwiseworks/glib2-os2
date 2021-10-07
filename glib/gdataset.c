@@ -30,8 +30,13 @@
  */
 
 #include "config.h"
+#include "glibconfig.h"
 
 #include <string.h>
+
+#ifdef G_PLATFORM_OS2
+#include <malloc.h> /* memalign() */
+#endif
 
 #include "gdataset.h"
 #include "gbitlock.h"
@@ -461,7 +466,14 @@ g_data_set_internal (GData	  **datalist,
       old_d = d;
       if (d == NULL)
 	{
-	  d = g_malloc (sizeof (GData));
+#ifdef G_PLATFORM_OS2
+    /* On OS/2, malloc returns 4-byte aligned pointers and that's not enough
+     * for G_DATALIST_FLAGS_MASK_INTERNAL which requires 8-byte alignment at
+     * the moment. Use memalign to get proper alignment. */
+    d = memalign (G_DATALIST_FLAGS_MASK_INTERNAL + 1, sizeof (GData));
+#else
+    d = g_malloc (sizeof (GData));
+#endif
 	  d->len = 0;
 	  d->alloc = 1;
 	}
