@@ -644,7 +644,6 @@ g_spawn_async_with_pipes (const gchar          *working_directory,
                           GError              **error)
 {
   gboolean result;
-  int tid;
   GPid pid = -1;
 
   g_return_val_if_fail (argv != NULL, FALSE);
@@ -676,9 +675,12 @@ g_spawn_async_with_pipes (const gchar          *working_directory,
   if (child_pid)
     *child_pid = pid;
 
-  /* start a thread with waitpid() so the return code does not fill up memory */
-  if (result && pid > 0)
-    tid = _beginthread (reap_child_thread, NULL, 0x2000, (void *) pid);
+  /* start a thread with waitpid() so the return code does not fill up memory
+   * unless G_SPAWN_DO_NOT_REAP_CHILD is given in which case it's a
+   * responsibility of the caller.
+   */
+  if (result && pid > 0 && !(flags & G_SPAWN_DO_NOT_REAP_CHILD))
+    _beginthread (reap_child_thread, NULL, 0x2000, (void *) pid);
 
   return result;
 }
@@ -1071,13 +1073,6 @@ fork_exec_with_pipes (gboolean              intermediate_child,
   return TRUE;
 
  cleanup_and_fail:
-
-  /* There was an error from the Child, reap the child to avoid it being
-     a zombie.
-   */
-
-  if (pid > 0)
-    reap_child (pid);
 
   close_and_invalidate (&stdin_pipe[0]);
   close_and_invalidate (&stdin_pipe[1]);
