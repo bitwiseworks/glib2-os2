@@ -23,6 +23,7 @@ config.sub
 config.guess
 configure
 INSTALL
+gio/gdbus-2.0/codegen/*.pyc
 gio/Makefile.in
 gio/fam/Makefile.in
 gio/inotify/Makefile.in
