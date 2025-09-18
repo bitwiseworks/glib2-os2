@@ -167,7 +167,14 @@ case "$host" in
     glib_pid_format='i'
     glib_pollfd_format='%d'
     glib_dir_separator='/'
+ case $host in
+  *os2*)
+    glib_searchpath_separator=';'
+    ;;
+  *)
     glib_searchpath_separator=':'
+    ;;
+ esac
     ;;
 esac
 case $host in

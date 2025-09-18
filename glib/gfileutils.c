@@ -2429,7 +2429,7 @@ g_path_get_dirname (const gchar *file_name)
 
   if (!base)
     {
-#ifdef G_OS_WIN32)
+#ifdef G_OS_WIN32
       if (g_ascii_isalpha (file_name[0]) && file_name[1] == ':')
         {
           gchar drive_colon_dot[4];
