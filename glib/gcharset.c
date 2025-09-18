@@ -301,7 +301,7 @@ unalias_lang (char *lang)
 #ifndef G_PLATFORM_OS2
       read_aliases ("/usr/share/locale/locale.alias", table);
 #else
-      read_aliases ("/@unixroot/usr/share/locale/locale.alias" table);
+      read_aliases ("/@unixroot/usr/share/locale/locale.alias", table);
 #endif
       g_once_init_leave (&alias_table, table);
     }
