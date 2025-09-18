@@ -5,7 +5,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -328,14 +328,14 @@ typedef enum {
  *   by file renames (moves) and send a single G_FILE_MONITOR_EVENT_MOVED
  *   event instead (NB: not supported on all backends; the default
  *   behaviour -without specifying this flag- is to send single DELETED
- *   and CREATED events).  Deprecated since 2.44: use
+ *   and CREATED events).  Deprecated since 2.46: use
  *   %G_FILE_MONITOR_WATCH_MOVES instead.
  * @G_FILE_MONITOR_WATCH_HARD_LINKS: Watch for changes to the file made
  *   via another hard link. Since 2.36.
  * @G_FILE_MONITOR_WATCH_MOVES: Watch for rename operations on a
  *   monitored directory.  This causes %G_FILE_MONITOR_EVENT_RENAMED,
  *   %G_FILE_MONITOR_EVENT_MOVED_IN and %G_FILE_MONITOR_EVENT_MOVED_OUT
- *   events to be emitted when possible.  Since: 2.44.
+ *   events to be emitted when possible.  Since: 2.46.
  *
  * Flags used to set what a #GFileMonitor will watch for.
  */
@@ -403,13 +403,13 @@ typedef enum {
  *   (deprecated) %G_FILE_MONITOR_SEND_MOVED flag is set
  * @G_FILE_MONITOR_EVENT_RENAMED: the file was renamed within the
  *   current directory -- only sent if the %G_FILE_MONITOR_WATCH_MOVES
- *   flag is set.  Since: 2.44.
+ *   flag is set.  Since: 2.46.
  * @G_FILE_MONITOR_EVENT_MOVED_IN: the file was moved into the
  *   monitored directory from another location -- only sent if the
- *   %G_FILE_MONITOR_WATCH_MOVES flag is set.  Since: 2.44.
+ *   %G_FILE_MONITOR_WATCH_MOVES flag is set.  Since: 2.46.
  * @G_FILE_MONITOR_EVENT_MOVED_OUT: the file was moved out of the
  *   monitored directory to another location -- only sent if the
- *   %G_FILE_MONITOR_WATCH_MOVES flag is set.  Since: 2.44
+ *   %G_FILE_MONITOR_WATCH_MOVES flag is set.  Since: 2.46
  *
  * Specifies what type of event a monitor event is.
  **/
@@ -495,6 +495,7 @@ typedef enum {
  *     returned %G_IO_ERROR_FAILED. Now they should all return the same
  *     value, which has this more logical name. Since 2.44.
  * @G_IO_ERROR_NOT_CONNECTED: Transport endpoint is not connected. Since 2.44
+ * @G_IO_ERROR_MESSAGE_TOO_LARGE: Message too large. Since 2.48.
  *
  * Error codes returned by GIO functions.
  *
@@ -559,7 +560,8 @@ typedef enum {
   G_IO_ERROR_PROXY_NOT_ALLOWED,
   G_IO_ERROR_BROKEN_PIPE,
   G_IO_ERROR_CONNECTION_CLOSED = G_IO_ERROR_BROKEN_PIPE,
-  G_IO_ERROR_NOT_CONNECTED
+  G_IO_ERROR_NOT_CONNECTED,
+  G_IO_ERROR_MESSAGE_TOO_LARGE
 } GIOErrorEnum;
 
 
@@ -570,17 +572,19 @@ typedef enum {
  * @G_ASK_PASSWORD_NEED_DOMAIN: operation requires a domain.
  * @G_ASK_PASSWORD_SAVING_SUPPORTED: operation supports saving settings.
  * @G_ASK_PASSWORD_ANONYMOUS_SUPPORTED: operation supports anonymous users.
+ * @G_ASK_PASSWORD_TCRYPT: operation takes TCRYPT parameters (Since: 2.58)
  *
  * #GAskPasswordFlags are used to request specific information from the
  * user, or to notify the user of their choices in an authentication
  * situation.
  **/
 typedef enum {
-  G_ASK_PASSWORD_NEED_PASSWORD       = (1 << 0),
-  G_ASK_PASSWORD_NEED_USERNAME       = (1 << 1),
-  G_ASK_PASSWORD_NEED_DOMAIN         = (1 << 2),
-  G_ASK_PASSWORD_SAVING_SUPPORTED    = (1 << 3),
-  G_ASK_PASSWORD_ANONYMOUS_SUPPORTED = (1 << 4)
+  G_ASK_PASSWORD_NEED_PASSWORD           = (1 << 0),
+  G_ASK_PASSWORD_NEED_USERNAME           = (1 << 1),
+  G_ASK_PASSWORD_NEED_DOMAIN             = (1 << 2),
+  G_ASK_PASSWORD_SAVING_SUPPORTED        = (1 << 3),
+  G_ASK_PASSWORD_ANONYMOUS_SUPPORTED     = (1 << 4),
+  G_ASK_PASSWORD_TCRYPT                  = (1 << 5),
 } GAskPasswordFlags;
 
 
@@ -950,6 +954,8 @@ typedef enum
  * @G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT: Allow another message bus connection to claim the name.
  * @G_BUS_NAME_OWNER_FLAGS_REPLACE: If another message bus connection owns the name and have
  * specified #G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT, then take the name from the other connection.
+ * @G_BUS_NAME_OWNER_FLAGS_DO_NOT_QUEUE: If another message bus connection owns the name, immediately
+ * return an error from g_bus_own_name() rather than entering the waiting queue for that name. (Since 2.54)
  *
  * Flags used in g_bus_own_name().
  *
@@ -959,8 +965,11 @@ typedef enum
 {
   G_BUS_NAME_OWNER_FLAGS_NONE = 0,                    /*< nick=none >*/
   G_BUS_NAME_OWNER_FLAGS_ALLOW_REPLACEMENT = (1<<0),  /*< nick=allow-replacement >*/
-  G_BUS_NAME_OWNER_FLAGS_REPLACE = (1<<1)            /*< nick=replace >*/
+  G_BUS_NAME_OWNER_FLAGS_REPLACE = (1<<1),           /*< nick=replace >*/
+  G_BUS_NAME_OWNER_FLAGS_DO_NOT_QUEUE = (1<<2)       /*< nick=do-not-queue >*/
 } GBusNameOwnerFlags;
+/* When adding new flags, their numeric values must currently match those
+ * used in the D-Bus Specification. */
 
 /**
  * GBusNameWatcherFlags:
@@ -987,7 +996,7 @@ typedef enum
  * @G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START: If the proxy is for a well-known name,
  * do not ask the bus to launch an owner during proxy initialization or a method call.
  * This flag is only meaningful in proxies for well-known names.
- * @G_DBUS_PROXY_FLAGS_GET_INVALIDATED_PROPERTIES: If set, the property value for any <emphasis>invalidated property</emphasis> will be (asynchronously) retrieved upon receiving the <ulink url="http://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-properties">PropertiesChanged</ulink> D-Bus signal and the property will not cause emission of the #GDBusProxy::g-properties-changed signal. When the value is received the #GDBusProxy::g-properties-changed signal is emitted for the property along with the retrieved value. Since 2.32.
+ * @G_DBUS_PROXY_FLAGS_GET_INVALIDATED_PROPERTIES: If set, the property value for any __invalidated property__ will be (asynchronously) retrieved upon receiving the [`PropertiesChanged`](http://dbus.freedesktop.org/doc/dbus-specification.html#standard-interfaces-properties) D-Bus signal and the property will not cause emission of the #GDBusProxy::g-properties-changed signal. When the value is received the #GDBusProxy::g-properties-changed signal is emitted for the property along with the retrieved value. Since 2.32.
  * @G_DBUS_PROXY_FLAGS_DO_NOT_AUTO_START_AT_CONSTRUCTION: If the proxy is for a well-known name,
  * do not ask the bus to launch an owner during proxy initialization, but allow it to be
  * autostarted by a method call. This flag is only meaningful in proxies for well-known names,
@@ -1396,11 +1405,11 @@ typedef enum
 /**
  * GCredentialsType:
  * @G_CREDENTIALS_TYPE_INVALID: Indicates an invalid native credential type.
- * @G_CREDENTIALS_TYPE_LINUX_UCRED: The native credentials type is a <type>struct ucred</type>.
- * @G_CREDENTIALS_TYPE_FREEBSD_CMSGCRED: The native credentials type is a <type>struct cmsgcred</type>.
- * @G_CREDENTIALS_TYPE_OPENBSD_SOCKPEERCRED: The native credentials type is a <type>struct sockpeercred</type>. Added in 2.30.
- * @G_CREDENTIALS_TYPE_SOLARIS_UCRED: The native credentials type is a <type>ucred_t</type>. Added in 2.40.
- * @G_CREDENTIALS_TYPE_NETBSD_UNPCBID: The native credentials type is a <type>struct unpcbid</type>.
+ * @G_CREDENTIALS_TYPE_LINUX_UCRED: The native credentials type is a struct ucred.
+ * @G_CREDENTIALS_TYPE_FREEBSD_CMSGCRED: The native credentials type is a struct cmsgcred.
+ * @G_CREDENTIALS_TYPE_OPENBSD_SOCKPEERCRED: The native credentials type is a struct sockpeercred. Added in 2.30.
+ * @G_CREDENTIALS_TYPE_SOLARIS_UCRED: The native credentials type is a ucred_t. Added in 2.40.
+ * @G_CREDENTIALS_TYPE_NETBSD_UNPCBID: The native credentials type is a struct unpcbid.
  *
  * Enumeration describing different kinds of native credential types.
  *
@@ -1452,7 +1461,7 @@ typedef enum
  *     launching process to the primary instance. Set this flag if your
  *     application is expected to behave differently depending on certain
  *     environment variables. For instance, an editor might be expected
- *     to use the <envar>GIT_COMMITTER_NAME</envar> environment variable
+ *     to use the `GIT_COMMITTER_NAME` environment variable
  *     when editing a git commit message. The environment is available
  *     to the #GApplication::command-line signal handler, via
  *     g_application_command_line_getenv().
@@ -1462,6 +1471,9 @@ typedef enum
  *     owner of the application ID nor does it check if an existing
  *     owner already exists.  Everything occurs in the local process.
  *     Since: 2.30.
+ * @G_APPLICATION_CAN_OVERRIDE_APP_ID: Allow users to override the
+ *     application ID from the command line with `--gapplication-app-id`.
+ *     Since: 2.48
  *
  * Flags used to define the behaviour of a #GApplication.
  *
@@ -1477,7 +1489,9 @@ typedef enum
   G_APPLICATION_HANDLES_COMMAND_LINE = (1 << 3),
   G_APPLICATION_SEND_ENVIRONMENT    =  (1 << 4),
 
-  G_APPLICATION_NON_UNIQUE =           (1 << 5)
+  G_APPLICATION_NON_UNIQUE =           (1 << 5),
+
+  G_APPLICATION_CAN_OVERRIDE_APP_ID =  (1 << 6)
 } GApplicationFlags;
 
 /**
@@ -1678,7 +1692,7 @@ typedef enum /*< flags >*/ {
  * @G_TLS_DATABASE_LOOKUP_KEYPAIR: Restrict lookup to certificates that have
  *     a private key.
  *
- * Flags for g_tls_database_lookup_certificate_handle(),
+ * Flags for g_tls_database_lookup_certificate_for_handle(),
  * g_tls_database_lookup_certificate_issuer(),
  * and g_tls_database_lookup_certificates_issued_by().
  *
@@ -1804,12 +1818,12 @@ typedef enum /*< flags >*/ {
  *   spawned process that can be accessed with
  *   g_subprocess_get_stdout_pipe().
  * @G_SUBPROCESS_FLAGS_STDOUT_SILENCE: silence the stdout of the spawned
- *   process (ie: redirect to /dev/null).
+ *   process (ie: redirect to `/dev/null`).
  * @G_SUBPROCESS_FLAGS_STDERR_PIPE: create a pipe for the stderr of the
  *   spawned process that can be accessed with
  *   g_subprocess_get_stderr_pipe().
  * @G_SUBPROCESS_FLAGS_STDERR_SILENCE: silence the stderr of the spawned
- *   process (ie: redirect to /dev/null).
+ *   process (ie: redirect to `/dev/null`).
  * @G_SUBPROCESS_FLAGS_STDERR_MERGE: merge the stderr of the spawned
  *   process with whatever the stdout happens to be.  This is a good way
  *   of directing both streams to a common log file, for example.
@@ -1820,7 +1834,7 @@ typedef enum /*< flags >*/ {
  *
  * Flags to define the behaviour of a #GSubprocess.
  *
- * Note that the default for stdin is to redirect from /dev/null.  For
+ * Note that the default for stdin is to redirect from `/dev/null`.  For
  * stdout and stderr the default are for them to inherit the
  * corresponding descriptor from the calling process.
  *

@@ -5,7 +5,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -229,8 +229,14 @@ g_file_monitor_source_queue_event (GFileMonitorSource *fms,
 
   event = g_slice_new (QueuedEvent);
   event->event_type = event_type;
-  if (child)
+  if (child != NULL && fms->dirname != NULL)
     event->child = g_local_file_new_from_dirname_and_basename (fms->dirname, child);
+  else if (child != NULL)
+    {
+      gchar *dirname = g_path_get_dirname (fms->filename);
+      event->child = g_local_file_new_from_dirname_and_basename (dirname, child);
+      g_free (dirname);
+    }
   else if (fms->dirname)
     event->child = _g_local_file_new (fms->dirname);
   else if (fms->filename)
@@ -394,23 +400,29 @@ g_file_monitor_source_handle_event (GFileMonitorSource *fms,
 
     case G_FILE_MONITOR_EVENT_RENAMED:
       g_assert (!other && rename_to);
-      if (fms->flags & G_FILE_MONITOR_WATCH_MOVES)
+      if (fms->flags & (G_FILE_MONITOR_WATCH_MOVES | G_FILE_MONITOR_SEND_MOVED))
         {
           GFile *other;
+          const gchar *dirname;
+          gchar *allocated_dirname = NULL;
+          GFileMonitorEvent event;
 
-          other = g_local_file_new_from_dirname_and_basename (fms->dirname, rename_to);
-          g_file_monitor_source_file_changes_done (fms, rename_to);
-          g_file_monitor_source_send_event (fms, G_FILE_MONITOR_EVENT_RENAMED, child, other);
-          g_object_unref (other);
-        }
-      else if (fms->flags & G_FILE_MONITOR_SEND_MOVED)
-        {
-          GFile *other;
+          event = (fms->flags & G_FILE_MONITOR_WATCH_MOVES) ? G_FILE_MONITOR_EVENT_RENAMED : G_FILE_MONITOR_EVENT_MOVED;
 
-          other = g_local_file_new_from_dirname_and_basename (fms->dirname, rename_to);
+          if (fms->dirname != NULL)
+            dirname = fms->dirname;
+          else
+            {
+              allocated_dirname = g_path_get_dirname (fms->filename);
+              dirname = allocated_dirname;
+            }
+
+          other = g_local_file_new_from_dirname_and_basename (dirname, rename_to);
           g_file_monitor_source_file_changes_done (fms, rename_to);
-          g_file_monitor_source_send_event (fms, G_FILE_MONITOR_EVENT_MOVED, child, other);
+          g_file_monitor_source_send_event (fms, event, child, other);
+
           g_object_unref (other);
+          g_free (allocated_dirname);
         }
       else
         {
@@ -504,7 +516,7 @@ g_file_monitor_source_dispatch (GSource     *source,
   g_mutex_lock (&fms->lock);
 
   /* Create events for any pending changes that are due to fire */
-  while (g_sequence_get_length (fms->pending_changes))
+  while (!g_sequence_is_empty (fms->pending_changes))
     {
       GSequenceIter *iter = g_sequence_get_begin_iter (fms->pending_changes);
       PendingChange *pending = g_sequence_get (iter);
@@ -572,7 +584,7 @@ g_file_monitor_source_dispose (GFileMonitorSource *fms)
       while ((event = g_queue_pop_head (&fms->event_queue)))
         queued_event_free (event);
 
-      g_assert (g_sequence_get_length (fms->pending_changes) == 0);
+      g_assert (g_sequence_is_empty (fms->pending_changes));
       g_assert (g_hash_table_size (fms->pending_changes_table) == 0);
       g_assert (fms->event_queue.length == 0);
       fms->instance = NULL;
@@ -592,7 +604,7 @@ g_file_monitor_source_finalize (GSource *source)
 
   /* should already have been cleared in dispose of the monitor */
   g_assert (fms->instance == NULL);
-  g_assert (g_sequence_get_length (fms->pending_changes) == 0);
+  g_assert (g_sequence_is_empty (fms->pending_changes));
   g_assert (g_hash_table_size (fms->pending_changes_table) == 0);
   g_assert (fms->event_queue.length == 0);
 
@@ -635,6 +647,8 @@ g_file_monitor_source_new (gpointer           instance,
 
   source = g_source_new (&source_funcs, sizeof (GFileMonitorSource));
   fms = (GFileMonitorSource *) source;
+
+  g_source_set_name (source, "GFileMonitorSource");
 
   g_mutex_init (&fms->lock);
   fms->instance = instance;
@@ -748,6 +762,9 @@ g_local_file_monitor_start (GLocalFileMonitor *local_monitor,
 
   g_assert (!local_monitor->source);
 
+  source = g_file_monitor_source_new (local_monitor, filename, is_directory, flags);
+  local_monitor->source = source; /* owns the ref */
+
   if (is_directory && !class->mount_notify && (flags & G_FILE_MONITOR_WATCH_MOUNTS))
     {
 #ifdef G_OS_WIN32
@@ -770,9 +787,6 @@ g_local_file_monitor_start (GLocalFileMonitor *local_monitor,
                                G_CALLBACK (g_local_file_monitor_mounts_changed), local_monitor, 0);
 #endif
     }
-
-  source = g_file_monitor_source_new (local_monitor, filename, is_directory, flags);
-  local_monitor->source = source; /* owns the ref */
 
   G_LOCAL_FILE_MONITOR_GET_CLASS (local_monitor)->start (local_monitor,
                                                          source->dirname, source->basename, source->filename,

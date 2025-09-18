@@ -3,7 +3,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -232,7 +232,7 @@ thumbnail_verify (const char     *thumbnail_path,
     return FALSE;
 
   expected_info.uri = file_uri;
-  expected_info.mtime = file_stat_buf->st_mtime;
+  expected_info.mtime = (guint64) file_stat_buf->st_mtime;
   expected_info.size = file_stat_buf->st_size;
 
   file = g_mapped_file_new (thumbnail_path, FALSE, NULL);

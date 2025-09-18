@@ -5,7 +5,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -83,7 +83,7 @@ g_icon_default_init (GIconInterface *iface)
 
 /**
  * g_icon_hash:
- * @icon: #gconstpointer to an icon object.
+ * @icon: (not nullable): #gconstpointer to an icon object.
  * 
  * Gets a hash for an icon.
  *
@@ -105,8 +105,8 @@ g_icon_hash (gconstpointer icon)
 
 /**
  * g_icon_equal:
- * @icon1: (allow-none): pointer to the first #GIcon.
- * @icon2: (allow-none): pointer to the second #GIcon.
+ * @icon1: (nullable): pointer to the first #GIcon.
+ * @icon2: (nullable): pointer to the second #GIcon.
  * 
  * Checks if two icons are equal.
  * 
@@ -199,8 +199,8 @@ g_icon_to_string_tokenized (GIcon *icon, GString *s)
  *   native, the returned string is the result of g_file_get_uri()
  *   (such as `sftp://path/to/my%20icon.png`).
  * 
- * - If @icon is a #GThemedIcon with exactly one name, the encoding is
- *    simply the name (such as `network-server`).
+ * - If @icon is a #GThemedIcon with exactly one name and no fallbacks,
+ *   the encoding is simply the name (such as `network-server`).
  *
  * Virtual: to_tokens
  * Returns: (nullable): An allocated NUL-terminated UTF8 string or
@@ -237,15 +237,23 @@ g_icon_to_string (GIcon *icon)
     }
   else if (G_IS_THEMED_ICON (icon))
     {
-      const char * const *names;
+      char     **names                 = NULL;
+      gboolean   use_default_fallbacks = FALSE;
 
-      names = g_themed_icon_get_names (G_THEMED_ICON (icon));
+      g_object_get (G_OBJECT (icon),
+                    "names",                 &names,
+                    "use-default-fallbacks", &use_default_fallbacks,
+                    NULL);
+      /* Themed icon initialized with a single name and no fallbacks. */
       if (names != NULL &&
 	  names[0] != NULL &&
 	  names[0][0] != '.' && /* Allowing icons starting with dot would break G_ICON_SERIALIZATION_MAGIC0 */
 	  g_utf8_validate (names[0], -1, NULL) && /* Only return utf8 strings */
-	  names[1] == NULL)
+          names[1] == NULL &&
+          ! use_default_fallbacks)
 	ret = g_strdup (names[0]);
+
+      g_strfreev (names);
     }
 
   if (ret == NULL)
@@ -458,7 +466,7 @@ g_icon_new_for_string (const gchar   *str,
     g_set_error_literal (error,
                          G_IO_ERROR,
                          G_IO_ERROR_INVALID_ARGUMENT,
-                         _("Can't handle the supplied version of the icon encoding"));
+                         _("Can’t handle the supplied version of the icon encoding"));
 
   return icon;
 }

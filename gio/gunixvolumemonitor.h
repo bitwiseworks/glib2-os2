@@ -5,7 +5,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -55,6 +55,7 @@ GType            _g_unix_volume_monitor_get_type                     (void) G_GN
 GVolumeMonitor * _g_unix_volume_monitor_new                          (void);
 GUnixVolume    * _g_unix_volume_monitor_lookup_volume_for_mount_path (GUnixVolumeMonitor *monitor,
                                                                       const char         *mount_path);
+void             _g_unix_volume_monitor_update                       (GUnixVolumeMonitor *monitor);
 
 G_END_DECLS
 

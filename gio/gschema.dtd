@@ -1,4 +1,4 @@
-<!ELEMENT schemalist (schema|enum)* >
+<!ELEMENT schemalist (schema|enum|flags)* >
 <!ATTLIST schemalist gettext-domain CDATA #IMPLIED >
 
 <!ELEMENT schema (key|child|override)* >
@@ -47,9 +47,10 @@
 
 <!-- range is only allowed for keys with numeric type -->
 <!ELEMENT range EMPTY >
-<!-- min and max must be parseable as values of the key type and min < max -->
-<!ATTLIST range min CDATA #REQUIRED
-                max CDATA #REQUIRED >
+<!-- min and max must be parseable as values of the key type and
+     min must be less than or equal to max -->
+<!ATTLIST range min CDATA #IMPLIED
+                max CDATA #IMPLIED >
 
 <!-- choices is only allowed for keys with string or string array type -->
 <!ELEMENT choices (choice+) >

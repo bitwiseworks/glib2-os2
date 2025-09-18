@@ -5,7 +5,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -26,6 +26,7 @@
 #include "gdbus-tests.h"
 
 #include "gdbus-test-codegen-generated.h"
+#include "gdbus-test-codegen-generated-interface-info.h"
 
 /* ---------------------------------------------------------------------------------------------------- */
 
@@ -172,7 +173,12 @@ on_handle_test_non_primitive_types (FooiGenBar            *object,
   s = g_strjoinv (", ", (gchar **) array_of_bytestrings);
   g_string_append_printf (str, "array_of_bytestrings: [%s] ", s);
   g_free (s);
-  foo_igen_bar_complete_test_non_primitive_types (object, invocation, str->str);
+  foo_igen_bar_complete_test_non_primitive_types (object, invocation,
+                                                  array_of_strings,
+                                                  array_of_objpaths,
+                                                  array_of_signatures,
+                                                  array_of_bytestrings,
+                                                  str->str);
   g_string_free (str, TRUE);
   return TRUE;
 }
@@ -400,7 +406,7 @@ on_handle_get_self (FooiGenMethodThreads   *object,
                     gpointer                user_data)
 {
   gchar *s;
-  s = g_strdup_printf ("%p", g_thread_self ());
+  s = g_strdup_printf ("%p", (void *)g_thread_self ());
   foo_igen_method_threads_complete_get_self (object, invocation, s);
   g_free (s);
   return TRUE;
@@ -700,7 +706,12 @@ check_bar_proxy (FooiGenBar *proxy,
   const gchar *array_of_strings[3] = {"one", "two", NULL};
   const gchar *array_of_strings_2[3] = {"one2", "two2", NULL};
   const gchar *array_of_objpaths[3] = {"/one", "/one/two", NULL};
+  GVariant *array_of_signatures = NULL;
   const gchar *array_of_bytestrings[3] = {"one\xff", "two\xff", NULL};
+  gchar **ret_array_of_strings = NULL;
+  gchar **ret_array_of_objpaths = NULL;
+  GVariant *ret_array_of_signatures = NULL;
+  gchar **ret_array_of_bytestrings = NULL;
   guchar ret_val_byte;
   gboolean ret_val_boolean;
   gint16 ret_val_int16;
@@ -887,7 +898,13 @@ check_bar_proxy (FooiGenBar *proxy,
   g_assert_no_error (error);
   g_assert (ret);
 
+  g_clear_pointer (&ret_val_string, g_free);
+  g_clear_pointer (&ret_val_objpath, g_free);
+  g_clear_pointer (&ret_val_signature, g_free);
+  g_clear_pointer (&ret_val_bytestring, g_free);
+
   error = NULL;
+  array_of_signatures = g_variant_ref_sink (g_variant_new_parsed ("[@g 'ass', 'git']"));
   ret = foo_igen_bar_call_test_non_primitive_types_sync (proxy,
                                                          g_variant_new_parsed ("{'one': 'red',"
                                                                                " 'two': 'blue'}"),
@@ -896,14 +913,36 @@ check_bar_proxy (FooiGenBar *proxy,
                                                          g_variant_new_parsed ("(42, 'foo', 'bar')"),
                                                          array_of_strings,
                                                          array_of_objpaths,
-                                                         g_variant_new_parsed ("[@g 'ass', 'git']"),
+                                                         array_of_signatures,
                                                          array_of_bytestrings,
+                                                         &ret_array_of_strings,
+                                                         &ret_array_of_objpaths,
+                                                         &ret_array_of_signatures,
+                                                         &ret_array_of_bytestrings,
                                                          &s,
                                                          NULL, /* GCancellable */
                                                          &error);
 
   g_assert_no_error (error);
   g_assert (ret);
+
+  g_assert_nonnull (ret_array_of_strings);
+  g_assert_cmpuint (g_strv_length ((gchar **) ret_array_of_strings), ==,
+                    g_strv_length ((gchar **) array_of_strings));
+  g_assert_nonnull (ret_array_of_objpaths);
+  g_assert_cmpuint (g_strv_length ((gchar **) ret_array_of_objpaths), ==,
+                    g_strv_length ((gchar **) array_of_objpaths));
+  g_assert_nonnull (ret_array_of_signatures);
+  g_assert_true (g_variant_equal (ret_array_of_signatures, array_of_signatures));
+  g_assert_nonnull (ret_array_of_bytestrings);
+  g_assert_cmpuint (g_strv_length ((gchar **) ret_array_of_bytestrings), ==,
+                    g_strv_length ((gchar **) array_of_bytestrings));
+
+  g_clear_pointer (&ret_array_of_strings, g_strfreev);
+  g_clear_pointer (&ret_array_of_objpaths, g_strfreev);
+  g_clear_pointer (&ret_array_of_signatures, g_variant_unref);
+  g_clear_pointer (&ret_array_of_bytestrings, g_strfreev);
+  g_clear_pointer (&s, g_free);
 
   /* Check that org.freedesktop.DBus.Error.UnknownMethod is returned on
    * unimplemented methods.
@@ -1049,6 +1088,7 @@ check_bar_proxy (FooiGenBar *proxy,
 
   /* cleanup */
   g_free (data);
+  g_variant_unref (array_of_signatures);
 }
 
 /* ---------------------------------------------------------------------------------------------------- */
@@ -2346,6 +2386,152 @@ test_property_naming (void)
 
 /* ---------------------------------------------------------------------------------------------------- */
 
+/* autocleanups
+ *
+ * - check that g_autoptr() works for all generated types, if supported by the
+ *   current compiler
+ */
+
+static void
+test_autocleanups (void)
+{
+#ifdef g_autoptr
+  g_autoptr(FooiGenBar) bar = NULL;
+  g_autoptr(FooiGenBarProxy) bar_proxy = NULL;
+  g_autoptr(FooiGenBarSkeleton) bar_skeleton = NULL;
+  g_autoptr(FooiGenObject) object = NULL;
+  g_autoptr(FooiGenObjectProxy) object_proxy = NULL;
+  g_autoptr(FooiGenObjectSkeleton) object_skeleton = NULL;
+  g_autoptr(FooiGenObjectManagerClient) object_manager_client = NULL;
+
+  (void) bar;
+  (void) bar_proxy;
+  (void) bar_skeleton;
+  (void) object;
+  (void) object_proxy;
+  (void) object_skeleton;
+  (void) object_manager_client;
+#elif GLIB_CHECK_VERSION(2, 38, 0)
+  /* This file is compiled twice, once without GLib version guards and once
+   * with
+   *
+   *   -DGLIB_VERSION_MIN_REQUIRED=GLIB_VERSION_2_36
+   *   -DGLIB_VERSION_MAX_ALLOWED=GLIB_VERSION_2_36
+   *
+   * g_test_skip() was added in 2.38.
+   */
+  g_test_skip ("g_autoptr() not supported on this compiler");
+#else
+  /* Let's just say it passed. */
+#endif
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
+static void
+assert_arg_infos_equal (GDBusArgInfo **a,
+                        GDBusArgInfo **b)
+{
+  if (a == NULL)
+    {
+      g_assert_null (b);
+      return;
+    }
+
+  g_assert_nonnull (b);
+
+  for (; *a != NULL && *b != NULL; a++, b++)
+    {
+      g_assert_cmpstr ((*a)->name, ==, (*b)->name);
+      g_assert_cmpstr ((*a)->signature, ==, (*b)->signature);
+    }
+
+  g_assert_null (*a);
+  g_assert_null (*b);
+}
+
+static void
+assert_annotations_equal (GDBusAnnotationInfo **a,
+                          GDBusAnnotationInfo **b)
+{
+  guint a_len = count_annotations (a);
+  guint b_len = count_annotations (b);
+
+  g_assert_cmpuint (a_len, ==, b_len);
+
+  if (a == NULL || b == NULL)
+    return;
+
+  for (; *a != NULL && *b != NULL; a++, b++)
+    {
+      g_assert_cmpstr ((*a)->key, ==, (*b)->key);
+      g_assert_cmpstr ((*a)->value, ==, (*b)->value);
+      assert_annotations_equal ((*a)->annotations, (*b)->annotations);
+    }
+
+  g_assert_null (*a);
+  g_assert_null (*b);
+}
+
+/* Test that the GDBusInterfaceInfo structure generated by gdbus-codegen
+ * --interface-info-body matches that generated by the other mode.
+ */
+static void
+test_standalone_interface_info (void)
+{
+  GDBusInterfaceSkeleton *skel = G_DBUS_INTERFACE_SKELETON (foo_igen_bar_skeleton_new ());
+  GDBusInterfaceInfo *skel_info = g_dbus_interface_skeleton_get_info (skel);
+  const GDBusInterfaceInfo *slim_info = &org_project_bar_interface;
+  gsize i;
+
+  g_assert_cmpstr (skel_info->name, ==, slim_info->name);
+
+  for (i = 0; skel_info->methods[i] != NULL; i++)
+    {
+      GDBusMethodInfo *skel_method = skel_info->methods[i];
+      GDBusMethodInfo *slim_method = slim_info->methods[i];
+
+      g_assert_nonnull (slim_method);
+      g_assert_cmpstr (skel_method->name, ==, slim_method->name);
+      assert_arg_infos_equal (skel_method->in_args, slim_method->in_args);
+      assert_arg_infos_equal (skel_method->out_args, slim_method->out_args);
+      assert_annotations_equal (skel_method->annotations, slim_method->annotations);
+    }
+  g_assert_null (slim_info->methods[i]);
+
+  for (i = 0; skel_info->signals[i] != NULL; i++)
+    {
+      GDBusSignalInfo *skel_signal = skel_info->signals[i];
+      GDBusSignalInfo *slim_signal = slim_info->signals[i];
+
+      g_assert_nonnull (slim_signal);
+      g_assert_cmpstr (skel_signal->name, ==, slim_signal->name);
+      assert_arg_infos_equal (skel_signal->args, slim_signal->args);
+      assert_annotations_equal (skel_signal->annotations, slim_signal->annotations);
+    }
+  g_assert_null (slim_info->signals[i]);
+
+  for (i = 0; skel_info->properties[i] != NULL; i++)
+    {
+      GDBusPropertyInfo *skel_prop = skel_info->properties[i];
+      GDBusPropertyInfo *slim_prop = slim_info->properties[i];
+
+      g_assert_nonnull (slim_prop);
+
+      g_assert_cmpstr (skel_prop->name, ==, slim_prop->name);
+      g_assert_cmpstr (skel_prop->signature, ==, slim_prop->signature);
+      g_assert_cmpuint (skel_prop->flags, ==, slim_prop->flags);
+      assert_annotations_equal (skel_prop->annotations, slim_prop->annotations);
+    }
+  g_assert_null (slim_info->properties[i]);
+
+  assert_annotations_equal (skel_info->annotations, slim_info->annotations);
+
+  g_clear_object (&skel);
+}
+
+/* ---------------------------------------------------------------------------------------------------- */
+
 int
 main (int   argc,
       char *argv[])
@@ -2356,6 +2542,8 @@ main (int   argc,
   g_test_add_func ("/gdbus/codegen/interface_stability", test_interface_stability);
   g_test_add_func ("/gdbus/codegen/object-manager", test_object_manager);
   g_test_add_func ("/gdbus/codegen/property-naming", test_property_naming);
+  g_test_add_func ("/gdbus/codegen/autocleanups", test_autocleanups);
+  g_test_add_func ("/gdbus/codegen/standalone-interface-info", test_standalone_interface_info);
 
   return session_bus_run ();
 }

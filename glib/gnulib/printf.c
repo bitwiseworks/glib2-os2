@@ -22,9 +22,7 @@
  * GLib at ftp://ftp.gtk.org/pub/gtk/. 
  */
 
-#ifdef HAVE_CONFIG_H
-# include <config.h>
-#endif
+#include <config.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -88,16 +86,16 @@ int _g_gnulib_vprintf (char const *format, va_list args)
 int _g_gnulib_vfprintf (FILE *file, char const *format, va_list args)
 {
   char *result;
-  size_t length;
+  size_t length, rlength;
 
   result = vasnprintf (NULL, &length, format, args);
   if (result == NULL) 
     return -1;
 
-  fwrite (result, 1, length, file);
+  rlength = fwrite (result, 1, length, file);
   free (result);
   
-  return length;
+  return rlength;
 }
 
 int _g_gnulib_vsprintf (char *string, char const *format, va_list args)

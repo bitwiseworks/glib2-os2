@@ -5,7 +5,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -220,8 +220,8 @@ g_variant_type_info_get_type_string (GVariantTypeInfo *info)
 /* < private >
  * g_variant_type_info_query:
  * @info: a #GVariantTypeInfo
- * @alignment: (allow-none): the location to store the alignment, or %NULL
- * @fixed_size: (allow-none): the location to store the fixed size, or %NULL
+ * @alignment: (nullable): the location to store the alignment, or %NULL
+ * @fixed_size: (nullable): the location to store the fixed size, or %NULL
  *
  * Queries @info to determine the alignment requirements and fixed size
  * (if any) of the type.
@@ -249,6 +249,31 @@ g_variant_type_info_query (GVariantTypeInfo *info,
 
   if (fixed_size)
     *fixed_size = info->fixed_size;
+}
+
+/* < private >
+ * g_variant_type_info_query_depth:
+ * @info: a #GVariantTypeInfo
+ *
+ * Queries @info to determine the depth of the type.
+ *
+ * See g_variant_type_string_get_depth_() for more details.
+ *
+ * Returns: depth of @info
+ * Since: 2.60 (backported to 2.58)
+ */
+gsize
+g_variant_type_info_query_depth (GVariantTypeInfo *info)
+{
+  g_variant_type_info_check (info, 0);
+
+  if (info->container_class)
+    {
+      ContainerInfo *container = (ContainerInfo *) info;
+      return g_variant_type_string_get_depth_ (container->type_string);
+    }
+
+  return 1;
 }
 
 /* == array == */
@@ -304,8 +329,8 @@ g_variant_type_info_element (GVariantTypeInfo *info)
 /* < private >
  * g_variant_type_query_element:
  * @info: a #GVariantTypeInfo for an array or maybe type
- * @alignment: (allow-none): the location to store the alignment, or %NULL
- * @fixed_size: (allow-none): the location to store the fixed size, or %NULL
+ * @alignment: (nullable): the location to store the alignment, or %NULL
+ * @fixed_size: (nullable): the location to store the fixed size, or %NULL
  *
  * Returns the alignment requires and fixed size (if any) for the
  * element type of the array.  This call is a convenience wrapper around

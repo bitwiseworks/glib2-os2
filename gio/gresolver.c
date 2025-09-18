@@ -7,7 +7,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -32,6 +32,7 @@
 #include "gtask.h"
 #include "gsrvtarget.h"
 #include "gthreadedresolver.h"
+#include "gioerror.h"
 
 #ifdef G_OS_UNIX
 #include <sys/stat.h>
@@ -75,10 +76,13 @@ struct _GResolverPrivate {
  *
  * The object that handles DNS resolution. Use g_resolver_get_default()
  * to get the default resolver.
+ *
+ * This is an abstract type; subclasses of it implement different resolvers for
+ * different platforms and situations.
  */
-G_DEFINE_TYPE_WITH_CODE (GResolver, g_resolver, G_TYPE_OBJECT,
-                         G_ADD_PRIVATE (GResolver)
-			 g_networking_init ();)
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GResolver, g_resolver, G_TYPE_OBJECT,
+                                  G_ADD_PRIVATE (GResolver)
+                                  g_networking_init ();)
 
 static GList *
 srv_records_to_targets (GList *records)
@@ -185,6 +189,7 @@ g_resolver_init (GResolver *resolver)
 #endif
 }
 
+G_LOCK_DEFINE_STATIC (default_resolver);
 static GResolver *default_resolver;
 
 /**
@@ -201,10 +206,15 @@ static GResolver *default_resolver;
 GResolver *
 g_resolver_get_default (void)
 {
+  GResolver *ret;
+
+  G_LOCK (default_resolver);
   if (!default_resolver)
     default_resolver = g_object_new (G_TYPE_THREADED_RESOLVER, NULL);
+  ret = g_object_ref (default_resolver);
+  G_UNLOCK (default_resolver);
 
-  return g_object_ref (default_resolver);
+  return ret;
 }
 
 /**
@@ -226,9 +236,11 @@ g_resolver_get_default (void)
 void
 g_resolver_set_default (GResolver *resolver)
 {
+  G_LOCK (default_resolver);
   if (default_resolver)
     g_object_unref (default_resolver);
   default_resolver = g_object_ref (resolver);
+  G_UNLOCK (default_resolver);
 }
 
 /* Bionic has res_init() but it's not in any header */
@@ -330,7 +342,7 @@ handle_ip_address (const char  *hostname,
 #endif
     {
       g_set_error (error, G_RESOLVER_ERROR, G_RESOLVER_ERROR_NOT_FOUND,
-                   _("Error resolving '%s': %s"),
+                   _("Error resolving “%s”: %s"),
                    hostname, gai_strerror (EAI_NONAME));
       return TRUE;
     }
@@ -342,7 +354,7 @@ handle_ip_address (const char  *hostname,
  * g_resolver_lookup_by_name:
  * @resolver: a #GResolver
  * @hostname: the hostname to look up
- * @cancellable: (allow-none): a #GCancellable, or %NULL
+ * @cancellable: (nullable): a #GCancellable, or %NULL
  * @error: return location for a #GError, or %NULL
  *
  * Synchronously resolves @hostname to determine its associated IP
@@ -395,6 +407,13 @@ g_resolver_lookup_by_name (GResolver     *resolver,
   if (g_hostname_is_non_ascii (hostname))
     hostname = ascii_hostname = g_hostname_to_ascii (hostname);
 
+  if (!hostname)
+    {
+      g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                           _("Invalid hostname"));
+      return NULL;
+    }
+
   g_resolver_maybe_reload (resolver);
   addrs = G_RESOLVER_GET_CLASS (resolver)->
     lookup_by_name (resolver, hostname, cancellable, error);
@@ -409,7 +428,7 @@ g_resolver_lookup_by_name (GResolver     *resolver,
  * g_resolver_lookup_by_name_async:
  * @resolver: a #GResolver
  * @hostname: the hostname to look up the address of
- * @cancellable: (allow-none): a #GCancellable, or %NULL
+ * @cancellable: (nullable): a #GCancellable, or %NULL
  * @callback: (scope async): callback to call after resolution completes
  * @user_data: (closure): data for @callback
  *
@@ -451,6 +470,19 @@ g_resolver_lookup_by_name_async (GResolver           *resolver,
 
   if (g_hostname_is_non_ascii (hostname))
     hostname = ascii_hostname = g_hostname_to_ascii (hostname);
+
+  if (!hostname)
+    {
+      GTask *task;
+
+      g_set_error_literal (&error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                           _("Invalid hostname"));
+      task = g_task_new (resolver, cancellable, callback, user_data);
+      g_task_set_source_tag (task, g_resolver_lookup_by_name_async);
+      g_task_return_error (task, error);
+      g_object_unref (task);
+      return;
+    }
 
   g_resolver_maybe_reload (resolver);
   G_RESOLVER_GET_CLASS (resolver)->
@@ -528,7 +560,7 @@ g_resolver_free_addresses (GList *addresses)
  * g_resolver_lookup_by_address:
  * @resolver: a #GResolver
  * @address: the address to reverse-resolve
- * @cancellable: (allow-none): a #GCancellable, or %NULL
+ * @cancellable: (nullable): a #GCancellable, or %NULL
  * @error: return location for a #GError, or %NULL
  *
  * Synchronously reverse-resolves @address to determine its
@@ -564,7 +596,7 @@ g_resolver_lookup_by_address (GResolver     *resolver,
  * g_resolver_lookup_by_address_async:
  * @resolver: a #GResolver
  * @address: the address to reverse-resolve
- * @cancellable: (allow-none): a #GCancellable, or %NULL
+ * @cancellable: (nullable): a #GCancellable, or %NULL
  * @callback: (scope async): callback to call after resolution completes
  * @user_data: (closure): data for @callback
  *
@@ -630,6 +662,8 @@ g_resolver_get_service_rrname (const char *service,
 
   if (g_hostname_is_non_ascii (domain))
     domain = ascii_domain = g_hostname_to_ascii (domain);
+  if (!domain)
+    return NULL;
 
   rrname = g_strdup_printf ("_%s._%s.%s", service, protocol, domain);
 
@@ -643,7 +677,7 @@ g_resolver_get_service_rrname (const char *service,
  * @service: the service type to look up (eg, "ldap")
  * @protocol: the networking protocol to use for @service (eg, "tcp")
  * @domain: the DNS domain to look up the service in
- * @cancellable: (allow-none): a #GCancellable, or %NULL
+ * @cancellable: (nullable): a #GCancellable, or %NULL
  * @error: return location for a #GError, or %NULL
  *
  * Synchronously performs a DNS SRV lookup for the given @service and
@@ -692,6 +726,12 @@ g_resolver_lookup_service (GResolver     *resolver,
   g_return_val_if_fail (domain != NULL, NULL);
 
   rrname = g_resolver_get_service_rrname (service, protocol, domain);
+  if (!rrname)
+    {
+      g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_FAILED,
+                           _("Invalid domain"));
+      return NULL;
+    }
 
   g_resolver_maybe_reload (resolver);
   targets = G_RESOLVER_GET_CLASS (resolver)->
@@ -707,7 +747,7 @@ g_resolver_lookup_service (GResolver     *resolver,
  * @service: the service type to look up (eg, "ldap")
  * @protocol: the networking protocol to use for @service (eg, "tcp")
  * @domain: the DNS domain to look up the service in
- * @cancellable: (allow-none): a #GCancellable, or %NULL
+ * @cancellable: (nullable): a #GCancellable, or %NULL
  * @callback: (scope async): callback to call after resolution completes
  * @user_data: (closure): data for @callback
  *
@@ -736,6 +776,14 @@ g_resolver_lookup_service_async (GResolver           *resolver,
   g_return_if_fail (domain != NULL);
 
   rrname = g_resolver_get_service_rrname (service, protocol, domain);
+  if (!rrname)
+    {
+      g_task_report_new_error (resolver, callback, user_data,
+                               g_resolver_lookup_service_async,
+                               G_IO_ERROR, G_IO_ERROR_FAILED,
+                               _("Invalid domain"));
+      return;
+    }
 
   g_resolver_maybe_reload (resolver);
   G_RESOLVER_GET_CLASS (resolver)->
@@ -803,7 +851,7 @@ g_resolver_free_targets (GList *targets)
  * @resolver: a #GResolver
  * @rrname: the DNS name to lookup the record for
  * @record_type: the type of DNS record to lookup
- * @cancellable: (allow-none): a #GCancellable, or %NULL
+ * @cancellable: (nullable): a #GCancellable, or %NULL
  * @error: return location for a #GError, or %NULL
  *
  * Synchronously performs a DNS record lookup for the given @rrname and returns
@@ -848,7 +896,7 @@ g_resolver_lookup_records (GResolver            *resolver,
  * @resolver: a #GResolver
  * @rrname: the DNS name to lookup the record for
  * @record_type: the type of DNS record to lookup
- * @cancellable: (allow-none): a #GCancellable, or %NULL
+ * @cancellable: (nullable): a #GCancellable, or %NULL
  * @callback: (scope async): callback to call after resolution completes
  * @user_data: (closure): data for @callback
  *

@@ -1822,6 +1822,49 @@ lonely_dash_test (void)
   g_option_context_free (context);
 }
 
+/* test that three dashes are treated as non-options */
+static void
+triple_dash_test (void)
+{
+  GOptionContext *context;
+  GOptionGroup *group;
+  gboolean retval;
+  GError *error = NULL;
+  gchar **argv;
+  gchar **argv_copy;
+  int argc;
+  gint arg1, arg2;
+  GOptionEntry entries [] =
+    { { "foo", 0, 0, G_OPTION_ARG_INT, &arg1, NULL, NULL},
+      { NULL }
+    };
+  GOptionEntry group_entries [] =
+    { { "test", 0, 0, G_OPTION_ARG_INT, &arg2, NULL, NULL},
+      { NULL }
+    };
+
+  context = g_option_context_new (NULL);
+  g_option_context_add_main_entries (context, entries, NULL);
+
+  group = g_option_group_new ("group", "Group description", "Group help", NULL, NULL);
+  g_option_group_add_entries (group, group_entries);
+
+  g_option_context_add_group (context, group);
+
+  /* Now try parsing */
+  argv = split_string ("program ---test 42", &argc);
+  argv_copy = copy_stringv (argv, argc);
+
+  retval = g_option_context_parse (context, &argc, &argv, &error);
+  g_assert_error (error, G_OPTION_ERROR, G_OPTION_ERROR_UNKNOWN_OPTION);
+  g_assert (retval == FALSE);
+
+  g_option_context_free (context);
+  g_clear_error (&error);
+  g_strfreev (argv_copy);
+  g_free (argv);
+}
+
 static void
 missing_arg_test (void)
 {
@@ -2478,6 +2521,39 @@ short_remaining (void)
   g_option_context_free (context);
 }
 
+static void
+double_free (void)
+{
+  gchar* text = NULL;
+  GOptionEntry entries[] =
+  {
+    { "known", 0, 0, G_OPTION_ARG_STRING, &text, NULL, NULL },
+    { NULL }
+  };
+  GOptionContext* context;
+  gchar **argv;
+  gint argc;
+  GError *error = NULL;
+
+  g_test_bug ("646926");
+
+  argv = split_string ("program --known=foo --known=bar --unknown=baz", &argc);
+
+  context = g_option_context_new (NULL);
+
+  g_option_context_add_main_entries (context, entries, NULL);
+  g_option_context_set_ignore_unknown_options (context, FALSE);
+  g_option_context_parse (context, &argc, &argv, &error);
+
+  g_assert_error (error, G_OPTION_ERROR, G_OPTION_ERROR_UNKNOWN_OPTION);
+  g_assert_null (text);
+
+  g_option_context_free (context);
+  g_clear_error (&error);
+  g_strfreev (argv);
+
+}
+
 int
 main (int   argc,
       char *argv[])
@@ -2587,9 +2663,11 @@ main (int   argc,
   /* regression tests for individual bugs */
   g_test_add_func ("/option/bug/unknown-short", unknown_short_test);
   g_test_add_func ("/option/bug/lonely-dash", lonely_dash_test);
+  g_test_add_func ("/option/bug/triple-dash", triple_dash_test);
   g_test_add_func ("/option/bug/missing-arg", missing_arg_test);
   g_test_add_func ("/option/bug/dash-arg", dash_arg_test);
-  g_test_add_func ("/option/bug/short-remaining", short_remaining); 
+  g_test_add_func ("/option/bug/short-remaining", short_remaining);
+  g_test_add_func ("/option/bug/double-free", double_free);
 
   return g_test_run();
 }

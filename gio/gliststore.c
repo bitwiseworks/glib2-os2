@@ -5,7 +5,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -477,7 +477,6 @@ g_list_store_splice (GListStore *store,
     {
       gint i;
 
-      it = g_sequence_iter_next (it);
       for (i = 0; i < n_additions; i++)
         {
           if G_UNLIKELY (!g_type_is_a (G_OBJECT_TYPE (additions[i]), store->item_type))
@@ -488,6 +487,7 @@ g_list_store_splice (GListStore *store,
             }
 
           it = g_sequence_insert_before (it, g_object_ref (additions[i]));
+          it = g_sequence_iter_next (it);
         }
     }
 

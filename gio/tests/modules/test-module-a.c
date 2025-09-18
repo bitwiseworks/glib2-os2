@@ -20,7 +20,11 @@
  * if advised of the possibility of such damage.
  */
 
+#include "config.h" /* for _GLIB_EXTERN */
+
 #include <gio/gio.h>
+
+#include "symbol-visibility.h"
 
 typedef struct _TestA {
   GObject parent;
@@ -29,6 +33,8 @@ typedef struct _TestA {
 typedef struct _TestAClass {
   GObjectClass parent_class;
 } TestAClass;
+
+GType test_a_get_type (void);
 
 G_DEFINE_TYPE (TestA, test_a, G_TYPE_OBJECT)
 
@@ -42,7 +48,7 @@ test_a_init (TestA *self)
 {
 }
 
-void
+GLIB_TEST_EXPORT_SYMBOL void
 g_io_module_load (GIOModule *module)
 {
   g_io_extension_point_implement ("test-extension-point",
@@ -51,7 +57,7 @@ g_io_module_load (GIOModule *module)
                                   30);
 }
 
-void
+GLIB_TEST_EXPORT_SYMBOL void
 g_io_module_unload (GIOModule *module)
 {
 }

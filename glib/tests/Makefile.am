@@ -1,9 +1,20 @@
 include $(top_srcdir)/glib-tap.mk
 
+if USE_SYSTEM_PCRE
+pcre_lib = $(PCRE_LIBS)
+pcre_inc = $(PCRE_CFLAGS)
+else
+pcre_lib = $(top_builddir)/glib/pcre/libpcre.la
+pcre_inc = -DPCRE_STATIC
+endif
+
 LDADD = $(top_builddir)/glib/libglib-2.0.la -lm
 AM_CPPFLAGS = -g $(glib_INCLUDES) $(GLIB_DEBUG_FLAGS)
 DEFS = -DG_LOG_DOMAIN=\"GLib\" -DEXEEXT=\"$(EXEEXT)\"
-AM_CFLAGS = $(GLIB_WARN_CFLAGS)
+AM_CFLAGS = $(GLIB_WARN_CFLAGS) $(pcre_inc)
+
+# The regex test uses pcre_version()
+regex_LDADD = $(LDADD) $(pcre_lib)
 
 # These tests corrupt the gcov bookkeeping, so we
 # skip them. See bug 682133
@@ -27,6 +38,7 @@ dist_test_extra_scripts = \
 
 test_extra_programs = \
 	test-spawn-echo			\
+	testing-helper			\
 	$(NULL)
 
 test_programs = \
@@ -37,6 +49,7 @@ test_programs = \
 	bookmarkfile			\
 	bytes				\
 	cache				\
+	charset				\
 	checksum			\
 	collate				\
 	cond				\
@@ -48,6 +61,7 @@ test_programs = \
 	error				\
 	fileutils			\
 	gdatetime			\
+	guuid				\
 	gvariant			\
 	hash				\
 	hmac				\
@@ -69,12 +83,16 @@ test_programs = \
 	once				\
 	option-context			\
 	option-argv0			\
+	overflow			\
+	overflow-fallback		\
 	pattern				\
 	private				\
 	protocol			\
 	queue				\
 	rand				\
+	rcbox				\
 	rec-mutex			\
+	refstring			\
 	regex				\
 	rwlock				\
 	scannerapi			\
@@ -126,6 +144,30 @@ dist_test_data += \
 	bookmarks/fail-15.xbel \
 	bookmarks/fail-16.xbel \
 	bookmarks/fail-17.xbel \
+	bookmarks/fail-18.xbel \
+	bookmarks/fail-19.xbel \
+	bookmarks/fail-20.xbel \
+	bookmarks/fail-21.xbel \
+	bookmarks/fail-22.xbel \
+	bookmarks/fail-23.xbel \
+	bookmarks/fail-24.xbel \
+	bookmarks/fail-25.xbel \
+	bookmarks/fail-26.xbel \
+	bookmarks/fail-27.xbel \
+	bookmarks/fail-28.xbel \
+	bookmarks/fail-29.xbel \
+	bookmarks/fail-30.xbel \
+	bookmarks/fail-31.xbel \
+	bookmarks/fail-32.xbel \
+	bookmarks/fail-33.xbel \
+	bookmarks/fail-34.xbel \
+	bookmarks/fail-35.xbel \
+	bookmarks/fail-36.xbel \
+	bookmarks/fail-37.xbel \
+	bookmarks/fail-38.xbel \
+	bookmarks/fail-39.xbel \
+	bookmarks/fail-40.xbel \
+	bookmarks/fail-41.xbel \
 	bookmarks/valid-01.xbel \
 	bookmarks/valid-02.xbel \
 	bookmarks/valid-03.xbel \
@@ -141,7 +183,8 @@ markup_tests = \
 	fail-31 fail-32 fail-33 fail-34 fail-35 \
 	fail-36 fail-37 fail-38 fail-39 fail-40 \
 	fail-41 fail-42 fail-43 fail-44 fail-45 \
-	fail-46 fail-47 fail-48 fail-49 \
+	fail-46 fail-47 fail-48 fail-49 fail-50 \
+	fail-51 fail-52 fail-53 \
 	valid-1 valid-2 valid-3 valid-4 valid-5 \
 	valid-6 valid-7 valid-8 valid-9 valid-10 \
 	valid-11 valid-12 valid-13 valid-14 valid-15 \
@@ -164,6 +207,10 @@ atomic_CFLAGS  = $(AM_CFLAGS)
 if HAVE_GCC
 atomic_CFLAGS += -Wstrict-aliasing=2
 endif
+
+overflow_fallback_SOURCES = overflow.c
+# FIXME: FLAGS?
+overflow_fallback_FALGS = $(AM_CFLAGS) -D_GLIB_TEST_OVERFLOW_FALLBACK
 
 test_programs += 642026-ec
 642026_ec_SOURCES = 642026.c
@@ -197,12 +244,17 @@ CLEANFILES += tmpsample.xml
 check-am: gtester-xmllint-check
 
 private_LDFLAGS = @G_THREAD_LIBS@
+thread_LDFLAGS = @G_THREAD_LIBS@
 endif
 
 if HAVE_GCC
 test_programs += \
 	autoptr				\
 	$(NULL)
+endif
+
+if OS_WIN32
+test_programs += gpoll
 endif
 
 # -----------------------------------------------------------------------------

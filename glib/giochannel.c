@@ -7,7 +7,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -39,6 +39,7 @@
 #include "gstrfuncs.h"
 #include "gtestutils.h"
 #include "glibintl.h"
+#include "gunicodeprivate.h"
 
 
 /**
@@ -103,7 +104,7 @@
  *            various functions such as g_io_channel_write_chars() to
  *            write raw bytes to the channel.  Encoding and buffering
  *            issues are dealt with at a higher level.
- * @io_seek: &lpar;optional&rpar; seeks the channel.  This is called from
+ * @io_seek: (optional) seeks the channel.  This is called from
  *           g_io_channel_seek() on channels that support it.
  * @io_close: closes the channel.  This is called from
  *            g_io_channel_close() after flushing the buffers.
@@ -421,7 +422,7 @@ g_io_channel_seek (GIOChannel *channel,
 
 /**
  * g_io_channel_new_file:
- * @filename: A string containing the name of a file
+ * @filename: (type filename): A string containing the name of a file
  * @mode: One of "r", "w", "a", "r+", "w+", "a+". These have
  *        the same meaning as in fopen()
  * @error: A location to return an error of type %G_FILE_ERROR
@@ -516,7 +517,7 @@ g_io_channel_shutdown (GIOChannel  *channel,
   if (channel->partial_write_buf[0] != '\0')
     {
       if (flush)
-        g_warning ("Partial character at end of write buffer not flushed.\n");
+        g_warning ("Partial character at end of write buffer not flushed.");
       channel->partial_write_buf[0] = '\0';
     }
 
@@ -581,7 +582,7 @@ g_io_channel_purge (GIOChannel *channel)
 
       if (channel->partial_write_buf[0] != '\0')
         {
-          g_warning ("Partial character at end of write buffer not flushed.\n");
+          g_warning ("Partial character at end of write buffer not flushed.");
           channel->partial_write_buf[0] = '\0';
         }
     }
@@ -757,13 +758,13 @@ g_io_channel_error_from_errno (gint en)
     {
 #ifdef EBADF
     case EBADF:
-      g_warning("Invalid file descriptor.\n");
+      g_warning ("Invalid file descriptor.");
       return G_IO_CHANNEL_ERROR_FAILED;
 #endif
 
 #ifdef EFAULT
     case EFAULT:
-      g_warning("Buffer outside valid address space.\n");
+      g_warning ("Buffer outside valid address space.");
       return G_IO_CHANNEL_ERROR_FAILED;
 #endif
 
@@ -867,7 +868,7 @@ g_io_channel_get_buffer_size (GIOChannel *channel)
 /**
  * g_io_channel_set_line_term:
  * @channel: a #GIOChannel
- * @line_term: (allow-none): The line termination string. Use %NULL for
+ * @line_term: (nullable): The line termination string. Use %NULL for
  *             autodetect.  Autodetection breaks on "\n", "\r\n", "\r", "\0",
  *             and the Unicode paragraph separator. Autodetection should not be
  *             used for anything other than file-based channels.
@@ -1012,12 +1013,14 @@ g_io_channel_get_flags (GIOChannel *channel)
  * g_io_channel_set_close_on_unref:
  * @channel: a #GIOChannel
  * @do_close: Whether to close the channel on the final unref of
- *            the GIOChannel data structure. The default value of
- *            this is %TRUE for channels created by g_io_channel_new_file (),
- *            and %FALSE for all other channels.
+ *            the GIOChannel data structure.
+ *
+ * Whether to close the channel on the final unref of the #GIOChannel
+ * data structure. The default value of this is %TRUE for channels
+ * created by g_io_channel_new_file (), and %FALSE for all other channels.
  *
  * Setting this flag to %TRUE for a channel you have already closed
- * can cause problems.
+ * can cause problems when the final reference to the #GIOChannel is dropped.
  **/
 void
 g_io_channel_set_close_on_unref	(GIOChannel *channel,
@@ -1037,8 +1040,7 @@ g_io_channel_set_close_on_unref	(GIOChannel *channel,
  * destroyed. The default value of this is %TRUE for channels created
  * by g_io_channel_new_file (), and %FALSE for all other channels.
  *
- * Returns: Whether the channel will be closed on the final unref of
- *               the GIOChannel data structure.
+ * Returns: %TRUE if the channel will be closed, %FALSE otherwise.
  **/
 gboolean
 g_io_channel_get_close_on_unref	(GIOChannel *channel)
@@ -1097,7 +1099,7 @@ g_io_channel_seek_position (GIOChannel  *channel,
                 && channel->encoded_read_buf->len > 0)
               {
                 g_warning ("Seek type G_SEEK_CUR not allowed for this"
-                  " channel's encoding.\n");
+                  " channel's encoding.");
                 return G_IO_STATUS_ERROR;
               }
           if (channel->read_buf)
@@ -1151,7 +1153,7 @@ g_io_channel_seek_position (GIOChannel  *channel,
 
       if (channel->partial_write_buf[0] != '\0')
         {
-          g_warning ("Partial character at end of write buffer not flushed.\n");
+          g_warning ("Partial character at end of write buffer not flushed.");
           channel->partial_write_buf[0] = '\0';
         }
     }
@@ -1235,7 +1237,7 @@ g_io_channel_set_buffered (GIOChannel *channel,
   if (channel->encoding != NULL)
     {
       g_warning ("Need to have NULL encoding to set the buffering state of the "
-                 "channel.\n");
+                 "channel.");
       return;
     }
 
@@ -1264,7 +1266,7 @@ g_io_channel_get_buffered (GIOChannel *channel)
 /**
  * g_io_channel_set_encoding:
  * @channel: a #GIOChannel
- * @encoding: (allow-none): the encoding type
+ * @encoding: (nullable): the encoding type
  * @error: location to store an error of type #GConvertError
  *
  * Sets the encoding for the input/output of the channel. 
@@ -1322,15 +1324,15 @@ g_io_channel_set_encoding (GIOChannel	*channel,
 
   if (!channel->use_buffer)
     {
-      g_warning ("Need to set the channel buffered before setting the encoding.\n");
-      g_warning ("Assuming this is what you meant and acting accordingly.\n");
+      g_warning ("Need to set the channel buffered before setting the encoding.");
+      g_warning ("Assuming this is what you meant and acting accordingly.");
 
       channel->use_buffer = TRUE;
     }
 
   if (channel->partial_write_buf[0] != '\0')
     {
-      g_warning ("Partial character at end of write buffer not flushed.\n");
+      g_warning ("Partial character at end of write buffer not flushed.");
       channel->partial_write_buf[0] = '\0';
     }
 
@@ -1381,11 +1383,11 @@ g_io_channel_set_encoding (GIOChannel	*channel,
 
           if (err == EINVAL)
             g_set_error (error, G_CONVERT_ERROR, G_CONVERT_ERROR_NO_CONVERSION,
-                         _("Conversion from character set '%s' to '%s' is not supported"),
+                         _("Conversion from character set “%s” to “%s” is not supported"),
                          from_enc, to_enc);
           else
             g_set_error (error, G_CONVERT_ERROR, G_CONVERT_ERROR_FAILED,
-                         _("Could not open converter from '%s' to '%s': %s"),
+                         _("Could not open converter from “%s” to “%s”: %s"),
                          from_enc, to_enc, g_strerror (err));
 
           if (read_cd != (GIConv) -1)
@@ -1462,7 +1464,7 @@ g_io_channel_fill_buffer (GIOChannel  *channel,
     }
   if (channel->is_seekable && channel->partial_write_buf[0] != '\0')
     {
-      g_warning ("Partial character at end of write buffer not flushed.\n");
+      g_warning ("Partial character at end of write buffer not flushed.");
       channel->partial_write_buf[0] = '\0';
     }
 
@@ -1626,8 +1628,8 @@ reencode:
  *              line terminator. This data should be freed with g_free()
  *              when no longer needed. This is a nul-terminated string. 
  *              If a @length of zero is returned, this will be %NULL instead.
- * @length: (allow-none) (out): location to store length of the read data, or %NULL
- * @terminator_pos: (allow-none) (out): location to store position of line terminator, or %NULL
+ * @length: (out) (optional): location to store length of the read data, or %NULL
+ * @terminator_pos: (out) (optional): location to store position of line terminator, or %NULL
  * @error: A location to return an error of type #GConvertError
  *         or #GIOChannelError
  *
@@ -1677,7 +1679,7 @@ g_io_channel_read_line (GIOChannel  *channel,
  * @buffer: a #GString into which the line will be written.
  *          If @buffer already contains data, the old data will
  *          be overwritten.
- * @terminator_pos: (allow-none): location to store position of line terminator, or %NULL
+ * @terminator_pos: (nullable): location to store position of line terminator, or %NULL
  * @error: a location to store an error of type #GConvertError
  *         or #GIOChannelError
  *
@@ -1730,7 +1732,7 @@ g_io_channel_read_line_backend (GIOChannel  *channel,
     {
       /* Can't do a raw read in read_line */
       g_set_error_literal (error, G_CONVERT_ERROR, G_CONVERT_ERROR_FAILED,
-                           _("Can't do a raw read in g_io_channel_read_line_string"));
+                           _("Can’t do a raw read in g_io_channel_read_line_string"));
       return G_IO_STATUS_ERROR;
     }
 
@@ -1921,7 +1923,7 @@ g_io_channel_read_to_end (GIOChannel  *channel,
   if (!channel->use_buffer)
     {
       g_set_error_literal (error, G_CONVERT_ERROR, G_CONVERT_ERROR_FAILED,
-                           _("Can't do a raw read in g_io_channel_read_to_end"));
+                           _("Can’t do a raw read in g_io_channel_read_to_end"));
       return G_IO_STATUS_ERROR;
     }
 
@@ -1972,7 +1974,7 @@ g_io_channel_read_to_end (GIOChannel  *channel,
  * @count: (in): the size of the buffer. Note that the buffer may not be
  *     complelely filled even if there is data in the buffer if the
  *     remaining data is not a complete character.
- * @bytes_read: (allow-none) (out): The number of bytes read. This may be
+ * @bytes_read: (out) (optional): The number of bytes read. This may be
  *     zero even on success if count < 6 and the channel's encoding
  *     is non-%NULL. This indicates that the next UTF-8 character is
  *     too wide for the buffer.
@@ -2220,7 +2222,7 @@ g_io_channel_write_chars (GIOChannel   *channel,
     {
       if (channel->do_encode && BUF_LEN (channel->encoded_read_buf) > 0)
         {
-          g_warning("Mixed reading and writing not allowed on encoded files");
+          g_warning ("Mixed reading and writing not allowed on encoded files");
           return G_IO_STATUS_ERROR;
         }
       status = g_io_channel_seek_position (channel, 0, G_SEEK_CUR, error);
@@ -2322,7 +2324,7 @@ reconvert:
 
               /* UTF-8, just validate, emulate g_iconv */
 
-              if (!g_utf8_validate (from_buf, try_len, &badchar))
+              if (!_g_utf8_validate_len (from_buf, try_len, &badchar))
                 {
                   gunichar try_char;
                   gsize incomplete_len = from_buf + try_len - badchar;
@@ -2442,7 +2444,7 @@ reconvert:
                       _("Invalid byte sequence in conversion input"));
                     if (from_buf_old_len > 0 && from_buf_len == left_len)
                       g_warning ("Illegal sequence due to partial character "
-                                 "at the end of a previous write.\n");
+                                 "at the end of a previous write.");
                     else
                       wrote_bytes += from_buf_len - left_len - from_buf_old_len;
                     if (bytes_written)
@@ -2514,7 +2516,7 @@ g_io_channel_write_unichar (GIOChannel  *channel,
 
   if (channel->partial_write_buf[0] != '\0')
     {
-      g_warning ("Partial charater written before writing unichar.\n");
+      g_warning ("Partial character written before writing unichar.");
       channel->partial_write_buf[0] = '\0';
     }
 

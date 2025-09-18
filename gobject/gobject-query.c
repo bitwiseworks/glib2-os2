@@ -4,7 +4,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -99,7 +99,7 @@ static gint
 help (gchar *arg)
 {
   g_fprintf (stderr, "usage: gobject-query <qualifier> [-r <type>] [-{i|b} \"\"] [-s #] [-{h|x|y}]\n");
-  g_fprintf (stderr, "       -r       specifiy root type\n");
+  g_fprintf (stderr, "       -r       specify root type\n");
   g_fprintf (stderr, "       -n       don't descend type tree\n");
   g_fprintf (stderr, "       -h       guess what ;)\n");
   g_fprintf (stderr, "       -b       specify indent string\n");

@@ -5,7 +5,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -612,7 +612,7 @@ _g_file_attribute_value_set_from_pointer (GFileAttributeValue *value,
       break;
 
     default:
-      g_warning ("Unknown type specified in g_file_info_set_attribute\n");
+      g_warning ("Unknown type specified in g_file_info_set_attribute");
       break;
     }
 }

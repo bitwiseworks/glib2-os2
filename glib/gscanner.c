@@ -7,7 +7,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -712,7 +712,7 @@ g_scanner_scope_add_symbol (GScanner	*scanner,
 	      c++;
 	    }
 	}
-      g_hash_table_insert (scanner->symbol_table, key, key);
+      g_hash_table_add (scanner->symbol_table, key);
     }
   else
     key->value = value;
@@ -1697,12 +1697,7 @@ g_scanner_get_token_i (GScanner	*scanner,
       *token_p = G_TOKEN_FLOAT;
       if (scanner->config->store_int64)
         {
-#ifdef _MSC_VER
-          /* work around error C2520, see gvaluetransform.c */
-          value_p->v_float = (__int64)value_p->v_int64;
-#else
           value_p->v_float = value_p->v_int64;
-#endif
         }
       else
 	value_p->v_float = value_p->v_int;

@@ -4,7 +4,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the licence, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -291,7 +291,8 @@ file_builder_add_string (FileBuilder *fb,
   chunk->offset = fb->offset;
   chunk->size = length;
   chunk->data = g_malloc (length);
-  memcpy (chunk->data, string, length);
+  if (length != 0)
+    memcpy (chunk->data, string, length);
 
   *start = guint32_to_le (fb->offset);
   *size = guint16_to_le (length);
@@ -338,6 +339,13 @@ file_builder_allocate_for_hash (FileBuilder            *fb,
 #undef chunk
 
   memset (*bloom_filter, 0, n_bloom_words * sizeof (guint32_le));
+
+  /* NOTE - the code to actually fill in the bloom filter here is missing.
+   * Patches welcome! 
+   *
+   * http://en.wikipedia.org/wiki/Bloom_filter
+   * http://0pointer.de/blog/projects/bloom.html
+   */
 }
 
 static void

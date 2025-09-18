@@ -4,7 +4,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -65,7 +65,7 @@ get_a_child (gint ttl)
   cmdline = g_strdup_printf( "child-test -c%d", ttl);
 
   if (!CreateProcess (argv0, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
-    g_error ("CreateProcess failed: %s\n", g_win32_error_message (GetLastError ()));
+    g_error ("CreateProcess failed: %s", g_win32_error_message (GetLastError ()));
 
   g_free(cmdline);
 
@@ -190,7 +190,7 @@ main (int argc, char *argv[])
 
   if (alive > 0)
     {
-      g_warning ("%d children still alive\n", alive);
+      g_warning ("%d children still alive", alive);
       return 1;
     }
     

@@ -1,10 +1,10 @@
 /*
  * Copyright © 2013 Lars Uebernickel
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published
- * by the Free Software Foundation; either version 2 of the licence or (at
- * your option) any later version.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -219,7 +219,8 @@ test_properties (void)
   g_assert (G_IS_THEMED_ICON (rn->icon));
   names = g_themed_icon_get_names (G_THEMED_ICON (rn->icon));
   g_assert_cmpstr (names[0], ==, "i-c-o-n");
-  g_assert (names[1] == NULL);
+  g_assert_cmpstr (names[1], ==, "i-c-o-n-symbolic");
+  g_assert_null (names[2]);
   g_assert (rn->priority == G_NOTIFICATION_PRIORITY_HIGH);
 
   g_assert_cmpint (rn->buttons->len, ==, 1);

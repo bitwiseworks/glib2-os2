@@ -12,7 +12,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -66,6 +66,8 @@ typedef void (*XdgMimeDestroy)  (void *user_data);
 #define xdg_mime_register_reload_callback     XDG_ENTRY(register_reload_callback)
 #define xdg_mime_remove_callback              XDG_ENTRY(remove_callback)
 #define xdg_mime_type_unknown                 XDG_ENTRY(type_unknown)
+#define xdg_mime_type_empty                   XDG_ENTRY(type_empty)
+#define xdg_mime_type_textplain               XDG_ENTRY(type_textplain)
 #define xdg_mime_get_icon                     XDG_ENTRY(get_icon)
 #define xdg_mime_get_generic_icon             XDG_ENTRY(get_generic_icon)
 
@@ -75,7 +77,11 @@ typedef void (*XdgMimeDestroy)  (void *user_data);
 #endif
 
 extern const char xdg_mime_type_unknown[];
+extern const char xdg_mime_type_empty[];
+extern const char xdg_mime_type_textplain[];
 #define XDG_MIME_TYPE_UNKNOWN xdg_mime_type_unknown
+#define XDG_MIME_TYPE_EMPTY xdg_mime_type_empty
+#define XDG_MIME_TYPE_TEXTPLAIN xdg_mime_type_textplain
 
 const char  *xdg_mime_get_mime_type_for_data       (const void *data,
 						    size_t      len,

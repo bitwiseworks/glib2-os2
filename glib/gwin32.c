@@ -5,7 +5,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -36,6 +36,7 @@
 #include <string.h>
 #include <wchar.h>
 #include <errno.h>
+#include <fcntl.h>
 
 #define STRICT			/* Strict typing, please */
 #include <windows.h>
@@ -59,12 +60,16 @@
 #ifdef _MSC_VER
 #pragma comment (lib, "ntoskrnl.lib")
 #endif
+#elif defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR)
+/* mingw-w64 must use winternl.h, but not MinGW */
+#include <ntdef.h>
 #else
 #include <winternl.h>
 #endif
 
 #include "glib.h"
 #include "gthreadprivate.h"
+#include "glib-init.h"
 
 #ifdef G_WITH_CYGWIN
 #include <sys/cygwin.h>
@@ -189,7 +194,7 @@ g_win32_error_message (gint error)
 {
   gchar *retval;
   wchar_t *msg = NULL;
-  int nchars;
+  size_t nchars;
 
   FormatMessageW (FORMAT_MESSAGE_ALLOCATE_BUFFER
 		  |FORMAT_MESSAGE_IGNORE_INSERTS
@@ -199,12 +204,12 @@ g_win32_error_message (gint error)
   if (msg != NULL)
     {
       nchars = wcslen (msg);
-      
-      if (nchars > 2 && msg[nchars-1] == '\n' && msg[nchars-2] == '\r')
-	msg[nchars-2] = '\0';
-      
+
+      if (nchars >= 2 && msg[nchars-1] == L'\n' && msg[nchars-2] == L'\r')
+        msg[nchars-2] = L'\0';
+
       retval = g_utf16_to_utf8 (msg, -1, NULL, NULL, NULL);
-      
+
       LocalFree (msg);
     }
   else
@@ -215,7 +220,7 @@ g_win32_error_message (gint error)
 
 /**
  * g_win32_get_package_installation_directory_of_module:
- * @hmodule: (allow-none): The Win32 handle for a DLL loaded into the current process, or %NULL
+ * @hmodule: (nullable): The Win32 handle for a DLL loaded into the current process, or %NULL
  *
  * This function tries to determine the installation directory of a
  * software package based on the location of a DLL of the software
@@ -355,8 +360,8 @@ get_package_directory_from_module (const gchar *module_name)
 
 /**
  * g_win32_get_package_installation_directory:
- * @package: (allow-none): You should pass %NULL for this.
- * @dll_name: (allow-none): The name of a DLL that a package provides in UTF-8, or %NULL.
+ * @package: (nullable): You should pass %NULL for this.
+ * @dll_name: (nullable): The name of a DLL that a package provides in UTF-8, or %NULL.
  *
  * Try to determine the installation directory for a software package.
  *
@@ -409,9 +414,9 @@ get_package_directory_from_module (const gchar *module_name)
  * g_win32_get_package_installation_directory_of_module() instead.
  **/
 
- gchar *
-g_win32_get_package_installation_directory_utf8 (const gchar *package,
-						 const gchar *dll_name)
+gchar *
+g_win32_get_package_installation_directory (const gchar *package,
+                                            const gchar *dll_name)
 {
   gchar *result = NULL;
 
@@ -427,42 +432,10 @@ g_win32_get_package_installation_directory_utf8 (const gchar *package,
   return result;
 }
 
-#if !defined (_WIN64)
-
-/* DLL ABI binary compatibility version that uses system codepage file names */
-
-gchar *
-g_win32_get_package_installation_directory (const gchar *package,
-					    const gchar *dll_name)
-{
-  gchar *utf8_package = NULL, *utf8_dll_name = NULL;
-  gchar *utf8_retval, *retval;
-
-  if (package != NULL)
-    utf8_package = g_locale_to_utf8 (package, -1, NULL, NULL, NULL);
-
-  if (dll_name != NULL)
-    utf8_dll_name = g_locale_to_utf8 (dll_name, -1, NULL, NULL, NULL);
-
-  utf8_retval =
-    g_win32_get_package_installation_directory_utf8 (utf8_package,
-						     utf8_dll_name);
-
-  retval = g_locale_from_utf8 (utf8_retval, -1, NULL, NULL, NULL);
-
-  g_free (utf8_package);
-  g_free (utf8_dll_name);
-  g_free (utf8_retval);
-
-  return retval;
-}
-
-#endif
-
 /**
  * g_win32_get_package_installation_subdirectory:
- * @package: (allow-none): You should pass %NULL for this.
- * @dll_name: (allow-none): The name of a DLL that a package provides, in UTF-8, or %NULL.
+ * @package: (nullable): You should pass %NULL for this.
+ * @dll_name: (nullable): The name of a DLL that a package provides, in UTF-8, or %NULL.
  * @subdir: A subdirectory of the package installation directory, also in UTF-8
  *
  * This function is deprecated. Use
@@ -489,15 +462,15 @@ g_win32_get_package_installation_directory (const gchar *package,
  **/
 
 gchar *
-g_win32_get_package_installation_subdirectory_utf8 (const gchar *package,
-						    const gchar *dll_name,
-						    const gchar *subdir)
+g_win32_get_package_installation_subdirectory (const gchar *package,
+                                               const gchar *dll_name,
+                                               const gchar *subdir)
 {
   gchar *prefix;
   gchar *dirname;
 
 G_GNUC_BEGIN_IGNORE_DEPRECATIONS
-  prefix = g_win32_get_package_installation_directory_utf8 (package, dll_name);
+  prefix = g_win32_get_package_installation_directory (package, dll_name);
 G_GNUC_END_IGNORE_DEPRECATIONS
 
   dirname = g_build_filename (prefix, subdir, NULL);
@@ -505,30 +478,6 @@ G_GNUC_END_IGNORE_DEPRECATIONS
 
   return dirname;
 }
-
-#if !defined (_WIN64)
-
-/* DLL ABI binary compatibility version that uses system codepage file names */
-
-gchar *
-g_win32_get_package_installation_subdirectory (const gchar *package,
-					       const gchar *dll_name,
-					       const gchar *subdir)
-{
-  gchar *prefix;
-  gchar *dirname;
-
-  G_GNUC_BEGIN_IGNORE_DEPRECATIONS
-  prefix = g_win32_get_package_installation_directory (package, dll_name);
-  G_GNUC_END_IGNORE_DEPRECATIONS
-
-  dirname = g_build_filename (prefix, subdir, NULL);
-  g_free (prefix);
-
-  return dirname;
-}
-
-#endif
 
 /**
  * g_win32_check_windows_version:
@@ -595,11 +544,13 @@ g_win32_check_windows_version (const gint major,
   if (osverinfo.dwMajorVersion > major)
     is_ver_checked = TRUE;
   else if (osverinfo.dwMajorVersion == major)
-    if (osverinfo.dwMinorVersion > minor)
-      is_ver_checked = TRUE;
-    else if (osverinfo.dwMinorVersion == minor)
-      if (osverinfo.wServicePackMajor >= spver)
+    {
+      if (osverinfo.dwMinorVersion > minor)
+        is_ver_checked = TRUE;
+      else if (osverinfo.dwMinorVersion == minor)
+        if (osverinfo.wServicePackMajor >= spver)
           is_ver_checked = TRUE;
+    }
 
   /* Check OS Type */
   if (is_ver_checked)
@@ -667,6 +618,49 @@ g_win32_get_windows_version (void)
   return windows_version;
 }
 
+/*
+ * Doesn't use gettext (and gconv), preventing recursive calls when
+ * g_win32_locale_filename_from_utf8() is called during
+ * gettext initialization.
+ */
+static gchar *
+special_wchar_to_locale_enoding (wchar_t *wstring)
+{
+  int sizeof_output;
+  int wctmb_result;
+  char *result;
+  BOOL not_representable = FALSE;
+
+  sizeof_output = WideCharToMultiByte (CP_ACP,
+                                       WC_NO_BEST_FIT_CHARS,
+                                       wstring, -1,
+                                       NULL, 0,
+                                       NULL,
+                                       &not_representable);
+
+  if (not_representable ||
+      sizeof_output == 0 ||
+      sizeof_output > MAX_PATH)
+    return NULL;
+
+  result = g_malloc0 (sizeof_output + 1);
+
+  wctmb_result = WideCharToMultiByte (CP_ACP,
+                                      WC_NO_BEST_FIT_CHARS,
+                                      wstring, -1,
+                                      result, sizeof_output + 1,
+                                      NULL,
+                                      &not_representable);
+
+  if (wctmb_result == sizeof_output &&
+      not_representable == FALSE)
+    return result;
+
+  g_free (result);
+
+  return NULL;
+}
+
 /**
  * g_win32_locale_filename_from_utf8:
  * @utf8filename: a UTF-8 encoded filename.
@@ -699,26 +693,27 @@ g_win32_get_windows_version (void)
 gchar *
 g_win32_locale_filename_from_utf8 (const gchar *utf8filename)
 {
-  gchar *retval = g_locale_from_utf8 (utf8filename, -1, NULL, NULL, NULL);
+  gchar *retval;
+  wchar_t *wname;
+
+  wname = g_utf8_to_utf16 (utf8filename, -1, NULL, NULL, NULL);
+
+  if (wname == NULL)
+    return NULL;
+
+  retval = special_wchar_to_locale_enoding (wname);
 
   if (retval == NULL)
     {
-      /* Conversion failed, so convert to wide chars, check if there
-       * is a 8.3 version, and use that.
-       */
-      wchar_t *wname = g_utf8_to_utf16 (utf8filename, -1, NULL, NULL, NULL);
-      if (wname != NULL)
-	{
-	  wchar_t wshortname[MAX_PATH + 1];
-	  if (GetShortPathNameW (wname, wshortname, G_N_ELEMENTS (wshortname)))
-	    {
-	      gchar *tem = g_utf16_to_utf8 (wshortname, -1, NULL, NULL, NULL);
-	      retval = g_locale_from_utf8 (tem, -1, NULL, NULL, NULL);
-	      g_free (tem);
-	    }
-	  g_free (wname);
-	}
+      /* Conversion failed, so check if there is a 8.3 version, and use that. */
+      wchar_t wshortname[MAX_PATH + 1];
+
+      if (GetShortPathNameW (wname, wshortname, G_N_ELEMENTS (wshortname)))
+        retval = special_wchar_to_locale_enoding (wshortname);
     }
+
+  g_free (wname);
+
   return retval;
 }
 
@@ -777,3 +772,250 @@ g_win32_get_command_line (void)
   LocalFree (args);
   return result;
 }
+
+#ifdef G_OS_WIN32
+
+/* Binary compatibility versions. Not for newly compiled code. */
+
+_GLIB_EXTERN gchar *g_win32_get_package_installation_directory_utf8    (const gchar *package,
+                                                                        const gchar *dll_name);
+
+_GLIB_EXTERN gchar *g_win32_get_package_installation_subdirectory_utf8 (const gchar *package,
+                                                                        const gchar *dll_name,
+                                                                        const gchar *subdir);
+
+gchar *
+g_win32_get_package_installation_directory_utf8 (const gchar *package,
+                                                 const gchar *dll_name)
+{
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+  return g_win32_get_package_installation_directory (package, dll_name);
+G_GNUC_END_IGNORE_DEPRECATIONS
+}
+
+gchar *
+g_win32_get_package_installation_subdirectory_utf8 (const gchar *package,
+                                                    const gchar *dll_name,
+                                                    const gchar *subdir)
+{
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+  return g_win32_get_package_installation_subdirectory (package,
+                                                        dll_name,
+                                                        subdir);
+G_GNUC_END_IGNORE_DEPRECATIONS
+}
+
+#endif
+
+#ifdef G_OS_WIN32
+
+/* This function looks up two environment
+ * variables, G_WIN32_ALLOC_CONSOLE and G_WIN32_ATTACH_CONSOLE.
+ * G_WIN32_ALLOC_CONSOLE, if set to 1, makes the process
+ * call AllocConsole(). This is useful for binaries that
+ * are compiled to run without automatically-allocated console
+ * (like most GUI applications).
+ * G_WIN32_ATTACH_CONSOLE, if set to a comma-separated list
+ * of one or more strings "stdout", "stdin" and "stderr",
+ * makes the process reopen the corresponding standard streams
+ * to ensure that they are attached to the files that
+ * GetStdHandle() returns, which, hopefully, would be
+ * either a file handle or a console handle.
+ *
+ * This function is called automatically when glib DLL is
+ * attached to a process, from DllMain().
+ */
+void
+g_console_win32_init (void)
+{
+  struct
+    {
+      gboolean     redirect;
+      FILE        *stream;
+      const gchar *stream_name;
+      DWORD        std_handle_type;
+      int          flags;
+      const gchar *mode;
+    }
+  streams[] =
+    {
+      { FALSE, stdin, "stdin", STD_INPUT_HANDLE, _O_RDONLY, "rb" },
+      { FALSE, stdout, "stdout", STD_OUTPUT_HANDLE, 0, "wb" },
+      { FALSE, stderr, "stderr", STD_ERROR_HANDLE, 0, "wb" },
+    };
+
+  const gchar  *attach_envvar;
+  guint         i;
+  gchar       **attach_strs;
+
+  /* Note: it's not a very good practice to use DllMain()
+   * to call any functions not in Kernel32.dll.
+   * The following only works if there are no weird
+   * circular DLL dependencies that could cause glib DllMain()
+   * to be called before CRT DllMain().
+   */
+
+  if (g_strcmp0 (g_getenv ("G_WIN32_ALLOC_CONSOLE"), "1") == 0)
+    AllocConsole (); /* no error handling, fails if console already exists */
+
+  attach_envvar = g_getenv ("G_WIN32_ATTACH_CONSOLE");
+
+  if (attach_envvar == NULL)
+    return;
+
+  /* Re-use parent console, if we don't have our own.
+   * If we do, it will fail, so just ignore the error.
+   */
+  AttachConsole (ATTACH_PARENT_PROCESS);
+
+  attach_strs = g_strsplit (attach_envvar, ",", -1);
+
+  for (i = 0; attach_strs[i]; i++)
+    {
+      if (g_strcmp0 (attach_strs[i], "stdout") == 0)
+        streams[1].redirect = TRUE;
+      else if (g_strcmp0 (attach_strs[i], "stderr") == 0)
+        streams[2].redirect = TRUE;
+      else if (g_strcmp0 (attach_strs[i], "stdin") == 0)
+        streams[0].redirect = TRUE;
+      else
+        g_warning ("Unrecognized stream name %s", attach_strs[i]);
+    }
+
+  g_strfreev (attach_strs);
+
+  for (i = 0; i < G_N_ELEMENTS (streams); i++)
+    {
+      int          old_fd;
+      int          backup_fd;
+      int          new_fd;
+      int          preferred_fd = i;
+      HANDLE       std_handle;
+      errno_t      errsv = 0;
+
+      if (!streams[i].redirect)
+        continue;
+
+      if (ferror (streams[i].stream) != 0)
+        {
+          g_warning ("Stream %s is in error state", streams[i].stream_name);
+          continue;
+        }
+
+      std_handle = GetStdHandle (streams[i].std_handle_type);
+
+      if (std_handle == INVALID_HANDLE_VALUE)
+        {
+          DWORD gle = GetLastError ();
+          g_warning ("Standard handle for %s can't be obtained: %lu",
+                     streams[i].stream_name, gle);
+          continue;
+        }
+
+      old_fd = fileno (streams[i].stream);
+
+      /* We need the stream object to be associated with
+       * any valid integer fd for the code to work.
+       * If it isn't, reopen it with NUL (/dev/null) to
+       * ensure that it is.
+       */
+      if (old_fd < 0)
+        {
+          if (freopen ("NUL", streams[i].mode, streams[i].stream) == NULL)
+            {
+              errsv = errno;
+              g_warning ("Failed to redirect %s: %d - %s",
+                         streams[i].stream_name,
+                         errsv,
+                         strerror (errsv));
+              continue;
+            }
+
+          old_fd = fileno (streams[i].stream);
+
+          if (old_fd < 0)
+            {
+              g_warning ("Stream %s does not have a valid fd",
+                         streams[i].stream_name);
+              continue;
+            }
+        }
+
+      new_fd = _open_osfhandle ((intptr_t) std_handle, streams[i].flags);
+
+      if (new_fd < 0)
+        {
+          g_warning ("Failed to create new fd for stream %s",
+                     streams[i].stream_name);
+          continue;
+        }
+
+      backup_fd = dup (old_fd);
+
+      if (backup_fd < 0)
+        g_warning ("Failed to backup old fd %d for stream %s",
+                   old_fd, streams[i].stream_name);
+
+      errno = 0;
+
+      /* Force old_fd to be associated with the same file
+       * as new_fd, i.e with the standard handle we need
+       * (or, rather, with the same kernel object; handle
+       * value will be different, but the kernel object
+       * won't be).
+       */
+      /* NOTE: MSDN claims that _dup2() returns 0 on success and -1 on error,
+       * POSIX claims that dup2() reurns new FD on success and -1 on error.
+       * The "< 0" check satisfies the error condition for either implementation.
+       */
+      if (_dup2 (new_fd, old_fd) < 0)
+        {
+          errsv = errno;
+          g_warning ("Failed to substitute fd %d for stream %s: %d : %s",
+                     old_fd, streams[i].stream_name, errsv, strerror (errsv));
+
+          _close (new_fd);
+
+          if (backup_fd < 0)
+            continue;
+
+          errno = 0;
+
+          /* Try to restore old_fd back to its previous
+           * handle, in case the _dup2() call above succeeded partially.
+           */
+          if (_dup2 (backup_fd, old_fd) < 0)
+            {
+              errsv = errno;
+              g_warning ("Failed to restore fd %d for stream %s: %d : %s",
+                         old_fd, streams[i].stream_name, errsv, strerror (errsv));
+            }
+
+          _close (backup_fd);
+
+          continue;
+        }
+
+      /* Success, drop the backup */
+      if (backup_fd >= 0)
+        _close (backup_fd);
+
+      /* Sadly, there's no way to check that preferred_fd
+       * is currently valid, so we can't back it up.
+       * Doing operations on invalid FDs invokes invalid
+       * parameter handler, which is bad for us.
+       */
+      if (old_fd != preferred_fd)
+        /* This extra code will also try to ensure that
+         * the expected file descriptors 0, 1 and 2 are
+         * associated with the appropriate standard
+         * handles.
+         */
+        if (_dup2 (new_fd, preferred_fd) < 0)
+          g_warning ("Failed to dup fd %d into fd %d", new_fd, preferred_fd);
+
+      _close (new_fd);
+    }
+}
+
+#endif

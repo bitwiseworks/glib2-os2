@@ -4,7 +4,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the licence, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -158,11 +158,11 @@ g_wakeup_new (void)
 #endif
 
   if (!g_unix_open_pipe (wakeup->fds, FD_CLOEXEC, &error))
-    g_error ("Creating pipes for GWakeup: %s\n", error->message);
+    g_error ("Creating pipes for GWakeup: %s", error->message);
 
   if (!g_unix_set_fd_nonblocking (wakeup->fds[0], TRUE, &error) ||
       !g_unix_set_fd_nonblocking (wakeup->fds[1], TRUE, &error))
-    g_error ("Set pipes non-blocking for GWakeup: %s\n", error->message);
+    g_error ("Set pipes non-blocking for GWakeup: %s", error->message);
 
   return wakeup;
 }

@@ -4,7 +4,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the licence, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -32,22 +32,30 @@
  *     and portability
  *
  * GLib defines a number of commonly used types, which can be divided
- * into 4 groups:
+ * into several groups:
  * - New types which are not part of standard C (but are defined in
- *   various C standard library header files) - #gboolean, #gsize,
- *   #gssize, #goffset, #gintptr, #guintptr.
+ *   various C standard library header files) — #gboolean, #gssize.
  * - Integer types which are guaranteed to be the same size across
- *   all platforms - #gint8, #guint8, #gint16, #guint16, #gint32,
+ *   all platforms — #gint8, #guint8, #gint16, #guint16, #gint32,
  *   #guint32, #gint64, #guint64.
  * - Types which are easier to use than their standard C counterparts -
  *   #gpointer, #gconstpointer, #guchar, #guint, #gushort, #gulong.
  * - Types which correspond exactly to standard C types, but are
- *   included for completeness - #gchar, #gint, #gshort, #glong,
+ *   included for completeness — #gchar, #gint, #gshort, #glong,
  *   #gfloat, #gdouble.
+ * - Types which correspond exactly to standard C99 types, but are available
+ *   to use even if your compiler does not support C99 — #gsize, #goffset,
+ *   #gintptr, #guintptr.
  *
  * GLib also defines macros for the limits of some of the standard
  * integer and floating point types, as well as macros for suitable
  * printf() formats for these types.
+ *
+ * Note that depending on the platform and build configuration, the format
+ * macros might not be compatible with the system provided printf() function,
+ * because GLib might use a different printf() implementation internally.
+ * The format macros will always work with GLib API (like g_print()), and with
+ * any C99 compatible printf() implementation.
  */
 
 /**
@@ -615,7 +623,9 @@
  * goffset:
  *
  * A signed integer type that is used for file offsets,
- * corresponding to the C99 type off64_t.
+ * corresponding to the POSIX type `off_t` as if compiling with
+ * `_FILE_OFFSET_BITS` set to 64. #goffset is always 64 bits wide, even on
+ * 32-bit architectures.
  * Values of this type can range from #G_MINOFFSET to
  * #G_MAXOFFSET.
  *
@@ -756,7 +766,7 @@
  *   i = (int) (long) p;
  * ]|
  * The GLib macros GPOINTER_TO_INT(), GINT_TO_POINTER(), etc. take care
- * to do the right thing on the every platform.
+ * to do the right thing on every platform.
  *
  * Warning: You may not store pointers in integers. This is not
  * portable in any way, shape or form. These macros only allow storing
@@ -1423,6 +1433,130 @@
  * Returns: @val converted to the opposite byte order
  */
  
+/* Bounds-checked integer arithmetic {{{1 */
+/**
+ * SECTION:checkedmath
+ * @title: Bounds-checking integer arithmetic
+ * @short_description: a set of helpers for performing checked integer arithmetic
+ *
+ * GLib offers a set of macros for doing additions and multiplications
+ * of unsigned integers, with checks for overflows.
+ *
+ * The helpers all have three arguments.  A pointer to the destination
+ * is always the first argument and the operands to the operation are
+ * the other two.
+ *
+ * Following standard GLib convention, the helpers return %TRUE in case
+ * of success (ie: no overflow).
+ *
+ * The helpers may be macros, normal functions or inlines.  They may be
+ * implemented with inline assembly or compiler intrinsics where
+ * available.
+ *
+ * Since: 2.48
+ */
+
+/**
+ * g_uint_checked_add
+ * @dest: a pointer to the #guint destination
+ * @a: the #guint left operand
+ * @b: the #guint right operand
+ *
+ * Performs a checked addition of @a and @b, storing the result in
+ * @dest.
+ *
+ * If the operation is successful, %TRUE is returned.  If the operation
+ * overflows then the state of @dest is undefined and %FALSE is
+ * returned.
+ *
+ * Returns: %TRUE if there was no overflow
+ * Since: 2.48
+ */
+
+/**
+ * g_uint_checked_mul
+ * @dest: a pointer to the #guint destination
+ * @a: the #guint left operand
+ * @b: the #guint right operand
+ *
+ * Performs a checked multiplication of @a and @b, storing the result in
+ * @dest.
+ *
+ * If the operation is successful, %TRUE is returned.  If the operation
+ * overflows then the state of @dest is undefined and %FALSE is
+ * returned.
+ *
+ * Returns: %TRUE if there was no overflow
+ * Since: 2.48
+ */
+
+/**
+ * g_uint64_checked_add
+ * @dest: a pointer to the #guint64 destination
+ * @a: the #guint64 left operand
+ * @b: the #guint64 right operand
+ *
+ * Performs a checked addition of @a and @b, storing the result in
+ * @dest.
+ *
+ * If the operation is successful, %TRUE is returned.  If the operation
+ * overflows then the state of @dest is undefined and %FALSE is
+ * returned.
+ *
+ * Returns: %TRUE if there was no overflow
+ * Since: 2.48
+ */
+
+/**
+ * g_uint64_checked_mul
+ * @dest: a pointer to the #guint64 destination
+ * @a: the #guint64 left operand
+ * @b: the #guint64 right operand
+ *
+ * Performs a checked multiplication of @a and @b, storing the result in
+ * @dest.
+ *
+ * If the operation is successful, %TRUE is returned.  If the operation
+ * overflows then the state of @dest is undefined and %FALSE is
+ * returned.
+ *
+ * Returns: %TRUE if there was no overflow
+ * Since: 2.48
+ */
+
+/**
+ * g_size_checked_add
+ * @dest: a pointer to the #gsize destination
+ * @a: the #gsize left operand
+ * @b: the #gsize right operand
+ *
+ * Performs a checked addition of @a and @b, storing the result in
+ * @dest.
+ *
+ * If the operation is successful, %TRUE is returned.  If the operation
+ * overflows then the state of @dest is undefined and %FALSE is
+ * returned.
+ *
+ * Returns: %TRUE if there was no overflow
+ * Since: 2.48
+ */
+
+/**
+ * g_size_checked_mul
+ * @dest: a pointer to the #gsize destination
+ * @a: the #gsize left operand
+ * @b: the #gsize right operand
+ *
+ * Performs a checked multiplication of @a and @b, storing the result in
+ * @dest.
+ *
+ * If the operation is successful, %TRUE is returned.  If the operation
+ * overflows then the state of @dest is undefined and %FALSE is
+ * returned.
+ *
+ * Returns: %TRUE if there was no overflow
+ * Since: 2.48
+ */
 /* Numerical Definitions {{{1 */
 
 /**
@@ -1655,6 +1789,26 @@
  */
 
 /**
+ * G_APPROX_VALUE:
+ * @a: a numeric value
+ * @b: a numeric value
+ * @epsilon: a numeric value that expresses the tolerance between @a and @b
+ *
+ * Evaluates to a truth value if the absolute difference between @a and @b is
+ * smaller than @epsilon, and to a false value otherwise.
+ *
+ * For example,
+ * - `G_APPROX_VALUE (5, 6, 2)` evaluates to true
+ * - `G_APPROX_VALUE (3.14, 3.15, 0.001)` evaluates to false
+ * - `G_APPROX_VALUE (n, 0.f, FLT_EPSILON)` evaluates to true if `n` is within
+ *   the single precision floating point epsilon from zero
+ *
+ * Returns: %TRUE if the two values are within the desired range
+ *
+ * Since: 2.58
+ */
+
+/**
  * G_STRUCT_MEMBER:
  * @member_type: the type of the struct field
  * @struct_p: a pointer to a struct
@@ -1726,16 +1880,15 @@
 /**
  * G_INLINE_FUNC:
  *
- * This macro is used to export function prototypes so they can be linked
- * with an external version when no inlining is performed. The file which
- * implements the functions should define %G_IMPLEMENTS_INLINES
- * before including the headers which contain %G_INLINE_FUNC declarations.
- * Since inlining is very compiler-dependent using these macros correctly
- * is very difficult. Their use is strongly discouraged.
+ * This macro used to be used to conditionally define inline functions
+ * in a compatible way before this feature was supported in all
+ * compilers.  These days, GLib requires inlining support from the
+ * compiler, so your GLib-using programs can safely assume that the
+ * "inline" keywork works properly.
  *
- * This macro is often mistaken for a replacement for the inline keyword;
- * inline is already declared in a portable manner in the GLib headers
- * and can be used normally.
+ * Never use this macro anymore.  Just say "static inline".
+ *
+ * Deprecated: 2.48: Use "static inline" instead
  */
 
 /**
@@ -1873,6 +2026,23 @@
  */
 
 /**
+ * G_GNUC_CHECK_VERSION:
+ * @major: major version to check against
+ * @minor: minor version to check against
+ *
+ * Expands to a a check for a compiler with __GNUC__ defined and a version
+ * greater than or equal to the major and minor numbers provided. For example,
+ * the following would only match on compilers such as GCC 4.8 or newer.
+ *
+ * |[<!-- language="C" -->
+ * #if G_GNUC_CHECK_VERSION(4, 8)
+ * #endif
+ * ]|
+ *
+ * Since: 2.42
+ */
+
+/**
  * G_GNUC_CONST:
  *
  * Expands to the GNU C const function attribute if the compiler is gcc.
@@ -1905,17 +2075,50 @@
  */
 
 /**
+ * G_GNUC_NO_INLINE:
+ *
+ * Expands to the GNU C `noinline` function attribute if the compiler is gcc.
+ * If the compiler is not gcc, this macro expands to nothing.
+ *
+ * Declaring a function as `noinline` prevents the function from being
+ * considered for inlining.
+ *
+ * The attribute may be placed before the declaration, right before the
+ * `static` keyword.
+ *
+ * See the
+ * [GNU C documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-noinline-function-attribute)
+ * for more details.
+ *
+ * Since: 2.58
+ */
+
+/**
  * G_GNUC_MALLOC:
  *
- * Expands to the GNU C malloc function attribute if the compiler is gcc.
- * Declaring a function as malloc enables better optimization of the function.
- * A function can have the malloc attribute if it returns a pointer which is
- * guaranteed to not alias with any other pointer when the function returns
- * (in practice, this means newly allocated memory).
+ * Expands to the
+ * [GNU C `malloc` function attribute](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-functions-that-behave-like-malloc)
+ * if the compiler is gcc.
+ * Declaring a function as `malloc` enables better optimization of the function,
+ * but must only be done if the allocation behaviour of the function is fully
+ * understood, otherwise miscompilation can result.
+ *
+ * A function can have the `malloc` attribute if it returns a pointer which is
+ * guaranteed to not alias with any other pointer valid when the function
+ * returns, and moreover no pointers to valid objects occur in any storage
+ * addressed by the returned pointer.
+ *
+ * In practice, this means that `G_GNUC_MALLOC` can be used with any function
+ * which returns unallocated or zeroed-out memory, but not with functions which
+ * return initialised structures containing other pointers, or with functions
+ * that reallocate memory. This definition changed in GLib 2.58 to match the
+ * stricter definition introduced around GCC 5.
  *
  * Place the attribute after the declaration, just before the semicolon.
  *
- * See the GNU C documentation for more details.
+ * See the
+ * [GNU C documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-functions-that-behave-like-malloc)
+ * for more details.
  *
  * Since: 2.6
  */
@@ -2099,8 +2302,9 @@
 /**
  * G_GNUC_PRINTF:
  * @format_idx: the index of the argument corresponding to the
- *     format string (The arguments are numbered from 1)
- * @arg_idx: the index of the first of the format arguments
+ *     format string (the arguments are numbered from 1)
+ * @arg_idx: the index of the first of the format arguments, or 0 if
+ *     there are no format arguments
  *
  * Expands to the GNU C format function attribute if the compiler is gcc.
  * This is used for declaring functions which take a variable number of
@@ -2110,7 +2314,9 @@
  * Place the attribute after the function declaration, just before the
  * semicolon.
  *
- * See the GNU C documentation for more details.
+ * See the
+ * [GNU C documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-Wformat-3288)
+ * for more details.
  *
  * |[<!-- language="C" -->
  * gint g_snprintf (gchar  *string,
@@ -2123,15 +2329,18 @@
 /**
  * G_GNUC_SCANF:
  * @format_idx: the index of the argument corresponding to
- *     the format string (The arguments are numbered from 1)
- * @arg_idx: the index of the first of the format arguments
+ *     the format string (the arguments are numbered from 1)
+ * @arg_idx: the index of the first of the format arguments, or 0 if
+ *     there are no format arguments
  *
  * Expands to the GNU C format function attribute if the compiler is gcc.
  * This is used for declaring functions which take a variable number of
  * arguments, with the same syntax as scanf(). It allows the compiler
  * to type-check the arguments passed to the function.
  *
- * See the GNU C documentation for details.
+ * See the
+ * [GNU C documentation](https://gcc.gnu.org/onlinedocs/gcc/Common-Function-Attributes.html#index-Wformat-3288)
+ * for details.
  */
 
 /**
@@ -2359,7 +2568,7 @@
  * }
  * ]|
  *
- * You must initialise the variable in some way -- either by use of an
+ * You must initialize the variable in some way -- either by use of an
  * initialiser or by ensuring that an _init function will be called on
  * it unconditionally before it goes out of scope.
  *
@@ -2449,14 +2658,70 @@
  *
  *   membuf = g_malloc (8192);
  *
- *   /* Some computation on membuf */
+ *   // Some computation on membuf
  *
- *   /* membuf will be automatically freed here */
+ *   // membuf will be automatically freed here
  *   return TRUE;
  * }
  * ]|
  *
  * Since: 2.44
+ */
+
+/**
+ * g_autolist:
+ * @TypeName: a supported variable type
+ *
+ * Helper to declare a list variable with automatic deep cleanup.
+ *
+ * The list is deeply freed, in a way appropriate to the specified type, when the
+ * variable goes out of scope.  The type must support this.
+ *
+ * This feature is only supported on GCC and clang.  This macro is not
+ * defined on other compilers and should not be used in programs that
+ * are intended to be portable to those compilers.
+ *
+ * This is meant to be used to declare lists of a type with a cleanup
+ * function.  The type of the variable is a GList *.  You
+ * must not add your own '*'.
+ *
+ * This macro can be used to avoid having to do explicit cleanups of
+ * local variables when exiting functions.  It often vastly simplifies
+ * handling of error conditions, removing the need for various tricks
+ * such as 'goto out' or repeating of cleanup code.  It is also helpful
+ * for non-error cases.
+ *
+ * See also g_autoslist(), g_autoptr() and g_steal_pointer().
+ *
+ * Since: 2.56
+ */
+
+/**
+ * g_autoslist:
+ * @TypeName: a supported variable type
+ *
+ * Helper to declare a singly linked list variable with automatic deep cleanup.
+ *
+ * The list is deeply freed, in a way appropriate to the specified type, when the
+ * variable goes out of scope.  The type must support this.
+ *
+ * This feature is only supported on GCC and clang.  This macro is not
+ * defined on other compilers and should not be used in programs that
+ * are intended to be portable to those compilers.
+ *
+ * This is meant to be used to declare lists of a type with a cleanup
+ * function.  The type of the variable is a GSList *.  You
+ * must not add your own '*'.
+ *
+ * This macro can be used to avoid having to do explicit cleanups of
+ * local variables when exiting functions.  It often vastly simplifies
+ * handling of error conditions, removing the need for various tricks
+ * such as 'goto out' or repeating of cleanup code.  It is also helpful
+ * for non-error cases.
+ *
+ * See also g_autolist(), g_autoptr() and g_steal_pointer().
+ *
+ * Since: 2.56
  */
 
 /**

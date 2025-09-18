@@ -32,17 +32,17 @@ else
 rpath_hack = -rpath /
 endif
 
-libtestmodulea_la_SOURCES = test-module-a.c
+libtestmodulea_la_SOURCES = test-module-a.c symbol-visibility.h
 libtestmodulea_la_LIBADD = $(LDADD)
-libtestmodulea_la_LDFLAGS = $(LDFLAGS) -no-undefined -avoid-version $(rpath_hack)
+libtestmodulea_la_LDFLAGS = $(LDFLAGS) -module -no-undefined -avoid-version $(rpath_hack)
 
 if OS_OS2
 libtestmodulea_la_LDFLAGS += -shortname testmoda
 endif
 
-libtestmoduleb_la_SOURCES = test-module-b.c
+libtestmoduleb_la_SOURCES = test-module-b.c symbol-visibility.h
 libtestmoduleb_la_LIBADD = $(LDADD)
-libtestmoduleb_la_LDFLAGS =$(LDFLAGS) -no-undefined -avoid-version $(rpath_hack)
+libtestmoduleb_la_LDFLAGS =$(LDFLAGS) -module -no-undefined -avoid-version $(rpath_hack)
 
 if OS_OS2
 libtestmoduleb_la_LDFLAGS += -shortname testmodb

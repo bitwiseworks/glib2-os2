@@ -12,7 +12,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -23,9 +23,7 @@
  * License along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
 
 #include "xdgmimeint.h"
 #include <ctype.h>
@@ -187,3 +185,18 @@ _xdg_reverse_ucs4 (xdg_unichar_t *source, int len)
     }
 }
 
+const char *
+_xdg_binary_or_text_fallback(const void *data, size_t len)
+{
+  unsigned char *chardata;
+  int i;
+
+  chardata = (unsigned char *) data;
+  for (i = 0; i < 128 && i < len; ++i)
+    {
+       if (chardata[i] < 32 && chardata[i] != 9 && chardata[i] != 10 && chardata[i] != 13)
+         return XDG_MIME_TYPE_UNKNOWN; /* binary data */
+    }
+
+  return XDG_MIME_TYPE_TEXTPLAIN;
+}

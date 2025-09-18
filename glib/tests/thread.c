@@ -21,6 +21,7 @@
  */
 
 #include <config.h>
+#include <errno.h>
 
 #ifdef HAVE_SYS_TIME_H
 #include <sys/time.h>
@@ -35,6 +36,10 @@
 #ifdef G_OS_UNIX
 #include <unistd.h>
 #include <sys/resource.h>
+#endif
+
+#ifdef THREADS_POSIX
+#include <pthread.h>
 #endif
 
 static gpointer
@@ -142,8 +147,8 @@ test_thread4 (void)
   getrlimit (RLIMIT_NPROC, &nl);
   nl.rlim_cur = 1;
 
-  if ((ret = prlimit (getpid(), RLIMIT_NPROC, &nl, &ol)) != 0)
-    g_error ("prlimit failed: %s\n", g_strerror (ret));
+  if ((ret = prlimit (getpid (), RLIMIT_NPROC, &nl, &ol)) != 0)
+    g_error ("prlimit failed: %s", g_strerror (errno));
 
   error = NULL;
   thread = g_thread_try_new ("a", thread1_func, NULL, &error);
@@ -152,7 +157,7 @@ test_thread4 (void)
   g_error_free (error);
 
   if ((ret = prlimit (getpid (), RLIMIT_NPROC, &ol, NULL)) != 0)
-    g_error ("resetting RLIMIT_NPROC failed: %s\n", g_strerror (ret));
+    g_error ("resetting RLIMIT_NPROC failed: %s", g_strerror (errno));
 #endif
 }
 
@@ -170,14 +175,12 @@ test_thread5 (void)
 static gpointer
 thread6_func (gpointer data)
 {
-#ifdef HAVE_SYS_PRCTL_H
-#ifdef PR_GET_NAME
-  const gchar name[16];
+#if defined (HAVE_PTHREAD_SETNAME_NP_WITH_TID) && defined (HAVE_PTHREAD_GETNAME_NP)
+  char name[16];
 
-  prctl (PR_GET_NAME, name, 0, 0, 0, 0);
+  pthread_getname_np (pthread_self(), name, 16);
 
-  g_assert_cmpstr (name, ==, (gchar*)data);
-#endif
+  g_assert_cmpstr (name, ==, data);
 #endif
 
   return NULL;

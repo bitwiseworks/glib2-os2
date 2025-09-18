@@ -5,7 +5,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -95,7 +95,7 @@ g_zlib_decompressor_set_gzheader (GZlibDecompressor *decompressor)
   decompressor->header_data->gzheader.name_max = 256;
 
   if (inflateGetHeader (&decompressor->zstream, &decompressor->header_data->gzheader) != Z_OK)
-    g_warning ("unexpected zlib error: %s\n", decompressor->zstream.msg);
+    g_warning ("unexpected zlib error: %s", decompressor->zstream.msg);
 #endif /* !G_OS_WIN32 || ZLIB >= 1.2.4 */
 }
 
@@ -205,7 +205,7 @@ g_zlib_decompressor_constructed (GObject *object)
     g_error ("GZlibDecompressor: Not enough memory for zlib use");
 
   if (res != Z_OK)
-    g_warning ("unexpected zlib error: %s\n", decompressor->zstream.msg);
+    g_warning ("unexpected zlib error: %s", decompressor->zstream.msg);
 
   g_zlib_decompressor_set_gzheader (decompressor);
 }
@@ -305,7 +305,7 @@ g_zlib_decompressor_reset (GConverter *converter)
 
   res = inflateReset (&decompressor->zstream);
   if (res != Z_OK)
-    g_warning ("unexpected zlib error: %s\n", decompressor->zstream.msg);
+    g_warning ("unexpected zlib error: %s", decompressor->zstream.msg);
 
   g_zlib_decompressor_set_gzheader (decompressor);
 }

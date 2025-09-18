@@ -5,7 +5,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -115,7 +115,7 @@ g_pollable_output_stream_is_writable (GPollableOutputStream *stream)
 /**
  * g_pollable_output_stream_create_source:
  * @stream: a #GPollableOutputStream.
- * @cancellable: (allow-none): a #GCancellable, or %NULL
+ * @cancellable: (nullable): a #GCancellable, or %NULL
  *
  * Creates a #GSource that triggers when @stream can be written, or
  * @cancellable is triggered or an error occurs. The callback on the
@@ -163,7 +163,7 @@ g_pollable_output_stream_default_write_nonblocking (GPollableOutputStream  *stre
  * @buffer: (array length=count) (element-type guint8): a buffer to write
  *     data from
  * @count: the number of bytes you want to write
- * @cancellable: (allow-none): a #GCancellable, or %NULL
+ * @cancellable: (nullable): a #GCancellable, or %NULL
  * @error: #GError for error reporting, or %NULL to ignore.
  *
  * Attempts to write up to @count bytes from @buffer to @stream, as
@@ -177,6 +177,9 @@ g_pollable_output_stream_default_write_nonblocking (GPollableOutputStream  *stre
  * if @cancellable has already been cancelled when you call, which
  * may happen if you call this method after a source triggers due
  * to having been cancelled.
+ *
+ * Also note that if %G_IO_ERROR_WOULD_BLOCK is returned some underlying
+ * transports like D/TLS require that you send the same @buffer and @count.
  *
  * Virtual: write_nonblocking
  * Returns: the number of bytes written, or -1 on error (including

@@ -4,7 +4,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the licence, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -37,6 +37,7 @@ struct _GSettingsSchemaKey
   const GVariantType *type;
   GVariant *minimum, *maximum;
   GVariant *default_value;
+  GVariant *desktop_overrides;
 
   gint ref_count;
 };
@@ -58,6 +59,7 @@ gboolean                g_settings_schema_key_type_check                (GSettin
 GVariant *              g_settings_schema_key_range_fixup               (GSettingsSchemaKey *key,
                                                                          GVariant           *value);
 GVariant *              g_settings_schema_key_get_translated_default    (GSettingsSchemaKey *key);
+GVariant *              g_settings_schema_key_get_per_desktop_default   (GSettingsSchemaKey *key);
 
 gint                    g_settings_schema_key_to_enum                   (GSettingsSchemaKey *key,
                                                                          GVariant           *value);

@@ -7,7 +7,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -118,7 +118,7 @@ g_quark_init (void)
 
 /**
  * g_quark_try_string:
- * @string: (allow-none): a string
+ * @string: (nullable): a string
  *
  * Gets the #GQuark associated with the given string, or 0 if string is
  * %NULL or it has no associated #GQuark.
@@ -190,9 +190,25 @@ quark_from_string (const gchar *string,
   return quark;
 }
 
+static inline GQuark
+quark_from_string_locked (const gchar   *string,
+                          gboolean       duplicate)
+{
+  GQuark quark = 0;
+
+  if (!string)
+    return 0;
+
+  G_LOCK (quark_global);
+  quark = quark_from_string (string, duplicate);
+  G_UNLOCK (quark_global);
+
+  return quark;
+}
+
 /**
  * g_quark_from_string:
- * @string: (allow-none): a string
+ * @string: (nullable): a string
  *
  * Gets the #GQuark identifying the given string. If the string does
  * not currently have an associated #GQuark, a new #GQuark is created,
@@ -203,21 +219,12 @@ quark_from_string (const gchar *string,
 GQuark
 g_quark_from_string (const gchar *string)
 {
-  GQuark quark;
-
-  if (!string)
-    return 0;
-
-  G_LOCK (quark_global);
-  quark = quark_from_string (string, TRUE);
-  G_UNLOCK (quark_global);
-
-  return quark;
+  return quark_from_string_locked (string, TRUE);
 }
 
 /**
  * g_quark_from_static_string:
- * @string: (allow-none): a string
+ * @string: (nullable): a string
  *
  * Gets the #GQuark identifying the given (static) string. If the
  * string does not currently have an associated #GQuark, a new #GQuark
@@ -237,16 +244,7 @@ g_quark_from_string (const gchar *string)
 GQuark
 g_quark_from_static_string (const gchar *string)
 {
-  GQuark quark;
-
-  if (!string)
-    return 0;
-
-  G_LOCK (quark_global);
-  quark = quark_from_string (string, FALSE);
-  G_UNLOCK (quark_global);
-
-  return quark;
+  return quark_from_string_locked (string, FALSE);
 }
 
 /**
@@ -301,9 +299,27 @@ quark_new (gchar *string)
   return quark;
 }
 
+static inline const gchar *
+quark_intern_string_locked (const gchar   *string,
+                            gboolean       duplicate)
+{
+  const gchar *result;
+  GQuark quark;
+
+  if (!string)
+    return NULL;
+
+  G_LOCK (quark_global);
+  quark = quark_from_string (string, duplicate);
+  result = quarks[quark];
+  G_UNLOCK (quark_global);
+
+  return result;
+}
+
 /**
  * g_intern_string:
- * @string: (allow-none): a string
+ * @string: (nullable): a string
  *
  * Returns a canonical representation for @string. Interned strings
  * can be compared for equality by comparing the pointers, instead of
@@ -316,23 +332,12 @@ quark_new (gchar *string)
 const gchar *
 g_intern_string (const gchar *string)
 {
-  const gchar *result;
-  GQuark quark;
-
-  if (!string)
-    return NULL;
-
-  G_LOCK (quark_global);
-  quark = quark_from_string (string, TRUE);
-  result = quarks[quark];
-  G_UNLOCK (quark_global);
-
-  return result;
+  return quark_intern_string_locked (string, TRUE);
 }
 
 /**
  * g_intern_static_string:
- * @string: (allow-none): a static string
+ * @string: (nullable): a static string
  *
  * Returns a canonical representation for @string. Interned strings
  * can be compared for equality by comparing the pointers, instead of
@@ -346,16 +351,5 @@ g_intern_string (const gchar *string)
 const gchar *
 g_intern_static_string (const gchar *string)
 {
-  GQuark quark;
-  const gchar *result;
-
-  if (!string)
-    return NULL;
-
-  G_LOCK (quark_global);
-  quark = quark_from_string (string, FALSE);
-  result = quarks[quark];
-  G_UNLOCK (quark_global);
-
-  return result;
+  return quark_intern_string_locked (string, FALSE);
 }
