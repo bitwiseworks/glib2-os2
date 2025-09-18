@@ -6,7 +6,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -24,6 +24,8 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <errno.h>
+#include <string.h>
 #include <gstdio.h>
 #ifdef G_OS_UNIX
 #include <unistd.h>
@@ -94,7 +96,7 @@ _g_object_dispose_and_wait_weak_notify (gpointer object)
 
   if (data.timed_out)
     {
-      g_warning ("Weak notify timeout, object ref_count=%d\n",
+      g_warning ("Weak notify timeout, object ref_count=%d",
           G_OBJECT (object)->ref_count);
     }
   else
@@ -177,7 +179,7 @@ watch_parent (gint fd)
       if (num_events == 0)
         continue;
 
-      if (fds[0].revents == G_IO_HUP)
+      if (fds[0].revents & G_IO_HUP)
         {
           /* Parent quit, cleanup the mess and exit */
           for (n = 0; n < pids_to_kill->len; n++)
@@ -235,6 +237,7 @@ watcher_init (void)
 {
   static gsize started = 0;
   static GIOChannel *channel = NULL;
+  int errsv;
 
   if (g_once_init_enter (&started))
     {
@@ -243,14 +246,16 @@ watcher_init (void)
       /* fork a child to clean up when we are killed */
       if (pipe (pipe_fds) != 0)
         {
-          g_warning ("pipe() failed: %m");
+          errsv = errno;
+          g_warning ("pipe() failed: %s", g_strerror (errsv));
           g_assert_not_reached ();
         }
 
       switch (fork ())
         {
         case -1:
-          g_warning ("fork() failed: %m");
+          errsv = errno;
+          g_warning ("fork() failed: %s", g_strerror (errsv));
           g_assert_not_reached ();
           break;
 
@@ -713,7 +718,7 @@ g_test_dbus_get_flags (GTestDBus *self)
  * been called yet, %NULL is returned. This can be used with
  * g_dbus_connection_new_for_address().
  *
- * Returns: (allow-none): the address of the bus, or %NULL.
+ * Returns: (nullable): the address of the bus, or %NULL.
  */
 const gchar *
 g_test_dbus_get_bus_address (GTestDBus *self)
@@ -818,6 +823,7 @@ g_test_dbus_down (GTestDBus *self)
     _g_object_dispose_and_wait_weak_notify (connection);
 
   g_test_dbus_unset ();
+  _g_bus_forget_singleton (G_BUS_TYPE_SESSION);
   self->priv->up = FALSE;
 }
 

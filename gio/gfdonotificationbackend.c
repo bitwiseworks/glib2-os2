@@ -4,7 +4,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -62,18 +62,36 @@ typedef struct
   GVariant *default_action_target;
 } FreedesktopNotification;
 
-
 static void
 freedesktop_notification_free (gpointer data)
 {
   FreedesktopNotification *n = data;
 
+  g_object_unref (n->backend);
   g_free (n->id);
   g_free (n->default_action);
   if (n->default_action_target)
     g_variant_unref (n->default_action_target);
 
   g_slice_free (FreedesktopNotification, n);
+}
+
+static FreedesktopNotification *
+freedesktop_notification_new (GFdoNotificationBackend *backend,
+                              const gchar             *id,
+                              GNotification           *notification)
+{
+  FreedesktopNotification *n;
+
+  n = g_slice_new0 (FreedesktopNotification);
+  n->backend = g_object_ref (backend);
+  n->id = g_strdup (id);
+  n->notify_id = 0;
+  g_notification_get_default_action (notification,
+                                     &n->default_action,
+                                     &n->default_action_target);
+
+  return n;
 }
 
 static FreedesktopNotification *
@@ -178,8 +196,13 @@ notify_signal (GDBusConnection *connection,
         }
     }
 
-  backend->notifications = g_slist_remove (backend->notifications, n);
-  freedesktop_notification_free (n);
+  /* Get the notification again in case the action redrew it */
+  n = g_fdo_notification_backend_find_notification_by_notify_id (backend, id);
+  if (n != NULL)
+    {
+      backend->notifications = g_slist_remove (backend->notifications, n);
+      freedesktop_notification_free (n);
+    }
 }
 
 /* Converts a GNotificationPriority to an urgency level as defined by
@@ -195,9 +218,9 @@ urgency_from_priority (GNotificationPriority priority)
 
     default:
     case G_NOTIFICATION_PRIORITY_NORMAL:
+    case G_NOTIFICATION_PRIORITY_HIGH:
       return 1;
 
-    case G_NOTIFICATION_PRIORITY_HIGH:
     case G_NOTIFICATION_PRIORITY_URGENT:
       return 2;
     }
@@ -314,8 +337,19 @@ notification_sent (GObject      *source_object,
   val = g_dbus_connection_call_finish (G_DBUS_CONNECTION (source_object), result, &error);
   if (val)
     {
+      GFdoNotificationBackend *backend = n->backend;
+      FreedesktopNotification *match;
+
       g_variant_get (val, "(u)", &n->notify_id);
       g_variant_unref (val);
+
+      match = g_fdo_notification_backend_find_notification_by_notify_id (backend, n->notify_id);
+      if (match != NULL)
+        {
+          backend->notifications = g_slist_remove (backend->notifications, match);
+          freedesktop_notification_free (match);
+        }
+      backend->notifications = g_slist_prepend (backend->notifications, n);
     }
   else
     {
@@ -326,9 +360,7 @@ notification_sent (GObject      *source_object,
           warning_printed = TRUE;
         }
 
-      n->backend->notifications = g_slist_remove (n->backend->notifications, n);
       freedesktop_notification_free (n);
-
       g_error_free (error);
     }
 }
@@ -373,7 +405,7 @@ g_fdo_notification_backend_send_notification (GNotificationBackend *backend,
                                               GNotification        *notification)
 {
   GFdoNotificationBackend *self = G_FDO_NOTIFICATION_BACKEND (backend);
-  FreedesktopNotification *n;
+  FreedesktopNotification *n, *tmp;
 
   if (self->notify_subscription == 0)
     {
@@ -386,24 +418,11 @@ g_fdo_notification_backend_send_notification (GNotificationBackend *backend,
                                             notify_signal, backend, NULL);
     }
 
-  n = g_fdo_notification_backend_find_notification (self, id);
-  if (n == NULL)
-    {
-      n = g_slice_new0 (FreedesktopNotification);
-      n->backend = self;
-      n->id = g_strdup (id);
-      n->notify_id = 0;
+  n = freedesktop_notification_new (self, id, notification);
 
-      n->backend->notifications = g_slist_prepend (n->backend->notifications, n);
-    }
-  else
-    {
-      /* Only clear default action. All other fields are still valid */
-      g_clear_pointer (&n->default_action, g_free);
-      g_clear_pointer (&n->default_action_target, g_variant_unref);
-    }
-
-  g_notification_get_default_action (notification, &n->default_action, &n->default_action_target);
+  tmp = g_fdo_notification_backend_find_notification (self, id);
+  if (tmp)
+    n->notify_id = tmp->notify_id;
 
   call_notify (backend->dbus_connection, backend->application, n->notify_id, notification, notification_sent, n);
 }
@@ -424,7 +443,7 @@ g_fdo_notification_backend_withdraw_notification (GNotificationBackend *backend,
                                   "org.freedesktop.Notifications",
                                   "/org/freedesktop/Notifications",
                                   "org.freedesktop.Notifications", "CloseNotification",
-                                  g_variant_new ("(u)", n->id), NULL,
+                                  g_variant_new ("(u)", n->notify_id), NULL,
                                   G_DBUS_CALL_FLAGS_NONE, -1, NULL, NULL, NULL);
         }
 

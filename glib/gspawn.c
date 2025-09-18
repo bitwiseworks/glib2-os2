@@ -4,20 +4,18 @@
  *  g_execvpe implementation based on GNU libc execvp:
  *   Copyright 1991, 92, 95, 96, 97, 98, 99 Free Software Foundation, Inc.
  *
- * GLib is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2 of the
- * License, or (at your option) any later version.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- * GLib is distributed in the hope that it will be useful,
+ * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with GLib; see the file COPYING.LIB.  If not, write
- * to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with this library; if not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "config.h"
@@ -33,6 +31,14 @@
 #include <stdlib.h>   /* for fdwalk */
 #include <dirent.h>
 
+#ifdef HAVE_SPAWN_H
+#include <spawn.h>
+#endif /* HAVE_SPAWN_H */
+
+#ifdef HAVE_CRT_EXTERNS_H
+#include <crt_externs.h> /* for _NSGetEnviron */
+#endif
+
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif /* HAVE_SYS_SELECT_H */
@@ -41,7 +47,12 @@
 #include <sys/resource.h>
 #endif /* HAVE_SYS_RESOURCE_H */
 
+#ifdef __linux__
+#include <sys/syscall.h>  /* for syscall and SYS_getdents64 */
+#endif
+
 #include "gspawn.h"
+#include "gspawn-private.h"
 #include "gthread.h"
 #include "glib/gstdio.h"
 
@@ -54,6 +65,34 @@
 #include "gutils.h"
 #include "glibintl.h"
 #include "glib-unix.h"
+
+/* posix_spawn() is assumed the fastest way to spawn, but glibc's
+ * implementation was buggy before glibc 2.24, so avoid it on old versions.
+ */
+#ifdef HAVE_POSIX_SPAWN
+#ifdef __GLIBC__
+
+#if __GLIBC_PREREQ(2,24)
+#define POSIX_SPAWN_AVAILABLE
+#endif
+
+#else /* !__GLIBC__ */
+/* Assume that all non-glibc posix_spawn implementations are fine. */
+#define POSIX_SPAWN_AVAILABLE
+#endif /* __GLIBC__ */
+#endif /* HAVE_POSIX_SPAWN */
+
+#ifdef HAVE__NSGETENVIRON
+#define environ (*_NSGetEnviron())
+#else
+extern char **environ;
+#endif
+
+#ifndef O_CLOEXEC
+#define O_CLOEXEC 0
+#else
+#define HAVE_O_CLOEXEC 1
+#endif
 
 /**
  * SECTION:spawn
@@ -70,6 +109,49 @@
  *
  * See #GSubprocess in GIO for a higher-level API that provides
  * stream interfaces for communication with child processes.
+ *
+ * An example of using g_spawn_async_with_pipes():
+ * |[<!-- language="C" -->
+ * const gchar * const argv[] = { "my-favourite-program", "--args", NULL };
+ * gint child_stdout, child_stderr;
+ * GPid child_pid;
+ * g_autoptr(GError) error = NULL;
+ *
+ * // Spawn child process.
+ * g_spawn_async_with_pipes (NULL, argv, NULL, G_SPAWN_DO_NOT_REAP_CHILD, NULL,
+ *                           NULL, &child_pid, NULL, &child_stdout,
+ *                           &child_stderr, &error);
+ * if (error != NULL)
+ *   {
+ *     g_error ("Spawning child failed: %s", error->message);
+ *     return;
+ *   }
+ *
+ * // Add a child watch function which will be called when the child process
+ * // exits.
+ * g_child_watch_add (child_pid, child_watch_cb, NULL);
+ *
+ * // You could watch for output on @child_stdout and @child_stderr using
+ * // #GUnixInputStream or #GIOChannel here.
+ *
+ * static void
+ * child_watch_cb (GPid     pid,
+ *                 gint     status,
+ *                 gpointer user_data)
+ * {
+ *   g_message ("Child %" G_PID_FORMAT " exited %s", pid,
+ *              g_spawn_check_exit_status (status, NULL) ? "normally" : "abnormally");
+ *
+ *   // Free any resources associated with the child here, such as I/O channels
+ *   // on its stdout and stderr FDs. If you have no code to put in the
+ *   // child_watch_cb() callback, you can remove it and the g_child_watch_add()
+ *   // call, but you must also remove the G_SPAWN_DO_NOT_REAP_CHILD flag,
+ *   // otherwise the child process will stay around as a zombie until this
+ *   // process exits.
+ *
+ *   g_spawn_close_pid (pid);
+ * }
+ * ]|
  */
 
 
@@ -100,18 +182,42 @@ static gboolean fork_exec_with_pipes (gboolean              intermediate_child,
                                       gint                 *standard_error,
                                       GError              **error);
 
+static gboolean fork_exec_with_fds (gboolean              intermediate_child,
+                                    const gchar          *working_directory,
+                                    gchar               **argv,
+                                    gchar               **envp,
+                                    gboolean              close_descriptors,
+                                    gboolean              search_path,
+                                    gboolean              search_path_from_envp,
+                                    gboolean              stdout_to_null,
+                                    gboolean              stderr_to_null,
+                                    gboolean              child_inherits_stdin,
+                                    gboolean              file_and_argv_zero,
+                                    gboolean              cloexec_pipes,
+                                    GSpawnChildSetupFunc  child_setup,
+                                    gpointer              user_data,
+                                    GPid                 *child_pid,
+                                    gint                 *child_close_fds,
+                                    gint                  stdin_fd,
+                                    gint                  stdout_fd,
+                                    gint                  stderr_fd,
+                                    GError              **error);
+
 G_DEFINE_QUARK (g-exec-error-quark, g_spawn_error)
 G_DEFINE_QUARK (g-spawn-exit-error-quark, g_spawn_exit_error)
 
 /**
  * g_spawn_async:
- * @working_directory: (allow-none): child's current working directory, or %NULL to inherit parent's
- * @argv: (array zero-terminated=1): child's argument vector
- * @envp: (array zero-terminated=1) (allow-none): child's environment, or %NULL to inherit parent's
+ * @working_directory: (type filename) (nullable): child's current working
+ *     directory, or %NULL to inherit parent's
+ * @argv: (array zero-terminated=1) (element-type filename):
+ *     child's argument vector
+ * @envp: (array zero-terminated=1) (element-type filename) (nullable):
+ *     child's environment, or %NULL to inherit parent's
  * @flags: flags from #GSpawnFlags
- * @child_setup: (scope async) (allow-none): function to run in the child just before exec()
+ * @child_setup: (scope async) (nullable): function to run in the child just before exec()
  * @user_data: (closure): user data for @child_setup
- * @child_pid: (out) (allow-none): return location for child process reference, or %NULL
+ * @child_pid: (out) (optional): return location for child process reference, or %NULL
  * @error: return location for error
  * 
  * See g_spawn_async_with_pipes() for a full description; this function
@@ -120,10 +226,10 @@ G_DEFINE_QUARK (g-spawn-exit-error-quark, g_spawn_exit_error)
  * You should call g_spawn_close_pid() on the returned child process
  * reference when you don't need it any more.
  * 
- * If you are writing a GTK+ application, and the program you are
- * spawning is a graphical application, too, then you may want to
- * use gdk_spawn_on_screen() instead to ensure that the spawned program
- * opens its windows on the right screen.
+ * If you are writing a GTK+ application, and the program you are spawning is a
+ * graphical application too, then to ensure that the spawned program opens its
+ * windows on the right screen, you may want to use #GdkAppLaunchContext,
+ * #GAppLaunchContext, or set the %DISPLAY environment variable.
  *
  * Note that the returned @child_pid on Windows is a handle to the child
  * process and not its identifier. Process handles and process identifiers
@@ -215,15 +321,18 @@ read_data (GString *str,
 
 /**
  * g_spawn_sync:
- * @working_directory: (allow-none): child's current working directory, or %NULL to inherit parent's
- * @argv: (array zero-terminated=1): child's argument vector
- * @envp: (array zero-terminated=1) (allow-none): child's environment, or %NULL to inherit parent's
+ * @working_directory: (type filename) (nullable): child's current working
+ *     directory, or %NULL to inherit parent's
+ * @argv: (array zero-terminated=1) (element-type filename):
+ *     child's argument vector
+ * @envp: (array zero-terminated=1) (element-type filename) (nullable):
+ *     child's environment, or %NULL to inherit parent's
  * @flags: flags from #GSpawnFlags
- * @child_setup: (scope async) (allow-none): function to run in the child just before exec()
+ * @child_setup: (scope async) (nullable): function to run in the child just before exec()
  * @user_data: (closure): user data for @child_setup
- * @standard_output: (out) (array zero-terminated=1) (element-type guint8) (allow-none): return location for child output, or %NULL
- * @standard_error: (out) (array zero-terminated=1) (element-type guint8) (allow-none): return location for child error messages, or %NULL
- * @exit_status: (out) (allow-none): return location for child exit status, as returned by waitpid(), or %NULL
+ * @standard_output: (out) (array zero-terminated=1) (element-type guint8) (optional): return location for child output, or %NULL
+ * @standard_error: (out) (array zero-terminated=1) (element-type guint8) (optional): return location for child error messages, or %NULL
+ * @exit_status: (out) (optional): return location for child exit status, as returned by waitpid(), or %NULL
  * @error: return location for error, or %NULL
  *
  * Executes a child synchronously (waits for the child to exit before returning).
@@ -236,7 +345,8 @@ read_data (GString *str,
  * the child is stored there; see the documentation of
  * g_spawn_check_exit_status() for how to use and interpret this.
  * Note that it is invalid to pass %G_SPAWN_DO_NOT_REAP_CHILD in
- * @flags.
+ * @flags, and on POSIX platforms, the same restrictions as for
+ * g_child_watch_source_new() apply.
  *
  * If an error occurs, no data is returned in @standard_output,
  * @standard_error, or @exit_status.
@@ -417,7 +527,7 @@ g_spawn_sync (const gchar          *working_directory,
         {
           if (exit_status)
             {
-              g_warning ("In call to g_spawn_sync(), exit status of a child process was requested but ECHILD was received by waitpid(). Most likely the process is ignoring SIGCHLD, or some other thread is invoking waitpid() with a nonpositive first argument; either behavior can break applications that use g_spawn_sync either directly or indirectly.");
+              g_warning ("In call to g_spawn_sync(), exit status of a child process was requested but ECHILD was received by waitpid(). See the documentation of g_child_watch_source_new() for possible causes.");
             }
           else
             {
@@ -467,16 +577,20 @@ g_spawn_sync (const gchar          *working_directory,
 
 /**
  * g_spawn_async_with_pipes:
- * @working_directory: (allow-none): child's current working directory, or %NULL to inherit parent's, in the GLib file name encoding
- * @argv: (array zero-terminated=1): child's argument vector, in the GLib file name encoding
- * @envp: (array zero-terminated=1) (allow-none): child's environment, or %NULL to inherit parent's, in the GLib file name encoding
+ * @working_directory: (type filename) (nullable): child's current working
+ *     directory, or %NULL to inherit parent's, in the GLib file name encoding
+ * @argv: (array zero-terminated=1) (element-type filename): child's argument
+ *     vector, in the GLib file name encoding
+ * @envp: (array zero-terminated=1) (element-type filename) (nullable):
+ *     child's environment, or %NULL to inherit parent's, in the GLib file
+ *     name encoding
  * @flags: flags from #GSpawnFlags
- * @child_setup: (scope async) (allow-none): function to run in the child just before exec()
+ * @child_setup: (scope async) (nullable): function to run in the child just before exec()
  * @user_data: (closure): user data for @child_setup
- * @child_pid: (out) (allow-none): return location for child process ID, or %NULL
- * @standard_input: (out) (allow-none): return location for file descriptor to write to child's stdin, or %NULL
- * @standard_output: (out) (allow-none): return location for file descriptor to read child's stdout, or %NULL
- * @standard_error: (out) (allow-none): return location for file descriptor to read child's stderr, or %NULL
+ * @child_pid: (out) (optional): return location for child process ID, or %NULL
+ * @standard_input: (out) (optional): return location for file descriptor to write to child's stdin, or %NULL
+ * @standard_output: (out) (optional): return location for file descriptor to read child's stdout, or %NULL
+ * @standard_error: (out) (optional): return location for file descriptor to read child's stderr, or %NULL
  * @error: return location for error
  *
  * Executes a child program asynchronously (your program will not
@@ -537,19 +651,21 @@ g_spawn_sync (const gchar          *working_directory,
  *
  * @flags should be the bitwise OR of any flags you want to affect the
  * function's behaviour. The %G_SPAWN_DO_NOT_REAP_CHILD means that the
- * child will not automatically be reaped; you must use a child watch to
- * be notified about the death of the child process. Eventually you must
- * call g_spawn_close_pid() on the @child_pid, in order to free
- * resources which may be associated with the child process. (On Unix,
+ * child will not automatically be reaped; you must use a child watch
+ * (g_child_watch_add()) to be notified about the death of the child process,
+ * otherwise it will stay around as a zombie process until this process exits.
+ * Eventually you must call g_spawn_close_pid() on the @child_pid, in order to
+ * free resources which may be associated with the child process. (On Unix,
  * using a child watch is equivalent to calling waitpid() or handling
  * the %SIGCHLD signal manually. On Windows, calling g_spawn_close_pid()
  * is equivalent to calling CloseHandle() on the process handle returned
  * in @child_pid). See g_child_watch_add().
  *
- * %G_SPAWN_LEAVE_DESCRIPTORS_OPEN means that the parent's open file
- * descriptors will be inherited by the child; otherwise all descriptors
- * except stdin/stdout/stderr will be closed before calling exec() in
- * the child. %G_SPAWN_SEARCH_PATH means that @argv[0] need not be an
+ * Open UNIX file descriptors marked as `FD_CLOEXEC` will be automatically
+ * closed in the child process. %G_SPAWN_LEAVE_DESCRIPTORS_OPEN means that
+ * other open file descriptors will be inherited by the child; otherwise all
+ * descriptors except stdin/stdout/stderr will be closed before calling exec()
+ * in the child. %G_SPAWN_SEARCH_PATH means that @argv[0] need not be an
  * absolute path, it will be looked for in the `PATH` environment
  * variable. %G_SPAWN_SEARCH_PATH_FROM_ENVP means need not be an
  * absolute path, it will be looked for in the `PATH` variable from
@@ -563,7 +679,7 @@ g_spawn_sync (const gchar          *working_directory,
  * standard error. If you use this flag, @standard_error must be %NULL.
  * %G_SPAWN_CHILD_INHERITS_STDIN means that the child will inherit the parent's
  * standard input (by default, the child's standard input is attached to
- * /dev/null). If you use this flag, @standard_input must be %NULL.
+ * `/dev/null`). If you use this flag, @standard_input must be %NULL.
  * %G_SPAWN_FILE_AND_ARGV_ZERO means that the first element of @argv is
  * the file to execute, while the remaining elements are the actual
  * argument vector to pass to the file. Normally g_spawn_async_with_pipes()
@@ -600,8 +716,8 @@ g_spawn_sync (const gchar          *working_directory,
  * when they are no longer in use. If these parameters are %NULL, the
  * corresponding pipe won't be created.
  *
- * If @standard_input is NULL, the child's standard input is attached to 
- * /dev/null unless %G_SPAWN_CHILD_INHERITS_STDIN is set.
+ * If @standard_input is %NULL, the child's standard input is attached to
+ * `/dev/null` unless %G_SPAWN_CHILD_INHERITS_STDIN is set.
  *
  * If @standard_error is NULL, the child's standard error goes to the same 
  * location as the parent's standard error unless %G_SPAWN_STDERR_TO_DEV_NULL 
@@ -624,10 +740,25 @@ g_spawn_sync (const gchar          *working_directory,
  * If @child_pid is not %NULL and an error does not occur then the returned
  * process reference must be closed using g_spawn_close_pid().
  *
- * If you are writing a GTK+ application, and the program you 
- * are spawning is a graphical application, too, then you may
- * want to use gdk_spawn_on_screen_with_pipes() instead to ensure that
- * the spawned program opens its windows on the right screen.
+ * On modern UNIX platforms, GLib can use an efficient process launching
+ * codepath driven internally by posix_spawn(). This has the advantage of
+ * avoiding the fork-time performance costs of cloning the parent process
+ * address space, and avoiding associated memory overcommit checks that are
+ * not relevant in the context of immediately executing a distinct process.
+ * This optimized codepath will be used provided that the following conditions
+ * are met:
+ *
+ * 1. %G_SPAWN_DO_NOT_REAP_CHILD is set
+ * 2. %G_SPAWN_LEAVE_DESCRIPTORS_OPEN is set
+ * 3. %G_SPAWN_SEARCH_PATH_FROM_ENVP is not set
+ * 4. @working_directory is %NULL
+ * 5. @child_setup is %NULL
+ * 6. The program is of a recognised binary format, or has a shebang. Otherwise, GLib will have to execute the program through the shell, which is not done using the optimized codepath.
+ *
+ * If you are writing a GTK+ application, and the program you are spawning is a
+ * graphical application too, then to ensure that the spawned program opens its
+ * windows on the right screen, you may want to use #GdkAppLaunchContext,
+ * #GAppLaunchContext, or set the %DISPLAY environment variable.
  * 
  * Returns: %TRUE on success, %FALSE if an error was set
  */
@@ -675,11 +806,92 @@ g_spawn_async_with_pipes (const gchar          *working_directory,
 }
 
 /**
+ * g_spawn_async_with_fds:
+ * @working_directory: (type filename) (nullable): child's current working directory, or %NULL to inherit parent's, in the GLib file name encoding
+ * @argv: (array zero-terminated=1): child's argument vector, in the GLib file name encoding
+ * @envp: (array zero-terminated=1) (nullable): child's environment, or %NULL to inherit parent's, in the GLib file name encoding
+ * @flags: flags from #GSpawnFlags
+ * @child_setup: (scope async) (nullable): function to run in the child just before exec()
+ * @user_data: (closure): user data for @child_setup
+ * @child_pid: (out) (optional): return location for child process ID, or %NULL
+ * @stdin_fd: file descriptor to use for child's stdin, or -1
+ * @stdout_fd: file descriptor to use for child's stdout, or -1
+ * @stderr_fd: file descriptor to use for child's stderr, or -1
+ * @error: return location for error
+ *
+ * Identical to g_spawn_async_with_pipes() but instead of
+ * creating pipes for the stdin/stdout/stderr, you can pass existing
+ * file descriptors into this function through the @stdin_fd,
+ * @stdout_fd and @stderr_fd parameters. The following @flags
+ * also have their behaviour slightly tweaked as a result:
+ *
+ * %G_SPAWN_STDOUT_TO_DEV_NULL means that the child's standard output
+ * will be discarded, instead of going to the same location as the parent's
+ * standard output. If you use this flag, @standard_output must be -1.
+ * %G_SPAWN_STDERR_TO_DEV_NULL means that the child's standard error
+ * will be discarded, instead of going to the same location as the parent's
+ * standard error. If you use this flag, @standard_error must be -1.
+ * %G_SPAWN_CHILD_INHERITS_STDIN means that the child will inherit the parent's
+ * standard input (by default, the child's standard input is attached to
+ * /dev/null). If you use this flag, @standard_input must be -1.
+ *
+ * It is valid to pass the same fd in multiple parameters (e.g. you can pass
+ * a single fd for both stdout and stderr).
+ *
+ * Returns: %TRUE on success, %FALSE if an error was set
+ *
+ * Since: 2.58
+ */
+gboolean
+g_spawn_async_with_fds (const gchar          *working_directory,
+                        gchar               **argv,
+                        gchar               **envp,
+                        GSpawnFlags           flags,
+                        GSpawnChildSetupFunc  child_setup,
+                        gpointer              user_data,
+                        GPid                 *child_pid,
+                        gint                  stdin_fd,
+                        gint                  stdout_fd,
+                        gint                  stderr_fd,
+                        GError              **error)
+{
+  g_return_val_if_fail (argv != NULL, FALSE);
+  g_return_val_if_fail (stdout_fd < 0 ||
+                        !(flags & G_SPAWN_STDOUT_TO_DEV_NULL), FALSE);
+  g_return_val_if_fail (stderr_fd < 0 ||
+                        !(flags & G_SPAWN_STDERR_TO_DEV_NULL), FALSE);
+  /* can't inherit stdin if we have an input pipe. */
+  g_return_val_if_fail (stdin_fd < 0 ||
+                        !(flags & G_SPAWN_CHILD_INHERITS_STDIN), FALSE);
+
+  return fork_exec_with_fds (!(flags & G_SPAWN_DO_NOT_REAP_CHILD),
+                               working_directory,
+                               argv,
+                               envp,
+                               !(flags & G_SPAWN_LEAVE_DESCRIPTORS_OPEN),
+                               (flags & G_SPAWN_SEARCH_PATH) != 0,
+                               (flags & G_SPAWN_SEARCH_PATH_FROM_ENVP) != 0,
+                               (flags & G_SPAWN_STDOUT_TO_DEV_NULL) != 0,
+                               (flags & G_SPAWN_STDERR_TO_DEV_NULL) != 0,
+                               (flags & G_SPAWN_CHILD_INHERITS_STDIN) != 0,
+                               (flags & G_SPAWN_FILE_AND_ARGV_ZERO) != 0,
+                               (flags & G_SPAWN_CLOEXEC_PIPES) != 0,
+                               child_setup,
+                               user_data,
+                               child_pid,
+                               NULL,
+                               stdin_fd,
+                               stdout_fd,
+                               stderr_fd,
+                               error);
+}
+
+/**
  * g_spawn_command_line_sync:
- * @command_line: a command line 
- * @standard_output: (out) (array zero-terminated=1) (element-type guint8) (allow-none): return location for child output
- * @standard_error: (out) (array zero-terminated=1) (element-type guint8) (allow-none): return location for child errors
- * @exit_status: (out) (allow-none): return location for child exit status, as returned by waitpid()
+ * @command_line: (type filename): a command line
+ * @standard_output: (out) (array zero-terminated=1) (element-type guint8) (optional): return location for child output
+ * @standard_error: (out) (array zero-terminated=1) (element-type guint8) (optional): return location for child errors
+ * @exit_status: (out) (optional): return location for child exit status, as returned by waitpid()
  * @error: return location for errors
  *
  * A simple version of g_spawn_sync() with little-used parameters
@@ -741,7 +953,7 @@ g_spawn_command_line_sync (const gchar  *command_line,
 
 /**
  * g_spawn_command_line_async:
- * @command_line: a command line
+ * @command_line: (type filename): a command line
  * @error: return location for errors
  * 
  * A simple version of g_spawn_async() that parses a command line with
@@ -872,113 +1084,6 @@ g_spawn_check_exit_status (gint      exit_status,
   return ret;
 }
 
-static gint
-exec_err_to_g_error (gint en)
-{
-  switch (en)
-    {
-#ifdef EACCES
-    case EACCES:
-      return G_SPAWN_ERROR_ACCES;
-      break;
-#endif
-
-#ifdef EPERM
-    case EPERM:
-      return G_SPAWN_ERROR_PERM;
-      break;
-#endif
-
-#ifdef E2BIG
-    case E2BIG:
-      return G_SPAWN_ERROR_TOO_BIG;
-      break;
-#endif
-
-#ifdef ENOEXEC
-    case ENOEXEC:
-      return G_SPAWN_ERROR_NOEXEC;
-      break;
-#endif
-
-#ifdef ENAMETOOLONG
-    case ENAMETOOLONG:
-      return G_SPAWN_ERROR_NAMETOOLONG;
-      break;
-#endif
-
-#ifdef ENOENT
-    case ENOENT:
-      return G_SPAWN_ERROR_NOENT;
-      break;
-#endif
-
-#ifdef ENOMEM
-    case ENOMEM:
-      return G_SPAWN_ERROR_NOMEM;
-      break;
-#endif
-
-#ifdef ENOTDIR
-    case ENOTDIR:
-      return G_SPAWN_ERROR_NOTDIR;
-      break;
-#endif
-
-#ifdef ELOOP
-    case ELOOP:
-      return G_SPAWN_ERROR_LOOP;
-      break;
-#endif
-      
-#ifdef ETXTBUSY
-    case ETXTBUSY:
-      return G_SPAWN_ERROR_TXTBUSY;
-      break;
-#endif
-
-#ifdef EIO
-    case EIO:
-      return G_SPAWN_ERROR_IO;
-      break;
-#endif
-
-#ifdef ENFILE
-    case ENFILE:
-      return G_SPAWN_ERROR_NFILE;
-      break;
-#endif
-
-#ifdef EMFILE
-    case EMFILE:
-      return G_SPAWN_ERROR_MFILE;
-      break;
-#endif
-
-#ifdef EINVAL
-    case EINVAL:
-      return G_SPAWN_ERROR_INVAL;
-      break;
-#endif
-
-#ifdef EISDIR
-    case EISDIR:
-      return G_SPAWN_ERROR_ISDIR;
-      break;
-#endif
-
-#ifdef ELIBBAD
-    case ELIBBAD:
-      return G_SPAWN_ERROR_LIBBAD;
-      break;
-#endif
-      
-    default:
-      return G_SPAWN_ERROR_FAILED;
-      break;
-    }
-}
-
 static gssize
 write_all (gint fd, gconstpointer vbuf, gsize to_write)
 {
@@ -1024,6 +1129,44 @@ set_cloexec (void *data, gint fd)
 }
 
 #ifndef HAVE_FDWALK
+#ifdef __linux__
+struct linux_dirent64
+{
+  guint64        d_ino;    /* 64-bit inode number */
+  guint64        d_off;    /* 64-bit offset to next structure */
+  unsigned short d_reclen; /* Size of this dirent */
+  unsigned char  d_type;   /* File type */
+  char           d_name[]; /* Filename (null-terminated) */
+};
+
+static gint
+filename_to_fd (const char *p)
+{
+  char c;
+  int fd = 0;
+  const int cutoff = G_MAXINT / 10;
+  const int cutlim = G_MAXINT % 10;
+
+  if (*p == '\0')
+    return -1;
+
+  while ((c = *p++) != '\0')
+    {
+      if (!g_ascii_isdigit (c))
+        return -1;
+      c -= '0';
+
+      /* Check for overflow. */
+      if (fd > cutoff || (fd == cutoff && c > cutlim))
+        return -1;
+
+      fd = fd * 10 + c;
+    }
+
+  return fd;
+}
+#endif
+
 static int
 fdwalk (int (*cb)(void *data, int fd), void *data)
 {
@@ -1035,45 +1178,39 @@ fdwalk (int (*cb)(void *data, int fd), void *data)
   struct rlimit rl;
 #endif
 
-#ifdef __linux__  
-  DIR *d;
+#ifdef __linux__
+  /* Avoid use of opendir/closedir since these are not async-signal-safe. */
+  int dir_fd = open ("/proc/self/fd", O_RDONLY | O_DIRECTORY);
+  if (dir_fd >= 0)
+    {
+      char buf[4096];
+      int pos, nread;
+      struct linux_dirent64 *de;
 
-  if ((d = opendir("/proc/self/fd"))) {
-      struct dirent *de;
+      while ((nread = syscall (SYS_getdents64, dir_fd, buf, sizeof(buf))) > 0)
+        {
+          for (pos = 0; pos < nread; pos += de->d_reclen)
+            {
+              de = (struct linux_dirent64 *)(buf + pos);
 
-      while ((de = readdir(d))) {
-          glong l;
-          gchar *e = NULL;
+              fd = filename_to_fd (de->d_name);
+              if (fd < 0 || fd == dir_fd)
+                  continue;
 
-          if (de->d_name[0] == '.')
-              continue;
-            
-          errno = 0;
-          l = strtol(de->d_name, &e, 10);
-          if (errno != 0 || !e || *e)
-              continue;
-
-          fd = (gint) l;
-
-          if ((glong) fd != l)
-              continue;
-
-          if (fd == dirfd(d))
-              continue;
-
-          if ((res = cb (data, fd)) != 0)
-              break;
+              if ((res = cb (data, fd)) != 0)
+                  break;
+            }
         }
-      
-      closedir(d);
+
+      close (dir_fd);
       return res;
-  }
+    }
 
   /* If /proc is not mounted or not accessible we fall back to the old
    * rlimit trick */
 
 #endif
-  
+
 #ifdef HAVE_SYS_RESOURCE_H
       
   if (getrlimit(RLIMIT_NOFILE, &rl) == 0 && rl.rlim_max != RLIM_INFINITY)
@@ -1171,13 +1308,12 @@ do_exec (gint                  child_err_report_fd,
         write_err_and_exit (child_err_report_fd,
                             CHILD_DUP2_FAILED);
 
-      /* ignore this if it doesn't work */
-      close_and_invalidate (&stdin_fd);
+      set_cloexec (GINT_TO_POINTER(0), stdin_fd);
     }
   else if (!child_inherits_stdin)
     {
       /* Keep process from blocking on a read of stdin */
-      gint read_null = open ("/dev/null", O_RDONLY);
+      gint read_null = sane_open ("/dev/null", O_RDONLY);
       g_assert (read_null != -1);
       sane_dup2 (read_null, 0);
       close_and_invalidate (&read_null);
@@ -1191,8 +1327,7 @@ do_exec (gint                  child_err_report_fd,
         write_err_and_exit (child_err_report_fd,
                             CHILD_DUP2_FAILED);
 
-      /* ignore this if it doesn't work */
-      close_and_invalidate (&stdout_fd);
+      set_cloexec (GINT_TO_POINTER(0), stdout_fd);
     }
   else if (stdout_to_null)
     {
@@ -1210,8 +1345,7 @@ do_exec (gint                  child_err_report_fd,
         write_err_and_exit (child_err_report_fd,
                             CHILD_DUP2_FAILED);
 
-      /* ignore this if it doesn't work */
-      close_and_invalidate (&stderr_fd);
+      set_cloexec (GINT_TO_POINTER(0), stderr_fd);
     }
   else if (stderr_to_null)
     {
@@ -1284,51 +1418,268 @@ read_ints (int      fd,
   return TRUE;
 }
 
+#ifdef POSIX_SPAWN_AVAILABLE
 static gboolean
-fork_exec_with_pipes (gboolean              intermediate_child,
-                      const gchar          *working_directory,
-                      gchar               **argv,
-                      gchar               **envp,
-                      gboolean              close_descriptors,
-                      gboolean              search_path,
-                      gboolean              search_path_from_envp,
-                      gboolean              stdout_to_null,
-                      gboolean              stderr_to_null,
-                      gboolean              child_inherits_stdin,
-                      gboolean              file_and_argv_zero,
-                      gboolean              cloexec_pipes,
-                      GSpawnChildSetupFunc  child_setup,
-                      gpointer              user_data,
-                      GPid                 *child_pid,
-                      gint                 *standard_input,
-                      gint                 *standard_output,
-                      gint                 *standard_error,
-                      GError              **error)     
+do_posix_spawn (gchar     **argv,
+                gchar     **envp,
+                gboolean    search_path,
+                gboolean    stdout_to_null,
+                gboolean    stderr_to_null,
+                gboolean    child_inherits_stdin,
+                gboolean    file_and_argv_zero,
+                GPid       *child_pid,
+                gint       *child_close_fds,
+                gint        stdin_fd,
+                gint        stdout_fd,
+                gint        stderr_fd)
+{
+  pid_t pid;
+  gchar **argv_pass;
+  posix_spawnattr_t attr;
+  posix_spawn_file_actions_t file_actions;
+  gint parent_close_fds[3];
+  gint num_parent_close_fds = 0;
+  GSList *child_close = NULL;
+  GSList *elem;
+  sigset_t mask;
+  int i, r;
+
+  if (*argv[0] == '\0')
+    {
+      /* We check the simple case first. */
+      return ENOENT;
+    }
+
+  r = posix_spawnattr_init (&attr);
+  if (r != 0)
+    return r;
+
+  if (child_close_fds)
+    {
+      int i = -1;
+      while (child_close_fds[++i] != -1)
+        child_close = g_slist_prepend (child_close,
+                                       GINT_TO_POINTER (child_close_fds[i]));
+    }
+
+  r = posix_spawnattr_setflags (&attr, POSIX_SPAWN_SETSIGDEF);
+  if (r != 0)
+    goto out_free_spawnattr;
+
+  /* Reset some signal handlers that we may use */
+  sigemptyset (&mask);
+  sigaddset (&mask, SIGCHLD);
+  sigaddset (&mask, SIGINT);
+  sigaddset (&mask, SIGTERM);
+  sigaddset (&mask, SIGHUP);
+
+  r = posix_spawnattr_setsigdefault (&attr, &mask);
+  if (r != 0)
+    goto out_free_spawnattr;
+
+  r = posix_spawn_file_actions_init (&file_actions);
+  if (r != 0)
+    goto out_free_spawnattr;
+
+  /* Redirect pipes as required */
+
+  if (stdin_fd >= 0)
+    {
+      r = posix_spawn_file_actions_adddup2 (&file_actions, stdin_fd, 0);
+      if (r != 0)
+        goto out_close_fds;
+
+      if (!g_slist_find (child_close, GINT_TO_POINTER (stdin_fd)))
+        child_close = g_slist_prepend (child_close, GINT_TO_POINTER (stdin_fd));
+    }
+  else if (!child_inherits_stdin)
+    {
+      /* Keep process from blocking on a read of stdin */
+      gint read_null = sane_open ("/dev/null", O_RDONLY | O_CLOEXEC);
+      g_assert (read_null != -1);
+      parent_close_fds[num_parent_close_fds++] = read_null;
+
+#ifndef HAVE_O_CLOEXEC
+      fcntl (read_null, F_SETFD, FD_CLOEXEC);
+#endif
+
+      r = posix_spawn_file_actions_adddup2 (&file_actions, read_null, 0);
+      if (r != 0)
+        goto out_close_fds;
+    }
+
+  if (stdout_fd >= 0)
+    {
+      r = posix_spawn_file_actions_adddup2 (&file_actions, stdout_fd, 1);
+      if (r != 0)
+        goto out_close_fds;
+
+      if (!g_slist_find (child_close, GINT_TO_POINTER (stdout_fd)))
+        child_close = g_slist_prepend (child_close, GINT_TO_POINTER (stdout_fd));
+    }
+  else if (stdout_to_null)
+    {
+      gint write_null = sane_open ("/dev/null", O_WRONLY | O_CLOEXEC);
+      g_assert (write_null != -1);
+      parent_close_fds[num_parent_close_fds++] = write_null;
+
+#ifndef HAVE_O_CLOEXEC
+      fcntl (write_null, F_SETFD, FD_CLOEXEC);
+#endif
+
+      r = posix_spawn_file_actions_adddup2 (&file_actions, write_null, 1);
+      if (r != 0)
+        goto out_close_fds;
+    }
+
+  if (stderr_fd >= 0)
+    {
+      r = posix_spawn_file_actions_adddup2 (&file_actions, stderr_fd, 2);
+      if (r != 0)
+        goto out_close_fds;
+
+      if (!g_slist_find (child_close, GINT_TO_POINTER (stderr_fd)))
+        child_close = g_slist_prepend (child_close, GINT_TO_POINTER (stderr_fd));
+    }
+  else if (stderr_to_null)
+    {
+      gint write_null = sane_open ("/dev/null", O_WRONLY | O_CLOEXEC);
+      g_assert (write_null != -1);
+      parent_close_fds[num_parent_close_fds++] = write_null;
+
+#ifndef HAVE_O_CLOEXEC
+      fcntl (write_null, F_SETFD, FD_CLOEXEC);
+#endif
+
+      r = posix_spawn_file_actions_adddup2 (&file_actions, write_null, 2);
+      if (r != 0)
+        goto out_close_fds;
+    }
+
+  /* Intentionally close the fds in the child as the last file action,
+   * having been careful not to add the same fd to this list twice.
+   *
+   * This is important to allow (e.g.) for the same fd to be passed as stdout
+   * and stderr (we must not close it before we have dupped it in both places,
+   * and we must not attempt to close it twice).
+   */
+  for (elem = child_close; elem != NULL; elem = elem->next)
+    {
+      r = posix_spawn_file_actions_addclose (&file_actions,
+                                             GPOINTER_TO_INT (elem->data));
+      if (r != 0)
+        goto out_close_fds;
+    }
+
+  argv_pass = file_and_argv_zero ? argv + 1 : argv;
+  if (envp == NULL)
+    envp = environ;
+
+  /* Don't search when it contains a slash. */
+  if (!search_path || strchr (argv[0], '/') != NULL)
+    r = posix_spawn (&pid, argv[0], &file_actions, &attr, argv_pass, envp);
+  else
+    r = posix_spawnp (&pid, argv[0], &file_actions, &attr, argv_pass, envp);
+
+  if (r == 0 && child_pid != NULL)
+    *child_pid = pid;
+
+out_close_fds:
+  for (i = 0; i < num_parent_close_fds; i++)
+    close_and_invalidate (&parent_close_fds [i]);
+
+  posix_spawn_file_actions_destroy (&file_actions);
+out_free_spawnattr:
+  posix_spawnattr_destroy (&attr);
+  g_slist_free (child_close);
+
+  return r;
+}
+#endif /* POSIX_SPAWN_AVAILABLE */
+
+static gboolean
+fork_exec_with_fds (gboolean              intermediate_child,
+                    const gchar          *working_directory,
+                    gchar               **argv,
+                    gchar               **envp,
+                    gboolean              close_descriptors,
+                    gboolean              search_path,
+                    gboolean              search_path_from_envp,
+                    gboolean              stdout_to_null,
+                    gboolean              stderr_to_null,
+                    gboolean              child_inherits_stdin,
+                    gboolean              file_and_argv_zero,
+                    gboolean              cloexec_pipes,
+                    GSpawnChildSetupFunc  child_setup,
+                    gpointer              user_data,
+                    GPid                 *child_pid,
+                    gint                 *child_close_fds,
+                    gint                  stdin_fd,
+                    gint                  stdout_fd,
+                    gint                  stderr_fd,
+                    GError              **error)
 {
   GPid pid = -1;
-  gint stdin_pipe[2] = { -1, -1 };
-  gint stdout_pipe[2] = { -1, -1 };
-  gint stderr_pipe[2] = { -1, -1 };
   gint child_err_report_pipe[2] = { -1, -1 };
   gint child_pid_report_pipe[2] = { -1, -1 };
   guint pipe_flags = cloexec_pipes ? FD_CLOEXEC : 0;
   gint status;
-  
+
+#ifdef POSIX_SPAWN_AVAILABLE
+  if (!intermediate_child && working_directory == NULL && !close_descriptors &&
+      !search_path_from_envp && child_setup == NULL)
+    {
+      g_debug ("Launching with posix_spawn");
+      status = do_posix_spawn (argv,
+                               envp,
+                               search_path,
+                               stdout_to_null,
+                               stderr_to_null,
+                               child_inherits_stdin,
+                               file_and_argv_zero,
+                               child_pid,
+                               child_close_fds,
+                               stdin_fd,
+                               stdout_fd,
+                               stderr_fd);
+      if (status == 0)
+        return TRUE;
+
+      if (status != ENOEXEC)
+        {
+          g_set_error (error,
+                       G_SPAWN_ERROR,
+                       G_SPAWN_ERROR_FAILED,
+                       _("Failed to spawn child process “%s” (%s)"),
+                       argv[0],
+                       g_strerror (status));
+          return FALSE;
+       }
+
+      /* posix_spawn is not intended to support script execution. It does in
+       * some situations on some glibc versions, but that will be fixed.
+       * So if it fails with ENOEXEC, we fall through to the regular
+       * gspawn codepath so that script execution can be attempted,
+       * per standard gspawn behaviour. */
+      g_debug ("posix_spawn failed (ENOEXEC), fall back to regular gspawn");
+    }
+  else
+    {
+      g_debug ("posix_spawn avoided %s%s%s%s%s",
+               !intermediate_child ? "" : "(automatic reaping requested) ",
+               working_directory == NULL ? "" : "(workdir specified) ",
+               !close_descriptors ? "" : "(fd close requested) ",
+               !search_path_from_envp ? "" : "(using envp for search path) ",
+               child_setup == NULL ? "" : "(child_setup specified) ");
+    }
+#endif /* POSIX_SPAWN_AVAILABLE */
+
   if (!g_unix_open_pipe (child_err_report_pipe, pipe_flags, error))
     return FALSE;
 
   if (intermediate_child && !g_unix_open_pipe (child_pid_report_pipe, pipe_flags, error))
     goto cleanup_and_fail;
   
-  if (standard_input && !g_unix_open_pipe (stdin_pipe, pipe_flags, error))
-    goto cleanup_and_fail;
-  
-  if (standard_output && !g_unix_open_pipe (stdout_pipe, pipe_flags, error))
-    goto cleanup_and_fail;
-
-  if (standard_error && !g_unix_open_pipe (stderr_pipe, FD_CLOEXEC, error))
-    goto cleanup_and_fail;
-
   pid = fork ();
 
   if (pid < 0)
@@ -1366,9 +1717,12 @@ fork_exec_with_pipes (gboolean              intermediate_child,
        */
       close_and_invalidate (&child_err_report_pipe[0]);
       close_and_invalidate (&child_pid_report_pipe[0]);
-      close_and_invalidate (&stdin_pipe[1]);
-      close_and_invalidate (&stdout_pipe[0]);
-      close_and_invalidate (&stderr_pipe[0]);
+      if (child_close_fds != NULL)
+        {
+           int i = -1;
+           while (child_close_fds[++i] != -1)
+             close_and_invalidate (&child_close_fds[i]);
+        }
       
       if (intermediate_child)
         {
@@ -1394,9 +1748,9 @@ fork_exec_with_pipes (gboolean              intermediate_child,
             {
               close_and_invalidate (&child_pid_report_pipe[1]);
               do_exec (child_err_report_pipe[1],
-                       stdin_pipe[0],
-                       stdout_pipe[1],
-                       stderr_pipe[1],
+                       stdin_fd,
+                       stdout_fd,
+                       stderr_fd,
                        working_directory,
                        argv,
                        envp,
@@ -1424,9 +1778,9 @@ fork_exec_with_pipes (gboolean              intermediate_child,
            */
 
           do_exec (child_err_report_pipe[1],
-                   stdin_pipe[0],
-                   stdout_pipe[1],
-                   stderr_pipe[1],
+                   stdin_fd,
+                   stdout_fd,
+                   stderr_fd,
                    working_directory,
                    argv,
                    envp,
@@ -1451,9 +1805,6 @@ fork_exec_with_pipes (gboolean              intermediate_child,
       /* Close the uncared-about ends of the pipes */
       close_and_invalidate (&child_err_report_pipe[1]);
       close_and_invalidate (&child_pid_report_pipe[1]);
-      close_and_invalidate (&stdin_pipe[0]);
-      close_and_invalidate (&stdout_pipe[1]);
-      close_and_invalidate (&stderr_pipe[1]);
 
       /* If we had an intermediate child, reap it */
       if (intermediate_child)
@@ -1487,7 +1838,7 @@ fork_exec_with_pipes (gboolean              intermediate_child,
               g_set_error (error,
                            G_SPAWN_ERROR,
                            G_SPAWN_ERROR_CHDIR,
-                           _("Failed to change to directory '%s' (%s)"),
+                           _("Failed to change to directory “%s” (%s)"),
                            working_directory,
                            g_strerror (buf[1]));
 
@@ -1496,8 +1847,8 @@ fork_exec_with_pipes (gboolean              intermediate_child,
             case CHILD_EXEC_FAILED:
               g_set_error (error,
                            G_SPAWN_ERROR,
-                           exec_err_to_g_error (buf[1]),
-                           _("Failed to execute child process \"%s\" (%s)"),
+                           _g_spawn_exec_err_to_g_error (buf[1]),
+                           _("Failed to execute child process “%s” (%s)"),
                            argv[0],
                            g_strerror (buf[1]));
 
@@ -1524,7 +1875,7 @@ fork_exec_with_pipes (gboolean              intermediate_child,
               g_set_error (error,
                            G_SPAWN_ERROR,
                            G_SPAWN_ERROR_FAILED,
-                           _("Unknown error executing child process \"%s\""),
+                           _("Unknown error executing child process “%s”"),
                            argv[0]);
               break;
             }
@@ -1566,13 +1917,6 @@ fork_exec_with_pipes (gboolean              intermediate_child,
       if (child_pid)
         *child_pid = pid;
 
-      if (standard_input)
-        *standard_input = stdin_pipe[1];
-      if (standard_output)
-        *standard_output = stdout_pipe[0];
-      if (standard_error)
-        *standard_error = stderr_pipe[0];
-      
       return TRUE;
     }
 
@@ -1601,6 +1945,92 @@ fork_exec_with_pipes (gboolean              intermediate_child,
   close_and_invalidate (&child_err_report_pipe[1]);
   close_and_invalidate (&child_pid_report_pipe[0]);
   close_and_invalidate (&child_pid_report_pipe[1]);
+
+  return FALSE;
+}
+
+static gboolean
+fork_exec_with_pipes (gboolean              intermediate_child,
+                      const gchar          *working_directory,
+                      gchar               **argv,
+                      gchar               **envp,
+                      gboolean              close_descriptors,
+                      gboolean              search_path,
+                      gboolean              search_path_from_envp,
+                      gboolean              stdout_to_null,
+                      gboolean              stderr_to_null,
+                      gboolean              child_inherits_stdin,
+                      gboolean              file_and_argv_zero,
+                      gboolean              cloexec_pipes,
+                      GSpawnChildSetupFunc  child_setup,
+                      gpointer              user_data,
+                      GPid                 *child_pid,
+                      gint                 *standard_input,
+                      gint                 *standard_output,
+                      gint                 *standard_error,
+                      GError              **error)
+{
+  guint pipe_flags = cloexec_pipes ? FD_CLOEXEC : 0;
+  gint stdin_pipe[2] = { -1, -1 };
+  gint stdout_pipe[2] = { -1, -1 };
+  gint stderr_pipe[2] = { -1, -1 };
+  gint child_close_fds[4];
+  gboolean ret;
+
+  if (standard_input && !g_unix_open_pipe (stdin_pipe, pipe_flags, error))
+    goto cleanup_and_fail;
+
+  if (standard_output && !g_unix_open_pipe (stdout_pipe, pipe_flags, error))
+    goto cleanup_and_fail;
+
+  if (standard_error && !g_unix_open_pipe (stderr_pipe, FD_CLOEXEC, error))
+    goto cleanup_and_fail;
+
+  child_close_fds[0] = stdin_pipe[1];
+  child_close_fds[1] = stdout_pipe[0];
+  child_close_fds[2] = stderr_pipe[0];
+  child_close_fds[3] = -1;
+
+  ret = fork_exec_with_fds (intermediate_child,
+                            working_directory,
+                            argv,
+                            envp,
+                            close_descriptors,
+                            search_path,
+                            search_path_from_envp,
+                            stdout_to_null,
+                            stderr_to_null,
+                            child_inherits_stdin,
+                            file_and_argv_zero,
+                            pipe_flags,
+                            child_setup,
+                            user_data,
+                            child_pid,
+                            child_close_fds,
+                            stdin_pipe[0],
+                            stdout_pipe[1],
+                            stderr_pipe[1],
+                            error);
+  if (!ret)
+    goto cleanup_and_fail;
+
+  /* Close the uncared-about ends of the pipes */
+  close_and_invalidate (&stdin_pipe[0]);
+  close_and_invalidate (&stdout_pipe[1]);
+  close_and_invalidate (&stderr_pipe[1]);
+
+  if (standard_input)
+    *standard_input = stdin_pipe[1];
+
+  if (standard_output)
+    *standard_output = stdout_pipe[0];
+
+  if (standard_error)
+    *standard_error = stderr_pipe[0];
+
+  return TRUE;
+
+cleanup_and_fail:
   close_and_invalidate (&stdin_pipe[0]);
   close_and_invalidate (&stdin_pipe[1]);
   close_and_invalidate (&stdout_pipe[0]);

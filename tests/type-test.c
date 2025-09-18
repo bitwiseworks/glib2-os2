@@ -4,7 +4,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -88,15 +88,15 @@ main (int   argc,
   g_assert (gsz == 0);
 
   gs = G_MAXSHORT;
-  gs++;
+  gs = (gshort) (1 + (gushort) gs);
   g_assert (gs == G_MINSHORT);
 
   gi = G_MAXINT;
-  gi++;
+  gi = (gint) (1 + (guint) gi);
   g_assert (gi == G_MININT);
 
   gl = G_MAXLONG;
-  gl++;
+  gl = (glong) (1 + (gulong) gl);
   g_assert (gl == G_MINLONG);
 
   /* Test the G_G(U)?INT(16|32|64)_FORMAT macros */
@@ -120,8 +120,13 @@ main (int   argc,
   gu64t1 = G_GINT64_CONSTANT (0xFAFAFAFAFAFAFAFA); 
 
 #define FORMAT64 "%" G_GINT64_FORMAT " %" G_GUINT64_FORMAT "\n"
+#ifndef G_OS_WIN32
+#  define SCAN_FORMAT64 FORMAT64
+#else
+#  define SCAN_FORMAT64 "%I64d %I64u\n"
+#endif
   string = g_strdup_printf (FORMAT64, gi64t1, gu64t1);
-  sscanf (string, FORMAT64, &gi64t2, &gu64t2);
+  sscanf (string, SCAN_FORMAT64, &gi64t2, &gu64t2);
   g_free (string);
   g_assert (gi64t1 == gi64t2);
   g_assert (gu64t1 == gu64t2);
@@ -130,8 +135,13 @@ main (int   argc,
   gst1 = 0xFAFAFAFA; 
 
 #define FORMATSIZE "%" G_GSSIZE_FORMAT " %" G_GSIZE_FORMAT "\n"
+#ifndef G_OS_WIN32
+#  define SCAN_FORMATSIZE FORMATSIZE
+#else
+#  define SCAN_FORMATSIZE "%Id %Iu\n"
+#endif
   string = g_strdup_printf (FORMATSIZE, gsst1, gst1);
-  sscanf (string, FORMATSIZE, &gsst2, &gst2);
+  sscanf (string, SCAN_FORMATSIZE, &gsst2, &gst2);
   g_free (string);
   g_assert (gsst1 == gsst2);
   g_assert (gst1 == gst2);

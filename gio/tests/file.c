@@ -8,12 +8,10 @@
 #endif
 
 static void
-test_basic (void)
+test_basic_for_file (GFile       *file,
+                     const gchar *suffix)
 {
-  GFile *file;
   gchar *s;
-
-  file = g_file_new_for_path ("./some/directory/testfile");
 
   s = g_file_get_basename (file);
   g_assert_cmpstr (s, ==, "testfile");
@@ -21,14 +19,36 @@ test_basic (void)
 
   s = g_file_get_uri (file);
   g_assert (g_str_has_prefix (s, "file://"));
-  g_assert (g_str_has_suffix (s, "/some/directory/testfile"));
+  g_assert (g_str_has_suffix (s, suffix));
   g_free (s);
 
   g_assert (g_file_has_uri_scheme (file, "file"));
   s = g_file_get_uri_scheme (file);
   g_assert_cmpstr (s, ==, "file");
   g_free (s);
+}
 
+static void
+test_basic (void)
+{
+  GFile *file;
+
+  file = g_file_new_for_path ("./some/directory/testfile");
+  test_basic_for_file (file, "/some/directory/testfile");
+  g_object_unref (file);
+}
+
+static void
+test_build_filename (void)
+{
+  GFile *file;
+
+  file = g_file_new_build_filename (".", "some", "directory", "testfile", NULL);
+  test_basic_for_file (file, "/some/directory/testfile");
+  g_object_unref (file);
+
+  file = g_file_new_build_filename ("testfile", NULL);
+  test_basic_for_file (file, "/testfile");
   g_object_unref (file);
 }
 
@@ -135,7 +155,7 @@ typedef struct
   gint monitor_changed;
   gchar *monitor_path;
   gint pos;
-  gchar *data;
+  const gchar *data;
   gchar *buffer;
   guint timeout;
 } CreateDeleteData;
@@ -149,9 +169,12 @@ monitor_changed (GFileMonitor      *monitor,
 {
   CreateDeleteData *data = user_data;
   gchar *path;
+  const gchar *peeked_path;
 
   path = g_file_get_path (file);
+  peeked_path = g_file_peek_path (file);
   g_assert_cmpstr (data->monitor_path, ==, path);
+  g_assert_cmpstr (path, ==, peeked_path);
   g_free (path);
 
   if (event_type == G_FILE_MONITOR_EVENT_CREATED)
@@ -454,7 +477,15 @@ test_create_delete (gconstpointer d)
    * that the monitor will notice a create immediately followed by a
    * delete, rather than coalescing them into nothing.
    */
-  if (!strcmp (G_OBJECT_TYPE_NAME (data->monitor), "GPollFileMonitor"))
+  /* This test also doesn't work with GKqueueFileMonitor because of
+   * the same reason. Kqueue is able to return a kevent when a file is
+   * created or deleted in a directory. However, the kernel doesn't tell
+   * the program file names, so GKqueueFileMonitor has to calculate the
+   * difference itself. This is usually too slow for rapid file creation
+   * and deletion tests.
+   */
+  if (strcmp (G_OBJECT_TYPE_NAME (data->monitor), "GPollFileMonitor") == 0 ||
+      strcmp (G_OBJECT_TYPE_NAME (data->monitor), "GKqueueFileMonitor") == 0)
     {
       g_test_skip ("skipping test for this GFileMonitor implementation");
       goto skip;
@@ -466,7 +497,7 @@ test_create_delete (gconstpointer d)
 
   data->loop = g_main_loop_new (NULL, FALSE);
 
-  data->timeout = g_timeout_add (5000, stop_timeout, NULL);
+  data->timeout = g_timeout_add (10000, stop_timeout, NULL);
 
   g_file_create_async (data->file, 0, 0, NULL, created_cb, data);
 
@@ -487,7 +518,7 @@ test_create_delete (gconstpointer d)
  skip:
   g_object_unref (data->monitor);
   g_object_unref (data->file);
-  free (data->monitor_path);
+  g_free (data->monitor_path);
   g_free (data->buffer);
   g_free (data);
 }
@@ -498,7 +529,7 @@ static const gchar *replace_data =
     " * @file: input #GFile.\n"
     " * @contents: string of contents to replace the file with.\n"
     " * @length: the length of @contents in bytes.\n"
-    " * @etag: (allow-none): a new <link linkend=\"gfile-etag\">entity tag</link> for the @file, or %NULL\n"
+    " * @etag: (nullable): a new <link linkend=\"gfile-etag\">entity tag</link> for the @file, or %NULL\n"
     " * @make_backup: %TRUE if a backup should be created.\n"
     " * @flags: a set of #GFileCreateFlags.\n"
     " * @cancellable: optional #GCancellable object, %NULL to ignore.\n"
@@ -599,7 +630,7 @@ static void
 test_replace_load (void)
 {
   ReplaceLoadData *data;
-  gchar *path;
+  const gchar *path;
   GFileIOStream *iostream;
 
   data = g_new0 (ReplaceLoadData, 1);
@@ -611,7 +642,7 @@ test_replace_load (void)
   g_assert (data->file != NULL);
   g_object_unref (iostream);
 
-  path = g_file_get_path (data->file);
+  path = g_file_peek_path (data->file);
   remove (path);
 
   g_assert (!g_file_query_exists (data->file, NULL));
@@ -633,7 +664,6 @@ test_replace_load (void)
   g_main_loop_unref (data->loop);
   g_object_unref (data->file);
   g_free (data);
-  free (path);
 }
 
 static void
@@ -875,14 +905,21 @@ splice_to_string (GInputStream   *stream,
   return ret;
 }
 
-static guint64
-get_size_from_du (const gchar *path)
+static gboolean
+get_size_from_du (const gchar *path, guint64 *size)
 {
   GSubprocess *du;
+  gboolean ok;
   gchar *result;
   gchar *endptr;
-  guint64 size;
   GError *error = NULL;
+  gchar *du_path = NULL;
+
+  /* If we can’t find du, don’t try and run the test. */
+  du_path = g_find_program_in_path ("du");
+  if (du_path == NULL)
+    return FALSE;
+  g_free (du_path);
 
   du = g_subprocess_new (G_SUBPROCESS_FLAGS_STDOUT_PIPE,
                          &error,
@@ -892,12 +929,17 @@ get_size_from_du (const gchar *path)
   result = splice_to_string (g_subprocess_get_stdout_pipe (du), &error);
   g_assert_no_error (error);
 
-  size = g_ascii_strtoll (result, &endptr, 10);
+  *size = g_ascii_strtoll (result, &endptr, 10);
+
+  g_subprocess_wait (du, NULL, &error);
+  g_assert_no_error (error);
+
+  ok = g_subprocess_get_successful (du);
 
   g_object_unref (du);
   g_free (result);
 
-  return size;
+  return ok;
 }
 
 static void
@@ -915,13 +957,9 @@ test_measure (void)
   path = g_test_build_filename (G_TEST_DIST, "desktop-files", NULL);
   file = g_file_new_for_path (path);
 
-  if (g_find_program_in_path ("du"))
+  if (!get_size_from_du (path, &size))
     {
-      size = get_size_from_du (path);
-    }
-  else
-    {
-      g_test_message ("du not found, skipping byte measurement");
+      g_test_message ("du not found or fail to run, skipping byte measurement");
       size = 0;
     }
 
@@ -940,7 +978,7 @@ test_measure (void)
   if (size > 0)
     g_assert_cmpuint (num_bytes, ==, size);
   g_assert_cmpuint (num_dirs, ==, 6);
-  g_assert_cmpuint (num_files, ==, 30);
+  g_assert_cmpuint (num_files, ==, 31);
 
   g_object_unref (file);
   g_free (path);
@@ -1021,26 +1059,107 @@ test_measure_async (void)
   path = g_test_build_filename (G_TEST_DIST, "desktop-files", NULL);
   file = g_file_new_for_path (path);
 
-  if (g_find_program_in_path ("du"))
+  if (!get_size_from_du (path, &data->expected_bytes))
     {
-      data->expected_bytes = get_size_from_du (path);
-    }
-  else
-    {
-      g_test_message ("du not found, skipping byte measurement");
+      g_test_message ("du not found or fail to run, skipping byte measurement");
       data->expected_bytes = 0;
     }
 
   g_free (path);
 
   data->expected_dirs = 6;
-  data->expected_files = 30;
+  data->expected_files = 31;
 
   g_file_measure_disk_usage_async (file,
                                    G_FILE_MEASURE_APPARENT_SIZE,
                                    0, NULL,
                                    measure_progress, data,
                                    measure_done, data);
+}
+
+static void
+test_load_bytes (void)
+{
+  gchar filename[] = "g_file_load_bytes_XXXXXX";
+  GError *error = NULL;
+  GBytes *bytes;
+  GFile *file;
+  int len;
+  int fd;
+  int ret;
+
+  fd = g_mkstemp (filename);
+  g_assert_cmpint (fd, !=, -1);
+  len = strlen ("test_load_bytes");
+  ret = write (fd, "test_load_bytes", len);
+  g_assert_cmpint (ret, ==, len);
+  close (fd);
+
+  file = g_file_new_for_path (filename);
+  bytes = g_file_load_bytes (file, NULL, NULL, &error);
+  g_assert_no_error (error);
+  g_assert (bytes != NULL);
+  g_assert_cmpint (len, ==, g_bytes_get_size (bytes));
+  g_assert_cmpstr ("test_load_bytes", ==, (gchar *)g_bytes_get_data (bytes, NULL));
+
+  g_file_delete (file, NULL, NULL);
+
+  g_bytes_unref (bytes);
+  g_object_unref (file);
+}
+
+typedef struct
+{
+  GMainLoop *main_loop;
+  GFile *file;
+  GBytes *bytes;
+} LoadBytesAsyncData;
+
+static void
+test_load_bytes_cb (GObject      *object,
+                    GAsyncResult *result,
+                    gpointer      user_data)
+{
+  GFile *file = G_FILE (object);
+  LoadBytesAsyncData *data = user_data;
+  GError *error = NULL;
+
+  data->bytes = g_file_load_bytes_finish (file, result, NULL, &error);
+  g_assert_no_error (error);
+  g_assert (data->bytes != NULL);
+
+  g_main_loop_quit (data->main_loop);
+}
+
+static void
+test_load_bytes_async (void)
+{
+  LoadBytesAsyncData data = { 0 };
+  gchar filename[] = "g_file_load_bytes_XXXXXX";
+  int len;
+  int fd;
+  int ret;
+
+  fd = g_mkstemp (filename);
+  g_assert_cmpint (fd, !=, -1);
+  len = strlen ("test_load_bytes_async");
+  ret = write (fd, "test_load_bytes_async", len);
+  g_assert_cmpint (ret, ==, len);
+  close (fd);
+
+  data.main_loop = g_main_loop_new (NULL, FALSE);
+  data.file = g_file_new_for_path (filename);
+
+  g_file_load_bytes_async (data.file, NULL, test_load_bytes_cb, &data);
+  g_main_loop_run (data.main_loop);
+
+  g_assert_cmpint (len, ==, g_bytes_get_size (data.bytes));
+  g_assert_cmpstr ("test_load_bytes_async", ==, (gchar *)g_bytes_get_data (data.bytes, NULL));
+
+  g_file_delete (data.file, NULL, NULL);
+  g_object_unref (data.file);
+  g_bytes_unref (data.bytes);
+  g_main_loop_unref (data.main_loop);
 }
 
 int
@@ -1051,6 +1170,7 @@ main (int argc, char *argv[])
   g_test_bug_base ("http://bugzilla.gnome.org/");
 
   g_test_add_func ("/file/basic", test_basic);
+  g_test_add_func ("/file/build-filename", test_build_filename);
   g_test_add_func ("/file/parent", test_parent);
   g_test_add_func ("/file/child", test_child);
   g_test_add_func ("/file/type", test_type);
@@ -1068,6 +1188,8 @@ main (int argc, char *argv[])
 #endif
   g_test_add_func ("/file/measure", test_measure);
   g_test_add_func ("/file/measure-async", test_measure_async);
+  g_test_add_func ("/file/load-bytes", test_load_bytes);
+  g_test_add_func ("/file/load-bytes-async", test_load_bytes_async);
 
   return g_test_run ();
 }

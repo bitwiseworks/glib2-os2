@@ -5,7 +5,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -53,7 +53,7 @@
  * both well-known and unique names.
  *
  * By default, #GDBusProxy will cache all properties (and listen to
- * changes) of the remote object, and proxy all signals that gets
+ * changes) of the remote object, and proxy all signals that get
  * emitted. This behaviour can be changed by passing suitable
  * #GDBusProxyFlags when the proxy is created. If the proxy is for a
  * well-known name, the property cache is flushed when the name owner
@@ -572,7 +572,7 @@ g_dbus_proxy_class_init (GDBusProxyClass *klass)
   /**
    * GDBusProxy::g-properties-changed:
    * @proxy: The #GDBusProxy emitting the signal.
-   * @changed_properties: A #GVariant containing the properties that changed
+   * @changed_properties: A #GVariant containing the properties that changed (type: `a{sv}`)
    * @invalidated_properties: A %NULL terminated array of properties that was invalidated
    *
    * Emitted when one or more D-Bus properties on @proxy changes. The
@@ -605,7 +605,7 @@ g_dbus_proxy_class_init (GDBusProxyClass *klass)
   /**
    * GDBusProxy::g-signal:
    * @proxy: The #GDBusProxy emitting the signal.
-   * @sender_name: (allow-none): The sender of the signal or %NULL if the connection is not a bus connection.
+   * @sender_name: (nullable): The sender of the signal or %NULL if the connection is not a bus connection.
    * @signal_name: The name of the signal.
    * @parameters: A #GVariant tuple with parameters for the signal.
    *
@@ -656,7 +656,8 @@ property_name_sort_func (const gchar **a,
  *
  * Gets the names of all cached properties on @proxy.
  *
- * Returns: (transfer full): A %NULL-terminated array of strings or %NULL if
+ * Returns: (transfer full) (nullable) (array zero-terminated=1): A
+ *          %NULL-terminated array of strings or %NULL if
  *          @proxy has no cached properties. Free the returned array with
  *          g_strfreev().
  *
@@ -723,9 +724,9 @@ lookup_property_info (GDBusProxy  *proxy,
  * #GDBusProxy:g-interface-info) and @property_name is referenced by
  * it, then @value is checked against the type of the property.
  *
- * Returns: A reference to the #GVariant instance that holds the value
- * for @property_name or %NULL if the value is not in the cache. The
- * returned reference must be freed with g_variant_unref().
+ * Returns: (transfer full) (nullable): A reference to the #GVariant instance
+ *    that holds the value for @property_name or %NULL if the value is not in
+ *    the cache. The returned reference must be freed with g_variant_unref().
  *
  * Since: 2.26
  */
@@ -772,7 +773,7 @@ g_dbus_proxy_get_cached_property (GDBusProxy   *proxy,
  * g_dbus_proxy_set_cached_property:
  * @proxy: A #GDBusProxy
  * @property_name: Property name.
- * @value: (allow-none): Value for the property or %NULL to remove it from the cache.
+ * @value: (nullable): Value for the property or %NULL to remove it from the cache.
  *
  * If @value is not %NULL, sets the cached value for the property with
  * name @property_name to the value in @value.
@@ -1454,8 +1455,9 @@ async_init_data_set_name_owner (GTask       *task,
 
   if (name_owner != NULL)
     {
-      /* it starts as NULL anyway */
       G_LOCK (properties_lock);
+      /* Must free first, since on_name_owner_changed() could run before us */
+      g_free (proxy->priv->name_owner);
       proxy->priv->name_owner = g_strdup (name_owner);
       G_UNLOCK (properties_lock);
     }
@@ -1678,6 +1680,7 @@ async_initable_init_second_async (GAsyncInitable      *initable,
   GTask *task;
 
   task = g_task_new (proxy, cancellable, callback, user_data);
+  g_task_set_source_tag (task, async_initable_init_second_async);
   g_task_set_priority (task, io_priority);
 
   /* Check name ownership asynchronously - possibly also start the service */
@@ -1720,6 +1723,7 @@ async_initable_init_second_finish (GAsyncInitable  *initable,
   if (result != NULL)
     {
       process_get_all_reply (proxy, result);
+      g_variant_unref (result);
     }
 
   proxy->priv->initialized = TRUE;
@@ -1846,6 +1850,7 @@ async_initable_init_async (GAsyncInitable      *initable,
   GTask *task;
 
   task = g_task_new (proxy, cancellable, callback, user_data);
+  g_task_set_source_tag (task, async_initable_init_async);
   g_task_set_priority (task, io_priority);
 
   if (proxy->priv->bus_type != G_BUS_TYPE_NONE)
@@ -1972,11 +1977,11 @@ initable_iface_init (GInitableIface *initable_iface)
  * g_dbus_proxy_new:
  * @connection: A #GDBusConnection.
  * @flags: Flags used when constructing the proxy.
- * @info: (allow-none): A #GDBusInterfaceInfo specifying the minimal interface that @proxy conforms to or %NULL.
- * @name: (allow-none): A bus name (well-known or unique) or %NULL if @connection is not a message bus connection.
+ * @info: (nullable): A #GDBusInterfaceInfo specifying the minimal interface that @proxy conforms to or %NULL.
+ * @name: (nullable): A bus name (well-known or unique) or %NULL if @connection is not a message bus connection.
  * @object_path: An object path.
  * @interface_name: A D-Bus interface name.
- * @cancellable: (allow-none): A #GCancellable or %NULL.
+ * @cancellable: (nullable): A #GCancellable or %NULL.
  * @callback: Callback function to invoke when the proxy is ready.
  * @user_data: User data to pass to @callback.
  *
@@ -2017,6 +2022,8 @@ g_dbus_proxy_new (GDBusConnection     *connection,
                   GAsyncReadyCallback  callback,
                   gpointer             user_data)
 {
+  _g_dbus_initialize ();
+
   g_return_if_fail (G_IS_DBUS_CONNECTION (connection));
   g_return_if_fail ((name == NULL && g_dbus_connection_get_unique_name (connection) == NULL) || g_dbus_is_name (name));
   g_return_if_fail (g_variant_is_object_path (object_path));
@@ -2043,7 +2050,8 @@ g_dbus_proxy_new (GDBusConnection     *connection,
  *
  * Finishes creating a #GDBusProxy.
  *
- * Returns: A #GDBusProxy or %NULL if @error is set. Free with g_object_unref().
+ * Returns: (transfer full): A #GDBusProxy or %NULL if @error is set.
+ *    Free with g_object_unref().
  *
  * Since: 2.26
  */
@@ -2072,12 +2080,12 @@ g_dbus_proxy_new_finish (GAsyncResult  *res,
  * g_dbus_proxy_new_sync:
  * @connection: A #GDBusConnection.
  * @flags: Flags used when constructing the proxy.
- * @info: (allow-none): A #GDBusInterfaceInfo specifying the minimal interface that @proxy conforms to or %NULL.
- * @name: (allow-none): A bus name (well-known or unique) or %NULL if @connection is not a message bus connection.
+ * @info: (nullable): A #GDBusInterfaceInfo specifying the minimal interface that @proxy conforms to or %NULL.
+ * @name: (nullable): A bus name (well-known or unique) or %NULL if @connection is not a message bus connection.
  * @object_path: An object path.
  * @interface_name: A D-Bus interface name.
- * @cancellable: (allow-none): A #GCancellable or %NULL.
- * @error: (allow-none): Return location for error or %NULL.
+ * @cancellable: (nullable): A #GCancellable or %NULL.
+ * @error: (nullable): Return location for error or %NULL.
  *
  * Creates a proxy for accessing @interface_name on the remote object
  * at @object_path owned by @name at @connection and synchronously
@@ -2098,7 +2106,8 @@ g_dbus_proxy_new_finish (GAsyncResult  *res,
  *
  * #GDBusProxy is used in this [example][gdbus-wellknown-proxy].
  *
- * Returns: A #GDBusProxy or %NULL if error is set. Free with g_object_unref().
+ * Returns: (transfer full): A #GDBusProxy or %NULL if error is set.
+ *    Free with g_object_unref().
  *
  * Since: 2.26
  */
@@ -2142,11 +2151,11 @@ g_dbus_proxy_new_sync (GDBusConnection     *connection,
  * g_dbus_proxy_new_for_bus:
  * @bus_type: A #GBusType.
  * @flags: Flags used when constructing the proxy.
- * @info: (allow-none): A #GDBusInterfaceInfo specifying the minimal interface that @proxy conforms to or %NULL.
+ * @info: (nullable): A #GDBusInterfaceInfo specifying the minimal interface that @proxy conforms to or %NULL.
  * @name: A bus name (well-known or unique).
  * @object_path: An object path.
  * @interface_name: A D-Bus interface name.
- * @cancellable: (allow-none): A #GCancellable or %NULL.
+ * @cancellable: (nullable): A #GCancellable or %NULL.
  * @callback: Callback function to invoke when the proxy is ready.
  * @user_data: User data to pass to @callback.
  *
@@ -2167,6 +2176,8 @@ g_dbus_proxy_new_for_bus (GBusType             bus_type,
                           GAsyncReadyCallback  callback,
                           gpointer             user_data)
 {
+  _g_dbus_initialize ();
+
   g_return_if_fail (g_dbus_is_name (name));
   g_return_if_fail (g_variant_is_object_path (object_path));
   g_return_if_fail (g_dbus_is_interface_name (interface_name));
@@ -2192,7 +2203,8 @@ g_dbus_proxy_new_for_bus (GBusType             bus_type,
  *
  * Finishes creating a #GDBusProxy.
  *
- * Returns: A #GDBusProxy or %NULL if @error is set. Free with g_object_unref().
+ * Returns: (transfer full): A #GDBusProxy or %NULL if @error is set.
+ *    Free with g_object_unref().
  *
  * Since: 2.26
  */
@@ -2207,19 +2219,20 @@ g_dbus_proxy_new_for_bus_finish (GAsyncResult  *res,
  * g_dbus_proxy_new_for_bus_sync:
  * @bus_type: A #GBusType.
  * @flags: Flags used when constructing the proxy.
- * @info: (allow-none): A #GDBusInterfaceInfo specifying the minimal interface
+ * @info: (nullable): A #GDBusInterfaceInfo specifying the minimal interface
  *        that @proxy conforms to or %NULL.
  * @name: A bus name (well-known or unique).
  * @object_path: An object path.
  * @interface_name: A D-Bus interface name.
- * @cancellable: (allow-none): A #GCancellable or %NULL.
+ * @cancellable: (nullable): A #GCancellable or %NULL.
  * @error: Return location for error or %NULL.
  *
  * Like g_dbus_proxy_new_sync() but takes a #GBusType instead of a #GDBusConnection.
  *
  * #GDBusProxy is used in this [example][gdbus-wellknown-proxy].
  *
- * Returns: A #GDBusProxy or %NULL if error is set. Free with g_object_unref().
+ * Returns: (transfer full): A #GDBusProxy or %NULL if error is set.
+ *    Free with g_object_unref().
  *
  * Since: 2.26
  */
@@ -2234,6 +2247,8 @@ g_dbus_proxy_new_for_bus_sync (GBusType             bus_type,
                                GError             **error)
 {
   GInitable *initable;
+
+  _g_dbus_initialize ();
 
   g_return_val_if_fail (g_dbus_is_name (name), NULL);
   g_return_val_if_fail (g_variant_is_object_path (object_path), NULL);
@@ -2317,7 +2332,8 @@ g_dbus_proxy_get_name (GDBusProxy *proxy)
  * #GObject::notify signal to track changes to the
  * #GDBusProxy:g-name-owner property.
  *
- * Returns: The name owner or %NULL if no name owner exists. Free with g_free().
+ * Returns: (transfer full) (nullable): The name owner or %NULL if no name
+ *    owner exists. Free with g_free().
  *
  * Since: 2.26
  */
@@ -2438,8 +2454,8 @@ g_dbus_proxy_set_default_timeout (GDBusProxy *proxy,
  * that @proxy conforms to. See the #GDBusProxy:g-interface-info
  * property for more details.
  *
- * Returns: A #GDBusInterfaceInfo or %NULL. Do not unref the returned
- * object, it is owned by @proxy.
+ * Returns: (transfer none) (nullable): A #GDBusInterfaceInfo or %NULL.
+ *    Do not unref the returned object, it is owned by @proxy.
  *
  * Since: 2.26
  */
@@ -2462,7 +2478,8 @@ g_dbus_proxy_get_interface_info (GDBusProxy *proxy)
 /**
  * g_dbus_proxy_set_interface_info:
  * @proxy: A #GDBusProxy
- * @info: (allow-none): Minimum interface this proxy conforms to or %NULL to unset.
+ * @info: (transfer none) (nullable): Minimum interface this proxy conforms to
+ *    or %NULL to unset.
  *
  * Ensure that interactions with @proxy conform to the given
  * interface. See the #GDBusProxy:g-interface-info property for more
@@ -2672,6 +2689,7 @@ g_dbus_proxy_call_internal (GDBusProxy          *proxy,
     {
       my_callback = (GAsyncReadyCallback) reply_cb;
       task = g_task_new (proxy, cancellable, callback, user_data);
+      g_task_set_source_tag (task, g_dbus_proxy_call_internal);
     }
   else
     {
@@ -2892,12 +2910,12 @@ g_dbus_proxy_call_sync_internal (GDBusProxy      *proxy,
  * g_dbus_proxy_call:
  * @proxy: A #GDBusProxy.
  * @method_name: Name of method to invoke.
- * @parameters: (allow-none): A #GVariant tuple with parameters for the signal or %NULL if not passing parameters.
+ * @parameters: (nullable): A #GVariant tuple with parameters for the signal or %NULL if not passing parameters.
  * @flags: Flags from the #GDBusCallFlags enumeration.
  * @timeout_msec: The timeout in milliseconds (with %G_MAXINT meaning
  *                "infinite") or -1 to use the proxy default timeout.
- * @cancellable: (allow-none): A #GCancellable or %NULL.
- * @callback: (allow-none): A #GAsyncReadyCallback to call when the request is satisfied or %NULL if you don't
+ * @cancellable: (nullable): A #GCancellable or %NULL.
+ * @callback: (nullable): A #GAsyncReadyCallback to call when the request is satisfied or %NULL if you don't
  * care about the result of the method invocation.
  * @user_data: The data to pass to @callback.
  *
@@ -2984,12 +3002,12 @@ g_dbus_proxy_call_finish (GDBusProxy    *proxy,
  * g_dbus_proxy_call_sync:
  * @proxy: A #GDBusProxy.
  * @method_name: Name of method to invoke.
- * @parameters: (allow-none): A #GVariant tuple with parameters for the signal
+ * @parameters: (nullable): A #GVariant tuple with parameters for the signal
  *              or %NULL if not passing parameters.
  * @flags: Flags from the #GDBusCallFlags enumeration.
  * @timeout_msec: The timeout in milliseconds (with %G_MAXINT meaning
  *                "infinite") or -1 to use the proxy default timeout.
- * @cancellable: (allow-none): A #GCancellable or %NULL.
+ * @cancellable: (nullable): A #GCancellable or %NULL.
  * @error: Return location for error or %NULL.
  *
  * Synchronously invokes the @method_name method on @proxy.
@@ -3052,13 +3070,13 @@ g_dbus_proxy_call_sync (GDBusProxy      *proxy,
  * g_dbus_proxy_call_with_unix_fd_list:
  * @proxy: A #GDBusProxy.
  * @method_name: Name of method to invoke.
- * @parameters: (allow-none): A #GVariant tuple with parameters for the signal or %NULL if not passing parameters.
+ * @parameters: (nullable): A #GVariant tuple with parameters for the signal or %NULL if not passing parameters.
  * @flags: Flags from the #GDBusCallFlags enumeration.
  * @timeout_msec: The timeout in milliseconds (with %G_MAXINT meaning
  *                "infinite") or -1 to use the proxy default timeout.
- * @fd_list: (allow-none): A #GUnixFDList or %NULL.
- * @cancellable: (allow-none): A #GCancellable or %NULL.
- * @callback: (allow-none): A #GAsyncReadyCallback to call when the request is satisfied or %NULL if you don't
+ * @fd_list: (nullable): A #GUnixFDList or %NULL.
+ * @cancellable: (nullable): A #GCancellable or %NULL.
+ * @callback: (nullable): A #GAsyncReadyCallback to call when the request is satisfied or %NULL if you don't
  * care about the result of the method invocation.
  * @user_data: The data to pass to @callback.
  *
@@ -3085,7 +3103,7 @@ g_dbus_proxy_call_with_unix_fd_list (GDBusProxy          *proxy,
 /**
  * g_dbus_proxy_call_with_unix_fd_list_finish:
  * @proxy: A #GDBusProxy.
- * @out_fd_list: (out) (allow-none): Return location for a #GUnixFDList or %NULL.
+ * @out_fd_list: (out) (optional): Return location for a #GUnixFDList or %NULL.
  * @res: A #GAsyncResult obtained from the #GAsyncReadyCallback passed to g_dbus_proxy_call_with_unix_fd_list().
  * @error: Return location for error or %NULL.
  *
@@ -3109,14 +3127,14 @@ g_dbus_proxy_call_with_unix_fd_list_finish (GDBusProxy    *proxy,
  * g_dbus_proxy_call_with_unix_fd_list_sync:
  * @proxy: A #GDBusProxy.
  * @method_name: Name of method to invoke.
- * @parameters: (allow-none): A #GVariant tuple with parameters for the signal
+ * @parameters: (nullable): A #GVariant tuple with parameters for the signal
  *              or %NULL if not passing parameters.
  * @flags: Flags from the #GDBusCallFlags enumeration.
  * @timeout_msec: The timeout in milliseconds (with %G_MAXINT meaning
  *                "infinite") or -1 to use the proxy default timeout.
- * @fd_list: (allow-none): A #GUnixFDList or %NULL.
- * @out_fd_list: (out) (allow-none): Return location for a #GUnixFDList or %NULL.
- * @cancellable: (allow-none): A #GCancellable or %NULL.
+ * @fd_list: (nullable): A #GUnixFDList or %NULL.
+ * @out_fd_list: (out) (optional): Return location for a #GUnixFDList or %NULL.
+ * @cancellable: (nullable): A #GCancellable or %NULL.
  * @error: Return location for error or %NULL.
  *
  * Like g_dbus_proxy_call_sync() but also takes and returns #GUnixFDList objects.

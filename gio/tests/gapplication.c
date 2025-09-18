@@ -425,30 +425,38 @@ appid (void)
 {
   gchar *id;
 
-  g_assert (!g_application_id_is_valid (""));
-  g_assert (!g_application_id_is_valid ("."));
-  g_assert (!g_application_id_is_valid ("a"));
-  g_assert (!g_application_id_is_valid ("abc"));
-  g_assert (!g_application_id_is_valid (".abc"));
-  g_assert (!g_application_id_is_valid ("abc."));
-  g_assert (!g_application_id_is_valid ("a..b"));
-  g_assert (!g_application_id_is_valid ("a/b"));
-  g_assert (!g_application_id_is_valid ("a\nb"));
-  g_assert (!g_application_id_is_valid ("a\nb"));
-  g_assert (!g_application_id_is_valid ("_a.b"));
-  g_assert (!g_application_id_is_valid ("-a.b"));
+  g_assert_false (g_application_id_is_valid (""));
+  g_assert_false (g_application_id_is_valid ("."));
+  g_assert_false (g_application_id_is_valid ("a"));
+  g_assert_false (g_application_id_is_valid ("abc"));
+  g_assert_false (g_application_id_is_valid (".abc"));
+  g_assert_false (g_application_id_is_valid ("abc."));
+  g_assert_false (g_application_id_is_valid ("a..b"));
+  g_assert_false (g_application_id_is_valid ("a/b"));
+  g_assert_false (g_application_id_is_valid ("a\nb"));
+  g_assert_false (g_application_id_is_valid ("a\nb"));
+  g_assert_false (g_application_id_is_valid ("emoji_picker"));
+  g_assert_false (g_application_id_is_valid ("emoji-picker"));
+  g_assert_false (g_application_id_is_valid ("emojipicker"));
+  g_assert_false (g_application_id_is_valid ("my.Terminal.0123"));
   id = g_new0 (gchar, 261);
   memset (id, 'a', 260);
   id[1] = '.';
   id[260] = 0;
-  g_assert (!g_application_id_is_valid (id));
+  g_assert_false (g_application_id_is_valid (id));
   g_free (id);
 
-  g_assert (g_application_id_is_valid ("a.b"));
-  g_assert (g_application_id_is_valid ("A.B"));
-  g_assert (g_application_id_is_valid ("A-.B"));
-  g_assert (g_application_id_is_valid ("a_b.c-d"));
-  g_assert (g_application_id_is_valid ("org.gnome.SessionManager"));
+  g_assert_true (g_application_id_is_valid ("a.b"));
+  g_assert_true (g_application_id_is_valid ("A.B"));
+  g_assert_true (g_application_id_is_valid ("A-.B"));
+  g_assert_true (g_application_id_is_valid ("a_b.c-d"));
+  g_assert_true (g_application_id_is_valid ("_a.b"));
+  g_assert_true (g_application_id_is_valid ("-a.b"));
+  g_assert_true (g_application_id_is_valid ("org.gnome.SessionManager"));
+  g_assert_true (g_application_id_is_valid ("my.Terminal._0123"));
+  g_assert_true (g_application_id_is_valid ("com.example.MyApp"));
+  g_assert_true (g_application_id_is_valid ("com.example.internal_apps.Calculator"));
+  g_assert_true (g_application_id_is_valid ("org._7_zip.Archiver"));
 }
 
 static gboolean nodbus_activated;
@@ -937,9 +945,35 @@ test_handle_local_options_passthrough (void)
   g_test_trap_assert_passed ();
 }
 
+static void
+test_api (void)
+{
+  GApplication *app;
+  GSimpleAction *action;
+
+  app = g_application_new ("org.gtk.TestApplication", 0);
+
+  /* add an action without a name */
+  g_test_expect_message (G_LOG_DOMAIN, G_LOG_LEVEL_CRITICAL, "*assertion*failed*");
+  action = g_simple_action_new (NULL, NULL);
+  g_assert (action == NULL);
+  g_test_assert_expected_messages ();
+
+  /* also, gapplication shouldn't accept actions without names */
+  action = g_object_new (G_TYPE_SIMPLE_ACTION, NULL);
+  g_test_expect_message (G_LOG_DOMAIN, G_LOG_LEVEL_CRITICAL, "*action has no name*");
+  g_action_map_add_action (G_ACTION_MAP (app), G_ACTION (action));
+  g_test_assert_expected_messages ();
+
+  g_object_unref (action);
+  g_object_unref (app);
+}
+
 int
 main (int argc, char **argv)
 {
+  g_setenv ("LC_ALL", "C", TRUE);
+
   g_test_init (&argc, &argv, NULL);
 
   g_test_dbus_unset ();
@@ -961,6 +995,7 @@ main (int argc, char **argv)
   g_test_add_func ("/gapplication/test-handle-local-options1", test_handle_local_options_success);
   g_test_add_func ("/gapplication/test-handle-local-options2", test_handle_local_options_failure);
   g_test_add_func ("/gapplication/test-handle-local-options3", test_handle_local_options_passthrough);
+  g_test_add_func ("/gapplication/api", test_api);
 
   return g_test_run ();
 }

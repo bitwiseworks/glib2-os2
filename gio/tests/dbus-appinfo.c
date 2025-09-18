@@ -1,10 +1,10 @@
 /*
  * Copyright © 2013 Canonical Limited
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published
- * by the Free Software Foundation; either version 2 of the licence or (at
- * your option) any later version.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -254,11 +254,14 @@ test_dbus_appinfo (void)
   const gchar *argv[] = { "myapp", NULL };
   TestApplication *app;
   int status;
+  gchar *desktop_file = NULL;
 
-  appinfo = g_desktop_app_info_new_from_filename (g_test_build_filename (G_TEST_DIST,
-                                                                         "org.gtk.test.dbusappinfo.desktop",
-                                                                         NULL));
+  desktop_file = g_test_build_filename (G_TEST_DIST,
+                                        "org.gtk.test.dbusappinfo.desktop",
+                                        NULL);
+  appinfo = g_desktop_app_info_new_from_filename (desktop_file);
   g_assert (appinfo != NULL);
+  g_free (desktop_file);
 
   app = g_object_new (test_application_get_type (),
                       "application-id", "org.gtk.test.dbusappinfo",

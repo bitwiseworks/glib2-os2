@@ -7,8 +7,7 @@ test -n "$srcdir" || srcdir=.
 olddir=`pwd`
 cd "$srcdir"
 
-GTKDOCIZE=$(which gtkdocize 2>/dev/null)
-if test -z $GTKDOCIZE; then
+if ! command -v gtkdocize >/dev/null 2>&1; then
         echo "You don't have gtk-doc installed, and thus won't be able to generate the documentation."
         rm -f gtk-doc.make
         cat > gtk-doc.make <<EOF
@@ -19,16 +18,15 @@ else
         gtkdocize || exit $?
 fi
 
-AUTORECONF=`which autoreconf`
-if test -z $AUTORECONF; then
+if ! command -v autoreconf >/dev/null 2>&1; then
         echo "*** No autoreconf found, please install it ***"
         exit 1
 fi
 
-# README and INSTALL are required by automake, but may be deleted by clean
-# up rules. to get automake to work, simply touch these here, they will be
-# regenerated from their corresponding *.in files by ./configure anyway.
-touch README INSTALL
+# INSTALL is required by automake, but may be deleted by clean
+# up rules. to get automake to work, simply touch it here. It will be
+# regenerated from its corresponding *.in file by ./configure anyway.
+touch INSTALL
 
 autoreconf --force --install --verbose || exit $?
 

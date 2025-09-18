@@ -4,7 +4,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -461,14 +461,14 @@ main (int   argc,
   
   if (argc < 3)
     {
-      g_warning ("Usage: %s filename prefix1 [prefix2 ...]\n", argv[0]);
+      g_warning ("Usage: %s filename prefix1 [prefix2 ...]", argv[0]);
       return 1;
     }
   
   file = fopen (argv[1], "r");
   if (!file)
     {
-      g_warning ("Cannot open %s\n", argv[1]);
+      g_warning ("Cannot open %s", argv[1]);
       return 1;
     }
   

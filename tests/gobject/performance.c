@@ -4,7 +4,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -125,6 +125,9 @@ run_test (PerformanceTest *test)
     g_print ("Running %"G_GINT64_MODIFIER"d rounds\n", num_rounds);
 
   /* Run the test */
+  avg_elapsed = 0.0;
+  min_elapsed = 0.0;
+  max_elapsed = 0.0;
   for (i = 0; i < num_rounds; i++)
     {
       test->init (test, data, factor);
@@ -144,7 +147,8 @@ run_test (PerformanceTest *test)
         }
     }
 
-  avg_elapsed = avg_elapsed / num_rounds;
+  if (num_rounds > 1)
+    avg_elapsed = avg_elapsed / num_rounds;
 
   if (verbose)
     {
@@ -152,6 +156,7 @@ run_test (PerformanceTest *test)
       g_print ("Maximum corrected round time: %.2f msecs\n", max_elapsed * 1000);
       g_print ("Average corrected round time: %.2f msecs\n", avg_elapsed * 1000);
     }
+
   /* Print the results */
   test->print_result (test, data, min_elapsed);
 
@@ -181,7 +186,7 @@ struct _SimpleObjectClass
   GObjectClass parent_class;
 };
 
-G_DEFINE_TYPE (SimpleObject, simple_object, G_TYPE_OBJECT);
+G_DEFINE_TYPE (SimpleObject, simple_object, G_TYPE_OBJECT)
 
 static void
 simple_object_finalize (GObject *object)
@@ -265,17 +270,11 @@ static void complex_test_iface_init (gpointer         g_iface,
 
 G_DEFINE_TYPE_EXTENDED (ComplexObject, complex_object,
 			G_TYPE_OBJECT, 0,
-			G_IMPLEMENT_INTERFACE (TEST_TYPE_IFACE1,
-					       complex_test_iface_init)
-			G_IMPLEMENT_INTERFACE (TEST_TYPE_IFACE2,
-					       complex_test_iface_init)
-			G_IMPLEMENT_INTERFACE (TEST_TYPE_IFACE3,
-					       complex_test_iface_init)
-			G_IMPLEMENT_INTERFACE (TEST_TYPE_IFACE4,
-					       complex_test_iface_init)
-			G_IMPLEMENT_INTERFACE (TEST_TYPE_IFACE5,
-					       complex_test_iface_init)
-			);
+			G_IMPLEMENT_INTERFACE (TEST_TYPE_IFACE1, complex_test_iface_init)
+			G_IMPLEMENT_INTERFACE (TEST_TYPE_IFACE2, complex_test_iface_init)
+			G_IMPLEMENT_INTERFACE (TEST_TYPE_IFACE3, complex_test_iface_init)
+			G_IMPLEMENT_INTERFACE (TEST_TYPE_IFACE4, complex_test_iface_init)
+			G_IMPLEMENT_INTERFACE (TEST_TYPE_IFACE5, complex_test_iface_init))
 
 #define COMPLEX_OBJECT(object) (G_TYPE_CHECK_INSTANCE_CAST ((object), COMPLEX_TYPE_OBJECT, ComplexObject))
 

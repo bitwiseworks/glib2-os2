@@ -4,7 +4,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -57,12 +57,7 @@
  * ]|
  */
 
-
-#ifdef	DISABLE_MEM_POOLS
-#  define	GROUP_N_VALUES	(1)	/* power of 2 !! */
-#else
-#  define	GROUP_N_VALUES	(8)	/* power of 2 !! */
-#endif
+#define	GROUP_N_VALUES	(8)	/* power of 2 !! */
 
 
 /* --- functions --- */
@@ -108,18 +103,6 @@ value_array_grow (GValueArray *value_array,
     }
 }
 
-static inline void
-value_array_shrink (GValueArray *value_array)
-{
-#ifdef  DISABLE_MEM_POOLS
-  if (value_array->n_prealloced >= value_array->n_values + GROUP_N_VALUES)
-    {
-      value_array->n_prealloced = (value_array->n_values + GROUP_N_VALUES - 1) & ~(GROUP_N_VALUES - 1);
-      value_array->values = g_renew (GValue, value_array->values, value_array->n_prealloced);
-    }
-#endif
-}
-
 /**
  * g_value_array_new:
  * @n_prealloced: number of values to preallocate space for
@@ -147,7 +130,7 @@ g_value_array_new (guint n_prealloced)
 }
 
 /**
- * g_value_array_free:
+ * g_value_array_free: (skip)
  * @value_array: #GValueArray to free
  *
  * Free a #GValueArray including its contents.
@@ -210,7 +193,7 @@ g_value_array_copy (const GValueArray *value_array)
 /**
  * g_value_array_prepend:
  * @value_array: #GValueArray to add an element to
- * @value: (allow-none): #GValue to copy into #GValueArray, or %NULL
+ * @value: (nullable): #GValue to copy into #GValueArray, or %NULL
  *
  * Insert a copy of @value as first element of @value_array. If @value is
  * %NULL, an uninitialized value is prepended.
@@ -234,7 +217,7 @@ g_value_array_prepend (GValueArray  *value_array,
 /**
  * g_value_array_append:
  * @value_array: #GValueArray to add an element to
- * @value: (allow-none): #GValue to copy into #GValueArray, or %NULL
+ * @value: (nullable): #GValue to copy into #GValueArray, or %NULL
  *
  * Insert a copy of @value as last element of @value_array. If @value is
  * %NULL, an uninitialized value is appended.
@@ -257,8 +240,8 @@ g_value_array_append (GValueArray  *value_array,
 /**
  * g_value_array_insert:
  * @value_array: #GValueArray to add an element to
- * @index_: insertion position, must be <= value_array-&gt;n_values
- * @value: (allow-none): #GValue to copy into #GValueArray, or %NULL
+ * @index_: insertion position, must be <= value_array->;n_values
+ * @value: (nullable): #GValue to copy into #GValueArray, or %NULL
  *
  * Insert a copy of @value at specified position into @value_array. If @value
  * is %NULL, an uninitialized value is inserted.
@@ -316,7 +299,6 @@ g_value_array_remove (GValueArray *value_array,
   if (index < value_array->n_values)
     memmove (value_array->values + index, value_array->values + index + 1,
              (value_array->n_values - index) * sizeof (value_array->values[0]));
-  value_array_shrink (value_array);
   if (value_array->n_prealloced > value_array->n_values)
     memset (value_array->values + value_array->n_values, 0, sizeof (value_array->values[0]));
 

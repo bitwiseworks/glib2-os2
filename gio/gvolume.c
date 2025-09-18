@@ -5,7 +5,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -66,7 +66,7 @@
  * different kinds of identifiers, such as Hal UDIs, filesystem labels,
  * traditional Unix devices (e.g. `/dev/sda2`), UUIDs. GIO uses predefined
  * strings as names for the different kinds of identifiers:
- * #G_VOLUME_IDENTIFIER_KIND_HAL_UDI, #G_VOLUME_IDENTIFIER_KIND_LABEL, etc.
+ * #G_VOLUME_IDENTIFIER_KIND_UUID, #G_VOLUME_IDENTIFIER_KIND_LABEL, etc.
  * Use g_volume_get_identifier() to obtain an identifier for a volume.
  *
  *
@@ -195,7 +195,8 @@ g_volume_get_symbolic_icon (GVolume *volume)
  * considered an opaque string. Returns %NULL if there is no UUID
  * available.
  * 
- * Returns: the UUID for @volume or %NULL if no UUID can be computed.
+ * Returns: (nullable) (transfer full): the UUID for @volume or %NULL if no UUID
+ *     can be computed.
  *     The returned string should be freed with g_free() 
  *     when no longer needed.
  */
@@ -216,8 +217,8 @@ g_volume_get_uuid (GVolume *volume)
  * @volume: a #GVolume
  * 
  * Gets the drive for the @volume.
- * 
- * Returns: (transfer full): a #GDrive or %NULL if @volume is not
+ *
+ * Returns: (transfer full) (nullable): a #GDrive or %NULL if @volume is not
  *     associated with a drive. The returned object should be unreffed
  *     with g_object_unref() when no longer needed.
  */
@@ -238,8 +239,8 @@ g_volume_get_drive (GVolume *volume)
  * @volume: a #GVolume
  * 
  * Gets the mount for the @volume.
- * 
- * Returns: (transfer full): a #GMount or %NULL if @volume isn't mounted.
+ *
+ * Returns: (transfer full) (nullable): a #GMount or %NULL if @volume isn't mounted.
  *     The returned object should be unreffed with g_object_unref()
  *     when no longer needed.
  */
@@ -330,9 +331,9 @@ g_volume_should_automount (GVolume *volume)
  * g_volume_mount:
  * @volume: a #GVolume
  * @flags: flags affecting the operation
- * @mount_operation: (allow-none): a #GMountOperation or %NULL to avoid user interaction
- * @cancellable: (allow-none): optional #GCancellable object, %NULL to ignore
- * @callback: (allow-none): a #GAsyncReadyCallback, or %NULL
+ * @mount_operation: (nullable): a #GMountOperation or %NULL to avoid user interaction
+ * @cancellable: (nullable): optional #GCancellable object, %NULL to ignore
+ * @callback: (nullable): a #GAsyncReadyCallback, or %NULL
  * @user_data: user data that gets passed to @callback
  * 
  * Mounts a volume. This is an asynchronous operation, and is
@@ -360,7 +361,7 @@ g_volume_mount (GVolume             *volume,
       g_task_report_new_error (volume, callback, user_data,
                                g_volume_mount,
                                G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
-                               _("volume doesn't implement mount"));
+                               _("volume doesn’t implement mount"));
       return;
     }
   
@@ -406,8 +407,8 @@ g_volume_mount_finish (GVolume       *volume,
  * g_volume_eject:
  * @volume: a #GVolume
  * @flags: flags affecting the unmount if required for eject
- * @cancellable: (allow-none): optional #GCancellable object, %NULL to ignore
- * @callback: (allow-none): a #GAsyncReadyCallback, or %NULL
+ * @cancellable: (nullable): optional #GCancellable object, %NULL to ignore
+ * @callback: (nullable): a #GAsyncReadyCallback, or %NULL
  * @user_data: user data that gets passed to @callback
  * 
  * Ejects a volume. This is an asynchronous operation, and is
@@ -434,7 +435,7 @@ g_volume_eject (GVolume             *volume,
       g_task_report_new_error (volume, callback, user_data,
                                g_volume_eject_with_operation,
                                G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED,
-                               _("volume doesn't implement eject"));
+                               _("volume doesn’t implement eject"));
       return;
     }
   
@@ -477,10 +478,10 @@ g_volume_eject_finish (GVolume       *volume,
  * g_volume_eject_with_operation:
  * @volume: a #GVolume
  * @flags: flags affecting the unmount if required for eject
- * @mount_operation: (allow-none): a #GMountOperation or %NULL to
+ * @mount_operation: (nullable): a #GMountOperation or %NULL to
  *     avoid user interaction
- * @cancellable: (allow-none): optional #GCancellable object, %NULL to ignore
- * @callback: (allow-none): a #GAsyncReadyCallback, or %NULL
+ * @cancellable: (nullable): optional #GCancellable object, %NULL to ignore
+ * @callback: (nullable): a #GAsyncReadyCallback, or %NULL
  * @user_data: user data passed to @callback
  *
  * Ejects a volume. This is an asynchronous operation, and is
@@ -511,7 +512,7 @@ g_volume_eject_with_operation (GVolume              *volume,
                                /* Translators: This is an error
                                 * message for volume objects that
                                 * don't implement any of eject or eject_with_operation. */
-                               _("volume doesn't implement eject or eject_with_operation"));
+                               _("volume doesn’t implement eject or eject_with_operation"));
       return;
     }
 
@@ -565,8 +566,8 @@ g_volume_eject_with_operation_finish (GVolume        *volume,
  * See the [introduction][volume-identifier] for more
  * information about volume identifiers.
  *
- * Returns: a newly allocated string containing the
- *     requested identfier, or %NULL if the #GVolume
+ * Returns: (nullable) (transfer full): a newly allocated string containing the
+ *     requested identifier, or %NULL if the #GVolume
  *     doesn't have this kind of identifier
  */
 char *
@@ -633,7 +634,7 @@ g_volume_enumerate_identifiers (GVolume *volume)
  * then the expression
  * |[<!-- language="C" -->
  *   (g_file_has_prefix (volume_activation_root, mount_root) ||
-      g_file_equal (volume_activation_root, mount_root))
+ *    g_file_equal (volume_activation_root, mount_root))
  * ]|
  * will always be %TRUE.
  *
@@ -666,7 +667,7 @@ g_volume_get_activation_root (GVolume *volume)
  *
  * Gets the sort key for @volume, if any.
  *
- * Returns: Sorting key for @volume or %NULL if no such key is available
+ * Returns: (nullable): Sorting key for @volume or %NULL if no such key is available
  *
  * Since: 2.32
  */

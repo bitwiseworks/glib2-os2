@@ -4,7 +4,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the licence, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -31,6 +31,9 @@
 #ifdef HAVE_LIBELF
 #include <libelf.h>
 #include <gelf.h>
+#endif
+
+#ifdef HAVE_MMAP
 #include <sys/mman.h>
 #endif
 
@@ -40,6 +43,10 @@
 
 #ifdef G_OS_WIN32
 #include "glib/glib-private.h"
+#endif
+
+#if defined(HAVE_LIBELF) && defined(HAVE_MMAP)
+#define USE_LIBELF
 #endif
 
 /* GResource functions {{{1 */
@@ -91,12 +98,15 @@ list_resource (GResource   *resource,
 
       len = MIN (strlen (child), strlen (prefix));
       if (strncmp (child, prefix, len) != 0)
-        continue;
+        {
+          g_free (child);
+          continue;
+        }
 
       if (g_resource_get_info (resource, child, 0, &size, &flags, NULL))
         {
           if (details)
-            g_print ("%s%s%6"G_GSIZE_FORMAT " %s %s\n", section, section[0] ? " " : "", size, flags & G_RESOURCE_FLAGS_COMPRESSED ? "c" : "u", child);
+            g_print ("%s%s%6"G_GSIZE_FORMAT " %s %s\n", section, section[0] ? " " : "", size, (flags & G_RESOURCE_FLAGS_COMPRESSED) ? "c" : "u", child);
           else
             g_print ("%s\n", child);
         }
@@ -130,7 +140,7 @@ extract_resource (GResource   *resource,
 
 /* Elf functions {{{1 */
 
-#ifdef HAVE_LIBELF
+#ifdef USE_LIBELF
 
 static Elf *
 get_elf (const gchar *file,
@@ -350,7 +360,7 @@ print_section_name (GElf_Shdr   *shdr,
   return TRUE;
 }
 
-#endif /* HAVE_LIBELF */
+#endif /* USE_LIBELF */
 
   /* Toplevel commands {{{1 */
 
@@ -362,7 +372,7 @@ cmd_sections (const gchar *file,
 {
   GResource *resource;
 
-#ifdef HAVE_LIBELF
+#ifdef USE_LIBELF
 
   Elf *elf;
   gint fd;
@@ -385,7 +395,7 @@ cmd_sections (const gchar *file,
   else
     {
       g_printerr ("Don't know how to handle %s\n", file);
-#ifndef HAVE_LIBELF
+#ifndef USE_LIBELF
       g_printerr ("gresource is built without elf support\n");
 #endif
     }
@@ -399,7 +409,7 @@ cmd_list (const gchar *file,
 {
   GResource *resource;
 
-#ifdef HAVE_LIBELF
+#ifdef USE_LIBELF
   Elf *elf;
   int fd;
 
@@ -421,7 +431,7 @@ cmd_list (const gchar *file,
   else
     {
       g_printerr ("Don't know how to handle %s\n", file);
-#ifndef HAVE_LIBELF
+#ifndef USE_LIBELF
       g_printerr ("gresource is built without elf support\n");
 #endif
     }
@@ -435,7 +445,7 @@ cmd_extract (const gchar *file,
 {
   GResource *resource;
 
-#ifdef HAVE_LIBELF
+#ifdef USE_LIBELF
 
   Elf *elf;
   int fd;
@@ -458,7 +468,7 @@ cmd_extract (const gchar *file,
   else
     {
       g_printerr ("Don't know how to handle %s\n", file);
-#ifndef HAVE_LIBELF
+#ifndef USE_LIBELF
       g_printerr ("gresource is built without elf support\n");
 #endif
     }
@@ -529,7 +539,7 @@ cmd_help (gboolean     requested,
     {
       g_string_append (string,
       _("Usage:\n"
-        "  gresource [--section SECTION] COMMAND [ARGS...]\n"
+        "  gresource [--section SECTION] COMMAND [ARGS…]\n"
         "\n"
         "Commands:\n"
         "  help                      Show this information\n"
@@ -538,7 +548,7 @@ cmd_help (gboolean     requested,
         "  details                   List resources with details\n"
         "  extract                   Extract a resource\n"
         "\n"
-        "Use 'gresource help COMMAND' to get detailed help.\n\n"));
+        "Use “gresource help COMMAND” to get detailed help.\n\n"));
     }
   else
     {

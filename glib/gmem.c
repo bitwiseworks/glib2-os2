@@ -4,7 +4,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -63,9 +63,14 @@ static GMemVTable glib_mem_vtable = {
  * 
  * These functions provide support for allocating and freeing memory.
  * 
- * If any call to allocate memory fails, the application is terminated.
- * This also means that there is no need to check if the call succeeded.
- * 
+ * If any call to allocate memory using functions g_new(), g_new0(), g_renew(),
+ * g_malloc(), g_malloc0(), g_malloc0_n(), g_realloc(), and g_realloc_n()
+ * fails, the application is terminated. This also means that there is no
+ * need to check if the call succeeded. On the other hand, g_try_...() family
+ * of functions returns %NULL on failure that can be used as a check
+ * for unsuccessful memory allocation. The application is not terminated
+ * in this case.
+ *
  * It's important to match g_malloc() (and wrappers such as g_new()) with
  * g_free(), g_slice_alloc() (and wrappers such as g_slice_new()) with
  * g_slice_free(), plain malloc() with free(), and (if you're using C++)
@@ -137,7 +142,7 @@ g_malloc0 (gsize n_bytes)
 
 /**
  * g_realloc:
- * @mem: (allow-none): the memory to reallocate
+ * @mem: (nullable): the memory to reallocate
  * @n_bytes: new size of the memory in bytes
  * 
  * Reallocates the memory pointed to by @mem, so that it now has space for
@@ -175,7 +180,7 @@ g_realloc (gpointer mem,
 
 /**
  * g_free:
- * @mem: (allow-none): the memory to free
+ * @mem: (nullable): the memory to free
  * 
  * Frees the memory pointed to by @mem.
  *
@@ -192,7 +197,8 @@ g_free (gpointer mem)
 
 /**
  * g_clear_pointer: (skip)
- * @pp: a pointer to a variable, struct member etc. holding a pointer
+ * @pp: (not nullable): a pointer to a variable, struct member etc. holding a
+ *    pointer
  * @destroy: a function to which a gpointer can be passed, to destroy *@pp
  *
  * Clears a reference to a variable.
@@ -204,7 +210,11 @@ g_free (gpointer mem)
  * pointer is set to %NULL.
  *
  * A macro is also included that allows this function to be used without
- * pointer casts.
+ * pointer casts. This will mask any warnings about incompatible function types
+ * or calling conventions, so you must ensure that your @destroy function is
+ * compatible with being called as `GDestroyNotify` using the standard calling
+ * convention for the platform that GLib was compiled for; otherwise the program
+ * will experience undefined behaviour.
  *
  * Since: 2.34
  **/
@@ -272,7 +282,7 @@ g_try_malloc0 (gsize n_bytes)
 
 /**
  * g_try_realloc:
- * @mem: (allow-none): previously-allocated memory, or %NULL.
+ * @mem: (nullable): previously-allocated memory, or %NULL.
  * @n_bytes: number of bytes to allocate.
  * 
  * Attempts to realloc @mem to a new size, @n_bytes, and returns %NULL
@@ -356,7 +366,7 @@ g_malloc0_n (gsize n_blocks,
 
 /**
  * g_realloc_n:
- * @mem: (allow-none): the memory to reallocate
+ * @mem: (nullable): the memory to reallocate
  * @n_blocks: the number of blocks to allocate
  * @n_block_bytes: the size of each block in bytes
  * 
@@ -424,7 +434,7 @@ g_try_malloc0_n (gsize n_blocks,
 
 /**
  * g_try_realloc_n:
- * @mem: (allow-none): previously-allocated memory, or %NULL.
+ * @mem: (nullable): previously-allocated memory, or %NULL.
  * @n_blocks: the number of blocks to allocate
  * @n_block_bytes: the size of each block in bytes
  * 
@@ -474,7 +484,8 @@ g_mem_is_system_malloc (void)
  * in GLib and GIO, because those use the GLib allocators before main is
  * reached. Therefore this function is now deprecated and is just a stub.
  *
- * Deprecated: 2.46: Use other memory profiling tools instead
+ * Deprecated: 2.46: This function now does nothing. Use other memory
+ * profiling tools instead
  */
 void
 g_mem_set_vtable (GMemVTable *vtable)
@@ -485,6 +496,9 @@ g_mem_set_vtable (GMemVTable *vtable)
 
 /**
  * glib_mem_profiler_table:
+ *
+ * Used to be a #GMemVTable containing profiling variants of the memory
+ * allocation functions, but this variable shouldn't be modified anymore.
  *
  * Deprecated: 2.46: Use other memory profiling tools instead
  */

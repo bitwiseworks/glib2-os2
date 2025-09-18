@@ -5,7 +5,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -103,18 +103,14 @@ g_tls_client_connection_default_init (GTlsClientConnectionInterface *iface)
   /**
    * GTlsClientConnection:use-ssl3:
    *
-   * If %TRUE, tells the connection to use a fallback version of TLS
+   * If %TRUE, forces the connection to use a fallback version of TLS
    * or SSL, rather than trying to negotiate the best version of TLS
-   * to use. This can be used when talking to servers that don't
-   * implement version negotiation correctly and therefore refuse to
-   * handshake at all with a "modern" TLS handshake.
-   *
-   * Despite the property name, the fallback version is not
-   * necessarily SSL 3.0; if SSL 3.0 has been disabled, the
-   * #GTlsClientConnection will use the next highest available version
-   * (normally TLS 1.0) as the fallback version.
+   * to use. See g_tls_client_connection_set_use_ssl3().
    *
    * Since: 2.28
+   *
+   * Deprecated: 2.56: SSL 3.0 is insecure, and this property does not
+   * generally enable or disable it, despite its name.
    */
   g_object_interface_install_property (iface,
 				       g_param_spec_boolean ("use-ssl3",
@@ -123,7 +119,8 @@ g_tls_client_connection_default_init (GTlsClientConnectionInterface *iface)
 							     FALSE,
 							     G_PARAM_READWRITE |
 							     G_PARAM_CONSTRUCT |
-							     G_PARAM_STATIC_STRINGS));
+							     G_PARAM_STATIC_STRINGS |
+							     G_PARAM_DEPRECATED));
 
   /**
    * GTlsClientConnection:accepted-cas: (type GLib.List) (element-type GLib.ByteArray)
@@ -149,12 +146,16 @@ g_tls_client_connection_default_init (GTlsClientConnectionInterface *iface)
 /**
  * g_tls_client_connection_new:
  * @base_io_stream: the #GIOStream to wrap
- * @server_identity: (allow-none): the expected identity of the server
+ * @server_identity: (nullable): the expected identity of the server
  * @error: #GError for error reporting, or %NULL to ignore.
  *
  * Creates a new #GTlsClientConnection wrapping @base_io_stream (which
  * must have pollable input and output streams) which is assumed to
  * communicate with the server identified by @server_identity.
+ *
+ * See the documentation for #GTlsConnection:base-io-stream for restrictions
+ * on when application code can run operations on the @base_io_stream after
+ * this function has returned.
  *
  * Returns: (transfer full) (type GTlsClientConnection): the new
  * #GTlsClientConnection, or %NULL on error
@@ -269,13 +270,16 @@ g_tls_client_connection_set_server_identity (GTlsClientConnection *conn,
  * g_tls_client_connection_get_use_ssl3:
  * @conn: the #GTlsClientConnection
  *
- * Gets whether @conn will use SSL 3.0 rather than the
- * highest-supported version of TLS; see
- * g_tls_client_connection_set_use_ssl3().
+ * Gets whether @conn will force the lowest-supported TLS protocol
+ * version rather than attempt to negotiate the highest mutually-
+ * supported version of TLS; see g_tls_client_connection_set_use_ssl3().
  *
- * Returns: whether @conn will use SSL 3.0
+ * Returns: whether @conn will use the lowest-supported TLS protocol version
  *
  * Since: 2.28
+ *
+ * Deprecated: 2.56: SSL 3.0 is insecure, and this function does not
+ * actually indicate whether it is enabled.
  */
 gboolean
 g_tls_client_connection_get_use_ssl3 (GTlsClientConnection *conn)
@@ -291,15 +295,26 @@ g_tls_client_connection_get_use_ssl3 (GTlsClientConnection *conn)
 /**
  * g_tls_client_connection_set_use_ssl3:
  * @conn: the #GTlsClientConnection
- * @use_ssl3: whether to use SSL 3.0
+ * @use_ssl3: whether to use the lowest-supported protocol version
  *
- * If @use_ssl3 is %TRUE, this forces @conn to use SSL 3.0 rather than
- * trying to properly negotiate the right version of TLS or SSL to use.
- * This can be used when talking to servers that do not implement the
- * fallbacks correctly and which will therefore fail to handshake with
- * a "modern" TLS handshake attempt.
+ * Since 2.42.1, if @use_ssl3 is %TRUE, this forces @conn to use the
+ * lowest-supported TLS protocol version rather than trying to properly
+ * negotiate the highest mutually-supported protocol version with the
+ * peer. Be aware that SSL 3.0 is generally disabled by the
+ * #GTlsBackend, so the lowest-supported protocol version is probably
+ * not SSL 3.0.
+ *
+ * Since 2.58, this may additionally cause an RFC 7507 fallback SCSV to
+ * be sent to the server, causing modern TLS servers to immediately
+ * terminate the connection. You should generally only use this function
+ * if you need to connect to broken servers that exhibit TLS protocol
+ * version intolerance, and when an initial attempt to connect to a
+ * server normally has already failed.
  *
  * Since: 2.28
+ *
+ * Deprecated: 2.56: SSL 3.0 is insecure, and this function does not
+ * generally enable or disable it, despite its name.
  */
 void
 g_tls_client_connection_set_use_ssl3 (GTlsClientConnection *conn,

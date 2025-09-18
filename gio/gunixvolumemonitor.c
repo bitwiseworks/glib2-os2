@@ -7,7 +7,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -183,15 +183,21 @@ g_unix_volume_monitor_class_init (GUnixVolumeMonitorClass *klass)
   native_class->get_mount_for_mount_path = get_mount_for_mount_path;
 }
 
+void
+_g_unix_volume_monitor_update (GUnixVolumeMonitor *unix_monitor)
+{
+  /* Update both to make sure volumes are created before mounts */
+  update_volumes (unix_monitor);
+  update_mounts (unix_monitor);
+}
+
 static void
 mountpoints_changed (GUnixMountMonitor *mount_monitor,
 		     gpointer           user_data)
 {
   GUnixVolumeMonitor *unix_monitor = user_data;
 
-  /* Update both to make sure volumes are created before mounts */
-  update_volumes (unix_monitor);
-  update_mounts (unix_monitor);
+  _g_unix_volume_monitor_update (unix_monitor);
 }
 
 static void
@@ -200,9 +206,7 @@ mounts_changed (GUnixMountMonitor *mount_monitor,
 {
   GUnixVolumeMonitor *unix_monitor = user_data;
 
-  /* Update both to make sure volumes are created before mounts */
-  update_volumes (unix_monitor);
-  update_mounts (unix_monitor);
+  _g_unix_volume_monitor_update (unix_monitor);
 }
 
 static void
@@ -219,8 +223,7 @@ g_unix_volume_monitor_init (GUnixVolumeMonitor *unix_monitor)
 		    "mountpoints-changed", G_CALLBACK (mountpoints_changed),
 		    unix_monitor);
 		    
-  update_volumes (unix_monitor);
-  update_mounts (unix_monitor);
+  _g_unix_volume_monitor_update (unix_monitor);
 }
 
 GVolumeMonitor *

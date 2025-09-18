@@ -5,7 +5,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -615,18 +615,21 @@ read_all_from_fd (gint fd, gsize *out_len, GError **error)
 
   do
     {
+      int errsv;
+
       num_read = read (fd, buf, sizeof (buf));
+      errsv = errno;
       if (num_read == -1)
         {
-          if (errno == EAGAIN || errno == EWOULDBLOCK)
+          if (errsv == EAGAIN || errsv == EWOULDBLOCK)
             continue;
           g_set_error (error,
                        G_IO_ERROR,
-                       g_io_error_from_errno (errno),
+                       g_io_error_from_errno (errsv),
                        "Failed reading %d bytes into offset %d: %s",
                        (gint) sizeof (buf),
                        (gint) str->len,
-                       strerror (errno));
+                       g_strerror (errsv));
           goto error;
         }
       else if (num_read > 0)
@@ -646,7 +649,7 @@ read_all_from_fd (gint fd, gsize *out_len, GError **error)
 
  error:
   if (out_len != NULL)
-    out_len = 0;
+    *out_len = 0;
   g_string_free (str, TRUE);
   return NULL;
 }
@@ -872,6 +875,7 @@ test_peer (void)
                       getuid ());
     g_assert_cmpuint (g_credentials_get_unix_pid (credentials, NULL), ==,
                       getpid ());
+    g_object_unref (credentials);
 #else
     g_assert_error (error, G_IO_ERROR, G_IO_ERROR_NOT_SUPPORTED);
     g_assert (credentials == NULL);
@@ -1355,6 +1359,8 @@ test_nonce_tcp (void)
 
   g_main_loop_quit (service_loop);
   g_thread_join (service_thread);
+
+  g_ptr_array_unref (data.current_connections);
 }
 
 static void
@@ -1679,7 +1685,11 @@ codegen_test_peer (void)
                                   NULL, &error);
   g_assert_no_error (error);
   g_variant_get (value, "(&s)", &s);
-  g_assert (g_dbus_is_guid (s));
+  g_test_message ("Machine ID: %s", s);
+  /* It's valid for machine-id inside containers to be empty, so we
+   * need to test for that possibility
+   */
+  g_assert ((s == NULL || *s == '\0') || g_dbus_is_guid (s));
   g_variant_unref (value);
   
   /* Poke server and make sure animal is updated */
@@ -1704,6 +1714,7 @@ codegen_test_peer (void)
    * change notifications anyway because those are done from an idle handler
    */
   example_animal_call_poke_sync (animal2, TRUE, TRUE, NULL, &error);
+  g_clear_error (&error);
 
   g_object_unref (animal1);
   g_object_unref (animal2);

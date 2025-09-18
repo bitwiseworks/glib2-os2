@@ -1,15 +1,20 @@
 /*
  * Copyright 2011 Red Hat, Inc.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation; either version 2 of the
- * License, or (at your option) any later version.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * See the included COPYING file for more information.
  */
 
 #include <glib.h>
+
+/* We want the g_atomic_pointer_get() macros to work when compiling third party
+ * projects with -Wbad-function-cast.
+ * See https://gitlab.gnome.org/GNOME/glib/issues/1041. */
+#pragma GCC diagnostic error "-Wbad-function-cast"
 
 static void
 test_types (void)
@@ -87,7 +92,8 @@ test_types (void)
   g_assert (ip == 0);
 
   g_atomic_pointer_set (&gs, 0);
-  gs2 = (gsize) g_atomic_pointer_get (&gs);
+  vp2 = g_atomic_pointer_get (&gs);
+  gs2 = (gsize) vp2;
   g_assert (gs2 == 0);
   res = g_atomic_pointer_compare_and_exchange (&gs, 0, 0);
   g_assert (res);
@@ -191,7 +197,8 @@ G_GNUC_END_IGNORE_DEPRECATIONS
   g_assert (ip == 0);
 
   g_atomic_pointer_set (&gs, 0);
-  gs2 = (gsize) g_atomic_pointer_get (&gs);
+  vp = g_atomic_pointer_get (&gs);
+  gs2 = (gsize) vp;
   g_assert (gs2 == 0);
   res = g_atomic_pointer_compare_and_exchange (&gs, 0, 0);
   g_assert (res);

@@ -4,7 +4,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -120,7 +120,9 @@
  *
  * GLib is attempting to unify around the use of 64bit integers to
  * represent microsecond-precision time. As such, this type will be
- * removed from a future version of GLib.
+ * removed from a future version of GLib. A consequence of using `glong` for
+ * `tv_sec` is that on 32-bit systems `GTimeVal` is subject to the year 2038
+ * problem.
  */
 
 /**
@@ -343,6 +345,35 @@ g_date_free (GDate *date)
 }
 
 /**
+ * g_date_copy:
+ * @date: a #GDate to copy
+ *
+ * Copies a GDate to a newly-allocated GDate. If the input was invalid
+ * (as determined by g_date_valid()), the invalid state will be copied
+ * as is into the new object.
+ *
+ * Returns: (transfer full): a newly-allocated #GDate initialized from @date
+ *
+ * Since: 2.56
+ */
+GDate *
+g_date_copy (const GDate *date)
+{
+  GDate *res;
+  g_return_val_if_fail (date != NULL, NULL);
+
+  if (g_date_valid (date))
+    res = g_date_new_julian (g_date_get_julian (date));
+  else
+    {
+      res = g_date_new ();
+      *res = *date;
+    }
+
+  return res;
+}
+
+/**
  * g_date_valid:
  * @date: a #GDate to check
  *
@@ -465,6 +496,8 @@ g_date_valid_dmy (GDateDay   d,
                   GDateMonth m, 
 		  GDateYear  y)
 {
+  /* No need to check the upper bound of @y, because #GDateYear is 16 bits wide,
+   * just like #GDate.year. */
   return ( (m > G_DATE_BAD_MONTH) &&
            (m < 13)               && 
            (d > G_DATE_BAD_DAY)   && 
@@ -485,7 +518,7 @@ g_date_update_julian (const GDate *const_d)
   gint idx;
   
   g_return_if_fail (d != NULL);
-  g_return_if_fail (d->dmy);
+  g_return_if_fail (d->dmy != 0);
   g_return_if_fail (!d->julian);
   g_return_if_fail (g_date_valid_dmy (d->day, d->month, d->year));
   
@@ -548,7 +581,7 @@ g_date_update_dmy (const GDate *const_d)
   
 #ifdef G_ENABLE_DEBUG
   if (!g_date_valid_dmy (day, m, y)) 
-    g_warning ("\nOOPS julian: %u  computed dmy: %u %u %u\n", 
+    g_warning ("OOPS julian: %u  computed dmy: %u %u %u",
 	       d->julian_days, day, m, y);
 #endif
   
@@ -732,7 +765,7 @@ g_date_get_monday_week_of_year (const GDate *d)
  * @date: a #GDate
  *
  * Returns the week of the year during which this date falls, if
- * weeks are understood to being on Sunday. The date must be valid.
+ * weeks are understood to begin on Sunday. The date must be valid.
  * Can return 0 if the day is before the first Sunday of the year.
  *
  * Returns: week number
@@ -850,9 +883,19 @@ static gchar *long_month_names[13] =
   NULL,
 };
 
+static gchar *long_month_names_alternative[13] =
+{
+  NULL,
+};
+
 static gchar *short_month_names[13] = 
 {
   NULL, 
+};
+
+static gchar *short_month_names_alternative[13] =
+{
+  NULL,
 };
 
 /* This tells us if we need to update the parse info */
@@ -887,6 +930,27 @@ struct _GDateParseTokens {
 };
 
 typedef struct _GDateParseTokens GDateParseTokens;
+
+static inline gboolean
+update_month_match (gsize *longest,
+                    const gchar *haystack,
+                    const gchar *needle)
+{
+  gsize length;
+
+  if (needle == NULL)
+    return FALSE;
+
+  length = strlen (needle);
+  if (*longest >= length)
+    return FALSE;
+
+  if (strstr (haystack, needle) == NULL)
+    return FALSE;
+
+  *longest = length;
+  return TRUE;
+}
 
 #define NUM_LEN 10
 
@@ -935,6 +999,7 @@ g_date_fill_parse_tokens (const gchar *str, GDateParseTokens *pt)
   
   if (pt->num_ints < 3)
     {
+      gsize longest = 0;
       gchar *casefold;
       gchar *normalized;
       
@@ -942,32 +1007,37 @@ g_date_fill_parse_tokens (const gchar *str, GDateParseTokens *pt)
       normalized = g_utf8_normalize (casefold, -1, G_NORMALIZE_ALL);
       g_free (casefold);
 
-      i = 1;
-      while (i < 13)
+      for (i = 1; i < 13; ++i)
         {
-          if (long_month_names[i] != NULL) 
-            {
-              const gchar *found = strstr (normalized, long_month_names[i]);
-	      
-              if (found != NULL)
-                {
-                  pt->month = i;
-		  break;
-                }
-            }
-	  
-          if (short_month_names[i] != NULL) 
-            {
-              const gchar *found = strstr (normalized, short_month_names[i]);
-	      
-              if (found != NULL)
-                {
-                  pt->month = i;
-		  break;
-                }
-            }
+          /* Here month names may be in a genitive case if the language
+           * grammatical rules require it.
+           * Examples of how January may look in some languages:
+           * Catalan: "de gener", Croatian: "siječnja", Polish: "stycznia",
+           * Upper Sorbian: "januara".
+           * Note that most of the languages can't or don't use the the
+           * genitive case here so they use nominative everywhere.
+           * For example, English always uses "January".
+           */
+          if (update_month_match (&longest, normalized, long_month_names[i]))
+            pt->month = i;
 
-          ++i;
+          /* Here month names will be in a nominative case.
+           * Examples of how January may look in some languages:
+           * Catalan: "gener", Croatian: "Siječanj", Polish: "styczeń",
+           * Upper Sorbian: "Januar".
+           */
+          if (update_month_match (&longest, normalized, long_month_names_alternative[i]))
+            pt->month = i;
+
+          /* Differences between abbreviated nominative and abbreviated
+           * genitive month names are visible in very few languages but
+           * let's handle them.
+           */
+          if (update_month_match (&longest, normalized, short_month_names[i]))
+            pt->month = i;
+
+          if (update_month_match (&longest, normalized, short_month_names_alternative[i]))
+            pt->month = i;
         }
 
       g_free (normalized);
@@ -1007,7 +1077,7 @@ g_date_prepare_to_parse (const gchar      *str,
         {
 	  gchar *casefold;
 	  
-          g_date_set_dmy (&d, 1, i, 1);
+          g_date_set_dmy (&d, 1, i, 1976);
 	  
           g_return_if_fail (g_date_valid (&d));
 	  
@@ -1024,6 +1094,18 @@ g_date_prepare_to_parse (const gchar      *str,
           long_month_names[i] = g_utf8_normalize (casefold, -1, G_NORMALIZE_ALL);
 	  g_free (casefold);
           
+          g_date_strftime (buf, 127, "%Ob", &d);
+          casefold = g_utf8_casefold (buf, -1);
+          g_free (short_month_names_alternative[i]);
+          short_month_names_alternative[i] = g_utf8_normalize (casefold, -1, G_NORMALIZE_ALL);
+          g_free (casefold);
+
+          g_date_strftime (buf, 127, "%OB", &d);
+          casefold = g_utf8_casefold (buf, -1);
+          g_free (long_month_names_alternative[i]);
+          long_month_names_alternative[i] = g_utf8_normalize (casefold, -1, G_NORMALIZE_ALL);
+          g_free (casefold);
+
           ++i;
         }
       
@@ -1036,6 +1118,12 @@ g_date_prepare_to_parse (const gchar      *str,
       g_date_strftime (buf, 127, "%x", &d);
       
       g_date_fill_parse_tokens (buf, &testpt);
+
+      using_twodigit_years = FALSE;
+      locale_era_adjust = 0;
+      dmy_order[0] = G_DATE_DAY;
+      dmy_order[1] = G_DATE_MONTH;
+      dmy_order[2] = G_DATE_YEAR;
       
       i = 0;
       while (i < testpt.num_ints)
@@ -1068,6 +1156,13 @@ g_date_prepare_to_parse (const gchar      *str,
       while (i < 13) 
         {
           DEBUG_MSG (("  %s   %s", long_month_names[i], short_month_names[i]));
+          ++i;
+        }
+      DEBUG_MSG (("Alternative month names:"));
+      i = 1;
+      while (i < 13)
+        {
+          DEBUG_MSG (("  %s   %s", long_month_names_alternative[i], short_month_names_alternative[i]));
           ++i;
         }
       if (using_twodigit_years)
@@ -1287,7 +1382,10 @@ g_date_set_parse (GDate       *d,
  *
  * To set the value of a date to the current day, you could write:
  * |[<!-- language="C" -->
- *  g_date_set_time_t (date, time (NULL)); 
+ *  time_t now = time (NULL);
+ *  if (now == (time_t) -1)
+ *    // handle the error
+ *  g_date_set_time_t (date, now);
  * ]|
  *
  * Since: 2.10
@@ -1569,6 +1667,7 @@ g_date_add_days (GDate *d,
     g_date_update_julian (d);
 
   g_return_if_fail (d->julian);
+  g_return_if_fail (ndays <= G_MAXUINT32 - d->julian_days);
   
   d->julian_days += ndays;
   d->dmy = FALSE;
@@ -1622,13 +1721,16 @@ g_date_add_months (GDate *d,
   if (!d->dmy) 
     g_date_update_dmy (d);
 
-  g_return_if_fail (d->dmy);  
-  
+  g_return_if_fail (d->dmy != 0);
+  g_return_if_fail (nmonths <= G_MAXUINT - (d->month - 1));
+
   nmonths += d->month - 1;
   
   years  = nmonths/12;
   months = nmonths%12;
-  
+
+  g_return_if_fail (years <= G_MAXUINT16 - d->year);
+
   d->month = months + 1;
   d->year  += years;
   
@@ -1664,7 +1766,7 @@ g_date_subtract_months (GDate *d,
   if (!d->dmy) 
     g_date_update_dmy (d);
 
-  g_return_if_fail (d->dmy);  
+  g_return_if_fail (d->dmy != 0);
   
   years  = nmonths/12;
   months = nmonths%12;
@@ -1710,8 +1812,9 @@ g_date_add_years (GDate *d,
   if (!d->dmy) 
     g_date_update_dmy (d);
 
-  g_return_if_fail (d->dmy);  
-  
+  g_return_if_fail (d->dmy != 0);
+  g_return_if_fail (nyears <= G_MAXUINT16 - d->year);
+
   d->year += nyears;
   
   if (d->month == 2 && d->day == 29)
@@ -1743,7 +1846,7 @@ g_date_subtract_years (GDate *d,
   if (!d->dmy) 
     g_date_update_dmy (d);
 
-  g_return_if_fail (d->dmy);  
+  g_return_if_fail (d->dmy != 0);
   g_return_if_fail (d->year > nyears);
   
   d->year -= nyears;
@@ -1938,7 +2041,7 @@ g_date_compare (const GDate *lhs,
 /**
  * g_date_to_struct_tm:
  * @date: a #GDate to set the struct tm from
- * @tm: struct tm to fill
+ * @tm: (not nullable): struct tm to fill
  *
  * Fills in the date-related bits of a struct tm using the @date value.
  * Initializes the non-date parts with something sane but meaningless.
@@ -1955,7 +2058,7 @@ g_date_to_struct_tm (const GDate *d,
   if (!d->dmy) 
     g_date_update_dmy (d);
 
-  g_return_if_fail (d->dmy);
+  g_return_if_fail (d->dmy != 0);
   
   /* zero all the irrelevant fields to be sure they're valid */
   
@@ -2039,6 +2142,48 @@ g_date_order (GDate *date1,
 }
 
 #ifdef G_OS_WIN32
+static void
+append_month_name (GArray     *result,
+		   LCID        lcid,
+		   SYSTEMTIME *systemtime,
+		   gboolean    abbreviated,
+		   gboolean    alternative)
+{
+  int n;
+  WORD base;
+  LPCWSTR lpFormat;
+
+  if (alternative)
+    {
+      base = abbreviated ? LOCALE_SABBREVMONTHNAME1 : LOCALE_SMONTHNAME1;
+      n = GetLocaleInfoW (lcid, base + systemtime->wMonth - 1, NULL, 0);
+      g_array_set_size (result, result->len + n);
+      GetLocaleInfoW (lcid, base + systemtime->wMonth - 1,
+		      ((wchar_t *) result->data) + result->len - n, n);
+      g_array_set_size (result, result->len - 1);
+    }
+  else
+    {
+      /* According to MSDN, this is the correct method to obtain
+       * the form of the month name used when formatting a full
+       * date; it must be a genitive case in some languages.
+       */
+      lpFormat = abbreviated ? L"ddMMM" : L"ddMMMM";
+      n = GetDateFormatW (lcid, 0, systemtime, lpFormat, NULL, 0);
+      g_array_set_size (result, result->len + n);
+      GetDateFormatW (lcid, 0, systemtime, lpFormat,
+		      ((wchar_t *) result->data) + result->len - n, n);
+      /* We have obtained a day number as two digits and the month name.
+       * Now let's get rid of those two digits: overwrite them with the
+       * month name.
+       */
+      memmove (((wchar_t *) result->data) + result->len - n,
+	       ((wchar_t *) result->data) + result->len - n + 2,
+	       (n - 2) * sizeof (wchar_t));
+      g_array_set_size (result, result->len - 3);
+    }
+}
+
 static gsize
 win32_strftime_helper (const GDate     *d,
 		       const gchar     *format,
@@ -2052,7 +2197,7 @@ win32_strftime_helper (const GDate     *d,
   int n, k;
   GArray *result;
   const gchar *p;
-  gunichar c;
+  gunichar c, modifier;
   const wchar_t digits[] = L"0123456789";
   gchar *convbuf;
   glong convlen = 0;
@@ -2084,17 +2229,21 @@ win32_strftime_helper (const GDate     *d,
 
 	      return 0;
 	    }
-	  
+
+	  modifier = '\0';
 	  c = g_utf8_get_char (p);
 	  if (c == 'E' || c == 'O')
 	    {
-	      /* Ignore modified conversion specifiers for now. */
+	      /* "%OB", "%Ob", and "%Oh" are supported, ignore other modified
+	       * conversion specifiers for now.
+	       */
+	      modifier = c;
 	      p = g_utf8_next_char (p);
 	      if (!*p)
 		{
 		  s[0] = '\0';
 		  g_array_free (result, TRUE);
-		  
+
 		  return 0;
 		}
 
@@ -2125,16 +2274,12 @@ win32_strftime_helper (const GDate     *d,
 	      break;
 	    case 'b':
 	    case 'h':
-	      n = GetLocaleInfoW (lcid, LOCALE_SABBREVMONTHNAME1+systemtime.wMonth-1, NULL, 0);
-	      g_array_set_size (result, result->len + n);
-	      GetLocaleInfoW (lcid, LOCALE_SABBREVMONTHNAME1+systemtime.wMonth-1, ((wchar_t *) result->data) + result->len - n, n);
-	      g_array_set_size (result, result->len - 1);
+	      append_month_name (result, lcid, &systemtime, TRUE,
+				 modifier == 'O');
 	      break;
 	    case 'B':
-	      n = GetLocaleInfoW (lcid, LOCALE_SMONTHNAME1+systemtime.wMonth-1, NULL, 0);
-	      g_array_set_size (result, result->len + n);
-	      GetLocaleInfoW (lcid, LOCALE_SMONTHNAME1+systemtime.wMonth-1, ((wchar_t *) result->data) + result->len - n, n);
-	      g_array_set_size (result, result->len - 1);
+	      append_month_name (result, lcid, &systemtime, FALSE,
+				 modifier == 'O');
 	      break;
 	    case 'c':
 	      n = GetDateFormatW (lcid, 0, &systemtime, NULL, NULL, 0);
@@ -2439,6 +2584,9 @@ win32_strftime_helper (const GDate     *d,
  *
  * Returns: number of characters written to the buffer, or 0 the buffer was too small
  */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+
 gsize     
 g_date_strftime (gchar       *s, 
                  gsize        slen, 
@@ -2478,7 +2626,7 @@ g_date_strftime (gchar       *s,
 
   if (error)
     {
-      g_warning (G_STRLOC "Error converting format to locale encoding: %s\n", error->message);
+      g_warning (G_STRLOC "Error converting format to locale encoding: %s", error->message);
       g_error_free (error);
 
       s[0] = '\0';
@@ -2503,7 +2651,7 @@ g_date_strftime (gchar       *s,
 
           if (tmpbufsize > 65536)
             {
-              g_warning (G_STRLOC "Maximum buffer size for g_date_strftime exceeded: giving up\n");
+              g_warning (G_STRLOC "Maximum buffer size for g_date_strftime exceeded: giving up");
               g_free (locale_format);
 
               s[0] = '\0';
@@ -2520,7 +2668,7 @@ g_date_strftime (gchar       *s,
 
   if (error)
     {
-      g_warning (G_STRLOC "Error converting results of strftime to UTF-8: %s\n", error->message);
+      g_warning (G_STRLOC "Error converting results of strftime to UTF-8: %s", error->message);
       g_error_free (error);
 
       s[0] = '\0';
@@ -2549,3 +2697,5 @@ g_date_strftime (gchar       *s,
   return retval;
 #endif
 }
+
+#pragma GCC diagnostic pop

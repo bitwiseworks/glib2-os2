@@ -4,7 +4,6 @@ noinst_LTLIBRARIES += libpcre.la
 
 libpcre_la_CPPFLAGS = \
 	-DG_LOG_DOMAIN=\"GLib-GRegex\" \
-	-DHAVE_CONFIG_H \
 	-DHAVE_MEMMOVE \
 	-DSUPPORT_UCP \
 	-DSUPPORT_UTF \
@@ -52,6 +51,7 @@ libpcre_la_SOURCES = \
 	pcre_study.c \
 	pcre_tables.c \
 	pcre_valid_utf8.c \
+	pcre_version.c \
 	pcre_xclass.c \
 	pcre.h \
 	pcre_internal.h \
@@ -59,6 +59,4 @@ libpcre_la_SOURCES = \
 
 libpcre_la_LIBADD = $(DEP_LIBS)
 
-EXTRA_DIST +=				\
-		COPYING			\
-		makefile.msc
+EXTRA_DIST += COPYING

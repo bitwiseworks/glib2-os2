@@ -68,6 +68,20 @@ check_locale_string_value (GKeyFile    *keyfile,
 }
 
 static void
+check_string_locale_value (GKeyFile    *keyfile,
+                           const gchar *group,
+                           const gchar *key,
+                           const gchar *locale,
+                           const gchar *expected)
+{
+  gchar *value;
+
+  value = g_key_file_get_locale_for_key (keyfile, group, key, locale);
+  g_assert_cmpstr (value, ==, expected);
+  g_free (value);
+}
+
+static void
 check_string_list_value (GKeyFile    *keyfile,
                          const gchar *group,
                          const gchar *key,
@@ -574,6 +588,8 @@ test_boolean (void)
     "key2=false\n"
     "key3=1\n"
     "key4=0\n"
+    "key5= true\n"
+    "key6=true \n"
     "[invalid]\n"
     "key1=t\n"
     "key2=f\n"
@@ -586,6 +602,8 @@ test_boolean (void)
   check_boolean_value (keyfile, "valid", "key2", FALSE);
   check_boolean_value (keyfile, "valid", "key3", TRUE);
   check_boolean_value (keyfile, "valid", "key4", FALSE);
+  check_boolean_value (keyfile, "valid", "key5", TRUE);
+  check_boolean_value (keyfile, "valid", "key6", TRUE);
 
   g_key_file_get_boolean (keyfile, "invalid", "key1", &error);
   check_error (&error, G_KEY_FILE_ERROR, G_KEY_FILE_ERROR_INVALID_VALUE);
@@ -611,6 +629,7 @@ test_number (void)
 {
   GKeyFile *keyfile;
   GError *error = NULL;
+  gdouble dval = 0.0;
 
   const gchar *data =
     "[valid]\n"
@@ -620,6 +639,8 @@ test_number (void)
     "key4=2324431\n"
     "key5=-2324431\n"
     "key6=000111\n"
+    "key7= 1\n"
+    "key8=1 \n"
     "dkey1=000111\n"
     "dkey2=145.45\n"
     "dkey3=-3453.7\n"
@@ -641,6 +662,8 @@ test_number (void)
   check_integer_value (keyfile, "valid", "key4", 2324431);
   check_integer_value (keyfile, "valid", "key5", -2324431);
   check_integer_value (keyfile, "valid", "key6", 111);
+  check_integer_value (keyfile, "valid", "key7", 1);
+  check_integer_value (keyfile, "valid", "key8", 1);
   check_double_value (keyfile, "valid", "dkey1", 111.0);
   check_double_value (keyfile, "valid", "dkey2", 145.45);
   check_double_value (keyfile, "valid", "dkey3", -3453.7);
@@ -657,17 +680,21 @@ test_number (void)
   g_key_file_get_integer (keyfile, "invalid", "key4", &error);
   check_error (&error, G_KEY_FILE_ERROR, G_KEY_FILE_ERROR_INVALID_VALUE);
 
-  g_key_file_get_double (keyfile, "invalid", "key5", &error);
+  dval = g_key_file_get_double (keyfile, "invalid", "key5", &error);
   check_error (&error, G_KEY_FILE_ERROR, G_KEY_FILE_ERROR_INVALID_VALUE);
+  g_assert_cmpfloat (dval, ==, 0.0);
 
-  g_key_file_get_double (keyfile, "invalid", "key6", &error);
+  dval = g_key_file_get_double (keyfile, "invalid", "key6", &error);
   check_error (&error, G_KEY_FILE_ERROR, G_KEY_FILE_ERROR_INVALID_VALUE);
+  g_assert_cmpfloat (dval, ==, 0.0);
 
-  g_key_file_get_double (keyfile, "invalid", "key7", &error);
+  dval = g_key_file_get_double (keyfile, "invalid", "key7", &error);
   check_error (&error, G_KEY_FILE_ERROR, G_KEY_FILE_ERROR_INVALID_VALUE);
+  g_assert_cmpfloat (dval, ==, 0.0);
 
-  g_key_file_get_double (keyfile, "invalid", "key8", &error);
+  dval = g_key_file_get_double (keyfile, "invalid", "key8", &error);
   check_error (&error, G_KEY_FILE_ERROR, G_KEY_FILE_ERROR_INVALID_VALUE);
+  g_assert_cmpfloat (dval, ==, 0.0);
 
   g_key_file_free (keyfile);
 }
@@ -1637,6 +1664,104 @@ test_roundtrip (void)
   g_key_file_free (kf);
 }
 
+static void
+test_bytes (void)
+{
+  const gchar data[] =
+    "[Group1]\n"
+    "key1=value1\n"
+    "\n"
+    "[Group2]\n"
+    "key2=value2\n";
+
+  GKeyFile *kf = g_key_file_new ();
+  GBytes *bytes = g_bytes_new (data, strlen (data));
+  GError *error = NULL;
+
+  gchar **names;
+  gsize len;
+
+  g_key_file_load_from_bytes (kf, bytes, 0, &error);
+
+  g_assert_no_error (error);
+
+  names = g_key_file_get_groups (kf, &len);
+  g_assert_nonnull (names);
+
+  check_length ("groups", g_strv_length (names), len, 2);
+  check_name ("group name", names[0], "Group1", 0);
+  check_name ("group name", names[1], "Group2", 1);
+
+  check_string_value (kf, "Group1", "key1", "value1");
+  check_string_value (kf, "Group2", "key2", "value2");
+
+  g_strfreev (names);
+  g_bytes_unref (bytes);
+  g_key_file_free (kf);
+}
+
+static void
+test_get_locale (void)
+{
+  GKeyFile *kf;
+
+  kf = g_key_file_new ();
+  g_key_file_load_from_data (kf,
+                             "[Group]\n"
+                             "x[fr_CA]=a\n"
+                             "x[fr]=b\n"
+                             "x=c\n",
+                             -1, G_KEY_FILE_KEEP_TRANSLATIONS,
+                             NULL);
+
+  check_locale_string_value (kf, "Group", "x", "fr_CA", "a");
+  check_string_locale_value (kf, "Group", "x", "fr_CA", "fr_CA");
+
+  check_locale_string_value (kf, "Group", "x", "fr_CH", "b");
+  check_string_locale_value (kf, "Group", "x", "fr_CH", "fr");
+
+  check_locale_string_value (kf, "Group", "x", "eo", "c");
+  check_string_locale_value (kf, "Group", "x", "eo", NULL);
+
+  g_key_file_free (kf);
+}
+
+static void
+test_free_when_not_last_ref (void)
+{
+  GKeyFile *kf;
+  GError *error = NULL;
+  const gchar *data =
+    "[Group]\n"
+    "Key=Value\n";
+
+  kf = load_data (data, G_KEY_FILE_NONE);
+  /* Add a second ref */
+  g_key_file_ref (kf);
+
+  /* Quick coherence check */
+  g_assert_true (g_key_file_has_group (kf, "Group"));
+  g_assert_true (g_key_file_has_key (kf, "Group", "Key", &error));
+  g_assert_no_error (error);
+
+  /* Should clear all keys and groups, and remove one ref */
+  g_key_file_free (kf);
+
+  /* kf should still work */
+  g_assert_false (g_key_file_has_group (kf, "Group"));
+  g_assert_false (g_key_file_has_key (kf, "Group", "Key", &error));
+  check_error (&error, G_KEY_FILE_ERROR, G_KEY_FILE_ERROR_GROUP_NOT_FOUND);
+  g_clear_error (&error);
+
+  g_key_file_load_from_data (kf, data, -1, G_KEY_FILE_NONE, &error);
+  g_assert_no_error (error);
+
+  g_assert_true (g_key_file_has_group (kf, "Group"));
+  g_assert_true (g_key_file_has_key (kf, "Group", "Key", &error));
+
+  g_key_file_unref (kf);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -1680,6 +1805,9 @@ main (int argc, char *argv[])
   g_test_add_func ("/keyfile/limbo", test_limbo);
   g_test_add_func ("/keyfile/utf8", test_utf8);
   g_test_add_func ("/keyfile/roundtrip", test_roundtrip);
+  g_test_add_func ("/keyfile/bytes", test_bytes);
+  g_test_add_func ("/keyfile/get-locale", test_get_locale);
+  g_test_add_func ("/keyfile/free-when-not-last-ref", test_free_when_not_last_ref);
 
   return g_test_run ();
 }

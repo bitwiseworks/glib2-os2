@@ -6,7 +6,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -47,6 +47,10 @@
 #include "gappinfo.h"
 #include "gappinfoprivate.h"
 #include "glocalfilemonitor.h"
+
+#ifdef G_OS_UNIX
+#include "gdocumentportal.h"
+#endif
 
 /**
  * SECTION:gdesktopappinfo
@@ -151,6 +155,7 @@ static guint           n_desktop_file_dirs;
 static const guint     desktop_file_dir_user_config_index = 0;
 static guint           desktop_file_dir_user_data_index;
 static GMutex          desktop_file_dir_lock;
+static const gchar    *gio_launch_desktop_path = NULL;
 
 /* Monitor 'changed' signal handler {{{2 */
 static void desktop_file_dir_reset (DesktopFileDir *dir);
@@ -383,6 +388,22 @@ const gchar desktop_key_match_category[N_DESKTOP_KEYS] = {
   [DESKTOP_KEY_Comment]          = 6
 };
 
+/* Common prefix commands to ignore from Exec= lines */
+const char * const exec_key_match_blacklist[] = {
+  "bash",
+  "env",
+  "flatpak",
+  "gjs",
+  "pkexec",
+  "python",
+  "python2",
+  "python3",
+  "sh",
+  "wine",
+  "wine64",
+  NULL
+};
+
 static gchar *
 desktop_key_get_name (guint key_id)
 {
@@ -506,7 +527,8 @@ add_token_result (const gchar *app_name,
 static void
 merge_token_results (gboolean first)
 {
-  qsort (static_token_results, static_token_results_size, sizeof (struct search_result), compare_results);
+  if (static_token_results_size != 0)
+    qsort (static_token_results, static_token_results_size, sizeof (struct search_result), compare_results);
 
   /* If this is the first token then we are basically merging a list with
    * itself -- we only perform de-duplication.
@@ -606,7 +628,8 @@ reset_total_search_results (void)
 static void
 sort_total_search_results (void)
 {
-  qsort (static_total_results, static_total_results_size, sizeof (struct search_result), compare_categories);
+  if (static_total_results_size != 0)
+    qsort (static_total_results, static_total_results_size, sizeof (struct search_result), compare_categories);
 }
 
 static void
@@ -620,9 +643,10 @@ merge_directory_results (void)
       static_total_results = g_renew (struct search_result, static_total_results, static_total_results_allocated);
     }
 
-  memcpy (static_total_results + static_total_results_size,
-          static_search_results,
-          static_search_results_size * sizeof (struct search_result));
+  if (static_total_results + static_total_results_size != 0)
+    memcpy (static_total_results + static_total_results_size,
+            static_search_results,
+            static_search_results_size * sizeof (struct search_result));
 
   static_total_results_size += static_search_results_size;
 
@@ -1082,6 +1106,10 @@ desktop_file_dir_unindexed_setup_search (DesktopFileDir *dir)
                   /* Skip the pathname, if any */
                   if ((slash = strrchr (raw, '/')))
                     value = slash + 1;
+
+                  /* Don't match on blacklisted binaries like interpreters */
+                  if (g_strv_contains (exec_key_match_blacklist, value))
+		    value = NULL;
                 }
 
               if (value)
@@ -1794,7 +1822,7 @@ g_desktop_app_info_load_from_keyfile (GDesktopAppInfo *info,
         {
           *last_dot = '\0';
 
-          if (g_dbus_is_interface_name (basename))
+          if (g_dbus_is_name (basename) && basename[0] != ':')
             info->app_id = g_strdup (basename);
         }
 
@@ -1831,7 +1859,7 @@ g_desktop_app_info_load_file (GDesktopAppInfo *self)
  *
  * Creates a new #GDesktopAppInfo.
  *
- * Returns: a new #GDesktopAppInfo or %NULL on error.
+ * Returns: (nullable): a new #GDesktopAppInfo or %NULL on error.
  *
  * Since: 2.18
  **/
@@ -1852,11 +1880,12 @@ g_desktop_app_info_new_from_keyfile (GKeyFile *key_file)
 
 /**
  * g_desktop_app_info_new_from_filename:
- * @filename: the path of a desktop file, in the GLib filename encoding
+ * @filename: (type filename): the path of a desktop file, in the GLib
+ *      filename encoding
  *
  * Creates a new #GDesktopAppInfo.
  *
- * Returns: a new #GDesktopAppInfo or %NULL on error.
+ * Returns: (nullable): a new #GDesktopAppInfo or %NULL on error.
  **/
 GDesktopAppInfo *
 g_desktop_app_info_new_from_filename (const char *filename)
@@ -1888,7 +1917,8 @@ g_desktop_app_info_new_from_filename (const char *filename)
  * (i.e. a desktop id of kde-foo.desktop will match
  * `/usr/share/applications/kde/foo.desktop`).
  *
- * Returns: a new #GDesktopAppInfo, or %NULL if no desktop file with that id
+ * Returns: (nullable): a new #GDesktopAppInfo, or %NULL if no desktop
+ *     file with that id exists.
  */
 GDesktopAppInfo *
 g_desktop_app_info_new (const char *desktop_id)
@@ -2027,7 +2057,8 @@ g_desktop_app_info_get_is_hidden (GDesktopAppInfo *info)
  * situations such as the #GDesktopAppInfo returned from
  * g_desktop_app_info_new_from_keyfile(), this function will return %NULL.
  *
- * Returns: The full path to the file for @info, or %NULL if not known.
+ * Returns: (type filename): The full path to the file for @info,
+ *     or %NULL if not known.
  * Since: 2.24
  */
 const char *
@@ -2190,7 +2221,7 @@ g_desktop_app_info_get_show_in (GDesktopAppInfo *info,
 /* Launching... {{{2 */
 
 static char *
-expand_macro_single (char macro, char *uri)
+expand_macro_single (char macro, const char *uri)
 {
   GFile *file;
   char *result = NULL;
@@ -2239,6 +2270,29 @@ expand_macro_single (char macro, char *uri)
   return result;
 }
 
+static char *
+expand_macro_uri (char macro, const char *uri, gboolean force_file_uri, char force_file_uri_macro)
+{
+  char *expanded = NULL;
+
+  g_return_val_if_fail (uri != NULL, NULL);
+
+  if (!force_file_uri ||
+      /* Pass URI if it contains an anchor */
+      strchr (uri, '#') != NULL)
+    {
+      expanded = expand_macro_single (macro, uri);
+    }
+  else
+    {
+      expanded = expand_macro_single (force_file_uri_macro, uri);
+      if (expanded == NULL)
+        expanded = expand_macro_single (macro, uri);
+    }
+
+  return expanded;
+}
+
 static void
 expand_macro (char              macro,
               GString          *exec,
@@ -2246,10 +2300,10 @@ expand_macro (char              macro,
               GList           **uri_list)
 {
   GList *uris = *uri_list;
-  char *expanded;
+  char *expanded = NULL;
   gboolean force_file_uri;
   char force_file_uri_macro;
-  char *uri;
+  const char *uri;
 
   g_return_if_fail (exec != NULL);
 
@@ -2286,19 +2340,8 @@ expand_macro (char              macro,
       if (uris)
         {
           uri = uris->data;
-          if (!force_file_uri ||
-              /* Pass URI if it contains an anchor */
-              strchr (uri, '#') != NULL)
-            {
-              expanded = expand_macro_single (macro, uri);
-            }
-          else
-            {
-              expanded = expand_macro_single (force_file_uri_macro, uri);
-              if (expanded == NULL)
-                expanded = expand_macro_single (macro, uri);
-            }
-
+          expanded = expand_macro_uri (macro, uri,
+                                       force_file_uri, force_file_uri_macro);
           if (expanded)
             {
               g_string_append (exec, expanded);
@@ -2316,20 +2359,8 @@ expand_macro (char              macro,
       while (uris)
         {
           uri = uris->data;
-
-          if (!force_file_uri ||
-              /* Pass URI if it contains an anchor */
-              strchr (uri, '#') != NULL)
-            {
-              expanded = expand_macro_single (macro, uri);
-            }
-          else
-            {
-              expanded = expand_macro_single (force_file_uri_macro, uri);
-              if (expanded == NULL)
-                expanded = expand_macro_single (macro, uri);
-            }
-
+          expanded = expand_macro_uri (macro, uri,
+                                       force_file_uri, force_file_uri_macro);
           if (expanded)
             {
               g_string_append (exec, expanded);
@@ -2399,7 +2430,7 @@ expand_application_parameters (GDesktopAppInfo   *info,
   if (exec_line == NULL)
     {
       g_set_error_literal (error, G_IO_ERROR, G_IO_ERROR_FAILED,
-                           _("Desktop file didn't specify Exec field"));
+                           _("Desktop file didn’t specify Exec field"));
       return FALSE;
     }
 
@@ -2481,13 +2512,11 @@ prepend_terminal_to_vector (int    *argc,
       if (check == NULL)
         check = g_find_program_in_path ("rxvt");
       if (check == NULL)
-        check = g_find_program_in_path ("xterm");
-      if (check == NULL)
         check = g_find_program_in_path ("dtterm");
       if (check == NULL)
         {
           check = g_strdup ("xterm");
-          g_warning ("couldn't find a terminal, falling back to xterm");
+          g_debug ("Couldn’t find a terminal: falling back to xterm");
         }
       term_argv[0] = check;
       term_argv[1] = g_strdup ("-e");
@@ -2532,41 +2561,6 @@ create_files_for_uris (GList *uris)
     }
 
   return g_list_reverse (res);
-}
-
-typedef struct
-{
-  GSpawnChildSetupFunc user_setup;
-  gpointer user_setup_data;
-
-  char *pid_envvar;
-} ChildSetupData;
-
-static void
-child_setup (gpointer user_data)
-{
-  ChildSetupData *data = user_data;
-
-  if (data->pid_envvar)
-    {
-      pid_t pid = getpid ();
-      char buf[20];
-      int i;
-
-      /* Write the pid into the space already reserved for it in the
-       * environment array. We can't use sprintf because it might
-       * malloc, so we do it by hand. It's simplest to write the pid
-       * out backwards first, then copy it over.
-       */
-      for (i = 0; pid; i++, pid /= 10)
-        buf[i] = (pid % 10) + '0';
-      for (i--; i >= 0; i--)
-        *(data->pid_envvar++) = buf[i];
-      *data->pid_envvar = '\0';
-    }
-
-  if (data->user_setup)
-    data->user_setup (data->user_setup_data);
 }
 
 static void
@@ -2647,13 +2641,17 @@ g_desktop_app_info_launch_uris_with_spawn (GDesktopAppInfo            *info,
                                            gpointer                    user_setup_data,
                                            GDesktopAppLaunchCallback   pid_callback,
                                            gpointer                    pid_callback_data,
+                                           gint                        stdin_fd,
+                                           gint                        stdout_fd,
+                                           gint                        stderr_fd,
                                            GError                    **error)
 {
   gboolean completed = FALSE;
   GList *old_uris;
+  GList *dup_uris;
+
   char **argv, **envp;
   int argc;
-  ChildSetupData data;
 
   g_return_val_if_fail (info != NULL, FALSE);
 
@@ -2664,20 +2662,27 @@ g_desktop_app_info_launch_uris_with_spawn (GDesktopAppInfo            *info,
   else
     envp = g_get_environ ();
 
+  /* The GList* passed to expand_application_parameters() will be modified
+   * internally by expand_macro(), so we need to pass a copy of it instead,
+   * and also use that copy to control the exit condition of the loop below.
+   */
+  dup_uris = g_list_copy (uris);
   do
     {
       GPid pid;
       GList *launched_uris;
       GList *iter;
       char *sn_id = NULL;
+      char **wrapped_argv;
+      int i;
 
-      old_uris = uris;
-      if (!expand_application_parameters (info, exec_line, &uris, &argc, &argv, error))
+      old_uris = dup_uris;
+      if (!expand_application_parameters (info, exec_line, &dup_uris, &argc, &argv, error))
         goto out;
 
       /* Get the subset of URIs we're launching with this process */
       launched_uris = NULL;
-      for (iter = old_uris; iter != NULL && iter != uris; iter = iter->next)
+      for (iter = old_uris; iter != NULL && iter != dup_uris; iter = iter->next)
         launched_uris = g_list_prepend (launched_uris, iter->data);
       launched_uris = g_list_reverse (launched_uris);
 
@@ -2688,25 +2693,11 @@ g_desktop_app_info_launch_uris_with_spawn (GDesktopAppInfo            *info,
           goto out;
         }
 
-      data.user_setup = user_setup;
-      data.user_setup_data = user_setup_data;
-
       if (info->filename)
-        {
-          envp = g_environ_setenv (envp,
-                                   "GIO_LAUNCHED_DESKTOP_FILE",
-                                   info->filename,
-                                   TRUE);
-          envp = g_environ_setenv (envp,
-                                   "GIO_LAUNCHED_DESKTOP_FILE_PID",
-                                   "XXXXXXXXXXXXXXXXXXXX", /* filled in child_setup */
-                                   TRUE);
-          data.pid_envvar = (char *)g_environ_getenv (envp, "GIO_LAUNCHED_DESKTOP_FILE_PID");
-        }
-      else
-        {
-          data.pid_envvar = NULL;
-        }
+        envp = g_environ_setenv (envp,
+                                 "GIO_LAUNCHED_DESKTOP_FILE",
+                                 info->filename,
+                                 TRUE);
 
       sn_id = NULL;
       if (launch_context)
@@ -2725,14 +2716,40 @@ g_desktop_app_info_launch_uris_with_spawn (GDesktopAppInfo            *info,
           g_list_free_full (launched_files, g_object_unref);
         }
 
-      if (!g_spawn_async (info->path,
-                          argv,
-                          envp,
-                          spawn_flags,
-                          child_setup,
-                          &data,
-                          &pid,
-                          error))
+      if (g_once_init_enter (&gio_launch_desktop_path))
+        {
+          const gchar *tmp;
+
+          /* Allow test suite to specify path to gio-launch-desktop */
+          tmp = g_getenv ("GIO_LAUNCH_DESKTOP");
+
+          /* Fall back on usual searching in $PATH */
+          if (tmp == NULL)
+            tmp = "gio-launch-desktop";
+          g_once_init_leave (&gio_launch_desktop_path, tmp);
+        }
+
+      wrapped_argv = g_new (char *, argc + 2);
+      wrapped_argv[0] = g_strdup (gio_launch_desktop_path);
+
+      for (i = 0; i < argc; i++)
+        wrapped_argv[i + 1] = g_steal_pointer (&argv[i]);
+
+      wrapped_argv[i + 1] = NULL;
+      g_free (argv);
+      argv = NULL;
+
+      if (!g_spawn_async_with_fds (info->path,
+                                   wrapped_argv,
+                                   envp,
+                                   spawn_flags,
+                                   user_setup,
+                                   user_setup_data,
+                                   &pid,
+                                   stdin_fd,
+                                   stdout_fd,
+                                   stderr_fd,
+                                   error))
         {
           if (sn_id)
             g_app_launch_context_launch_failed (launch_context, sn_id);
@@ -2770,14 +2787,15 @@ g_desktop_app_info_launch_uris_with_spawn (GDesktopAppInfo            *info,
       g_free (sn_id);
       g_list_free (launched_uris);
 
-      g_strfreev (argv);
-      argv = NULL;
+      g_strfreev (wrapped_argv);
+      wrapped_argv = NULL;
     }
-  while (uris != NULL);
+  while (dup_uris != NULL);
 
   completed = TRUE;
 
  out:
+  g_list_free (dup_uris);
   g_strfreev (argv);
   g_strfreev (envp);
 
@@ -2785,25 +2803,21 @@ g_desktop_app_info_launch_uris_with_spawn (GDesktopAppInfo            *info,
 }
 
 static gchar *
-object_path_from_appid (const gchar *app_id)
+object_path_from_appid (const gchar *appid)
 {
-  gchar *path;
-  gint i, n;
+  gchar *appid_path, *iter;
 
-  n = strlen (app_id);
-  path = g_malloc (n + 2);
+  appid_path = g_strconcat ("/", appid, NULL);
+  for (iter = appid_path; *iter; iter++)
+    {
+      if (*iter == '.')
+        *iter = '/';
 
-  path[0] = '/';
+      if (*iter == '-')
+        *iter = '_';
+    }
 
-  for (i = 0; i < n; i++)
-    if (app_id[i] != '.')
-      path[i + 1] = app_id[i];
-    else
-      path[i + 1] = '/';
-
-  path[i + 1] = '\0';
-
-  return path;
+  return appid_path;
 }
 
 static GVariant *
@@ -2834,16 +2848,14 @@ g_desktop_app_info_make_platform_data (GDesktopAppInfo   *info,
   return g_variant_builder_end (&builder);
 }
 
-static gboolean
-g_desktop_app_info_launch_uris_with_dbus (GDesktopAppInfo    *info,
-                                          GDBusConnection    *session_bus,
-                                          GList              *uris,
-                                          GAppLaunchContext  *launch_context)
+static void
+launch_uris_with_dbus (GDesktopAppInfo    *info,
+                       GDBusConnection    *session_bus,
+                       GList              *uris,
+                       GAppLaunchContext  *launch_context)
 {
   GVariantBuilder builder;
   gchar *object_path;
-
-  g_return_val_if_fail (info != NULL, FALSE);
 
   g_variant_builder_init (&builder, G_VARIANT_TYPE_TUPLE);
 
@@ -2868,6 +2880,35 @@ g_desktop_app_info_launch_uris_with_dbus (GDesktopAppInfo    *info,
                           uris ? "Open" : "Activate", g_variant_builder_end (&builder),
                           NULL, G_DBUS_CALL_FLAGS_NONE, -1, NULL, NULL, NULL);
   g_free (object_path);
+}
+
+static gboolean
+g_desktop_app_info_launch_uris_with_dbus (GDesktopAppInfo    *info,
+                                          GDBusConnection    *session_bus,
+                                          GList              *uris,
+                                          GAppLaunchContext  *launch_context)
+{
+  GList *ruris = uris;
+  char *app_id = NULL;
+
+  g_return_val_if_fail (info != NULL, FALSE);
+
+#ifdef G_OS_UNIX
+  app_id = g_desktop_app_info_get_string (info, "X-Flatpak");
+  if (app_id && *app_id)
+    {
+      ruris = g_document_portal_add_documents (uris, app_id, NULL);
+      if (ruris == NULL)
+        ruris = uris;
+    }
+#endif
+
+  launch_uris_with_dbus (info, session_bus, ruris, launch_context);
+
+  if (ruris != uris)
+    g_list_free_full (ruris, g_free);
+
+  g_free (app_id);
 
   return TRUE;
 }
@@ -2881,6 +2922,9 @@ g_desktop_app_info_launch_uris_internal (GAppInfo                   *appinfo,
                                          gpointer                    user_setup_data,
                                          GDesktopAppLaunchCallback   pid_callback,
                                          gpointer                    pid_callback_data,
+                                         gint                        stdin_fd,
+                                         gint                        stdout_fd,
+                                         gint                        stderr_fd,
                                          GError                     **error)
 {
   GDesktopAppInfo *info = G_DESKTOP_APP_INFO (appinfo);
@@ -2894,7 +2938,8 @@ g_desktop_app_info_launch_uris_internal (GAppInfo                   *appinfo,
   else
     success = g_desktop_app_info_launch_uris_with_spawn (info, session_bus, info->exec, uris, launch_context,
                                                          spawn_flags, user_setup, user_setup_data,
-                                                         pid_callback, pid_callback_data, error);
+                                                         pid_callback, pid_callback_data,
+                                                         stdin_fd, stdout_fd, stderr_fd, error);
 
   if (session_bus != NULL)
     {
@@ -2919,6 +2964,7 @@ g_desktop_app_info_launch_uris (GAppInfo           *appinfo,
                                                   launch_context,
                                                   _SPAWN_FLAGS_DEFAULT,
                                                   NULL, NULL, NULL, NULL,
+                                                  -1, -1, -1,
                                                   error);
 }
 
@@ -2970,16 +3016,71 @@ g_desktop_app_info_launch (GAppInfo           *appinfo,
 }
 
 /**
+ * g_desktop_app_info_launch_uris_as_manager_with_fds:
+ * @appinfo: a #GDesktopAppInfo
+ * @uris: (element-type utf8): List of URIs
+ * @launch_context: (nullable): a #GAppLaunchContext
+ * @spawn_flags: #GSpawnFlags, used for each process
+ * @user_setup: (scope async) (nullable): a #GSpawnChildSetupFunc, used once
+ *     for each process.
+ * @user_setup_data: (closure user_setup) (nullable): User data for @user_setup
+ * @pid_callback: (scope call) (nullable): Callback for child processes
+ * @pid_callback_data: (closure pid_callback) (nullable): User data for @callback
+ * @stdin_fd: file descriptor to use for child's stdin, or -1
+ * @stdout_fd: file descriptor to use for child's stdout, or -1
+ * @stderr_fd: file descriptor to use for child's stderr, or -1
+ * @error: return location for a #GError, or %NULL
+ *
+ * Equivalent to g_desktop_app_info_launch_uris_as_manager() but allows
+ * you to pass in file descriptors for the stdin, stdout and stderr streams
+ * of the launched process.
+ *
+ * If application launching occurs via some non-spawn mechanism (e.g. D-Bus
+ * activation) then @stdin_fd, @stdout_fd and @stderr_fd are ignored.
+ *
+ * Returns: %TRUE on successful launch, %FALSE otherwise.
+ *
+ * Since: 2.58
+ */
+gboolean
+g_desktop_app_info_launch_uris_as_manager_with_fds (GDesktopAppInfo            *appinfo,
+                                                    GList                      *uris,
+                                                    GAppLaunchContext          *launch_context,
+                                                    GSpawnFlags                 spawn_flags,
+                                                    GSpawnChildSetupFunc        user_setup,
+                                                    gpointer                    user_setup_data,
+                                                    GDesktopAppLaunchCallback   pid_callback,
+                                                    gpointer                    pid_callback_data,
+                                                    gint                        stdin_fd,
+                                                    gint                        stdout_fd,
+                                                    gint                        stderr_fd,
+                                                    GError                    **error)
+{
+  return g_desktop_app_info_launch_uris_internal ((GAppInfo*)appinfo,
+                                                  uris,
+                                                  launch_context,
+                                                  spawn_flags,
+                                                  user_setup,
+                                                  user_setup_data,
+                                                  pid_callback,
+                                                  pid_callback_data,
+                                                  stdin_fd,
+                                                  stdout_fd,
+                                                  stderr_fd,
+                                                  error);
+}
+
+/**
  * g_desktop_app_info_launch_uris_as_manager:
  * @appinfo: a #GDesktopAppInfo
  * @uris: (element-type utf8): List of URIs
- * @launch_context: (allow-none): a #GAppLaunchContext
+ * @launch_context: (nullable): a #GAppLaunchContext
  * @spawn_flags: #GSpawnFlags, used for each process
- * @user_setup: (scope call) (allow-none): a #GSpawnChildSetupFunc, used once
+ * @user_setup: (scope async) (nullable): a #GSpawnChildSetupFunc, used once
  *     for each process.
- * @user_setup_data: (closure user_setup) (allow-none): User data for @user_setup
- * @pid_callback: (scope call) (allow-none): Callback for child processes
- * @pid_callback_data: (closure pid_callback) (allow-none): User data for @callback
+ * @user_setup_data: (closure user_setup) (nullable): User data for @user_setup
+ * @pid_callback: (scope call) (nullable): Callback for child processes
+ * @pid_callback_data: (closure pid_callback) (nullable): User data for @callback
  * @error: return location for a #GError, or %NULL
  *
  * This function performs the equivalent of g_app_info_launch_uris(),
@@ -2987,11 +3088,12 @@ g_desktop_app_info_launch (GAppInfo           *appinfo,
  * launch applications.  Ordinary applications should use
  * g_app_info_launch_uris().
  *
- * If the application is launched via traditional UNIX fork()/exec()
- * then @spawn_flags, @user_setup and @user_setup_data are used for the
- * call to g_spawn_async().  Additionally, @pid_callback (with
- * @pid_callback_data) will be called to inform about the PID of the
- * created process.
+ * If the application is launched via GSpawn, then @spawn_flags, @user_setup
+ * and @user_setup_data are used for the call to g_spawn_async().
+ * Additionally, @pid_callback (with @pid_callback_data) will be called to
+ * inform about the PID of the created process. See g_spawn_async_with_pipes()
+ * for information on certain parameter conditions that can enable an
+ * optimized posix_spawn() codepath to be used.
  *
  * If application launching occurs via some other mechanism (eg: D-Bus
  * activation) then @spawn_flags, @user_setup, @user_setup_data,
@@ -3010,15 +3112,16 @@ g_desktop_app_info_launch_uris_as_manager (GDesktopAppInfo            *appinfo,
                                            gpointer                    pid_callback_data,
                                            GError                    **error)
 {
-  return g_desktop_app_info_launch_uris_internal ((GAppInfo*)appinfo,
-                                                  uris,
-                                                  launch_context,
-                                                  spawn_flags,
-                                                  user_setup,
-                                                  user_setup_data,
-                                                  pid_callback,
-                                                  pid_callback_data,
-                                                  error);
+  return g_desktop_app_info_launch_uris_as_manager_with_fds (appinfo,
+                                                             uris,
+                                                             launch_context,
+                                                             spawn_flags,
+                                                             user_setup,
+                                                             user_setup_data,
+                                                             pid_callback,
+                                                             pid_callback_data,
+                                                             -1, -1, -1,
+                                                             error);
 }
 
 /* OnlyShowIn API support {{{2 */
@@ -3096,11 +3199,11 @@ ensure_dir (DirType   type,
   display_name = g_filename_display_name (path);
   if (type == APP_DIR)
     g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errsv),
-                 _("Can't create user application configuration folder %s: %s"),
+                 _("Can’t create user application configuration folder %s: %s"),
                  display_name, g_strerror (errsv));
   else
     g_set_error (error, G_IO_ERROR, g_io_error_from_errno (errsv),
-                 _("Can't create user MIME configuration folder %s: %s"),
+                 _("Can’t create user MIME configuration folder %s: %s"),
                  display_name, g_strerror (errsv));
 
   g_free (display_name);
@@ -3419,6 +3522,7 @@ run_update_command (char *command,
              * chance of debugging it.
              */
             g_warning ("%s", error->message);
+            g_error_free (error);
           }
 
         g_free (argv[1]);
@@ -3597,7 +3701,7 @@ g_desktop_app_info_ensure_saved (GDesktopAppInfo  *info,
 
       display_name = g_filename_display_name (filename);
       g_set_error (error, G_IO_ERROR, G_IO_ERROR_FAILED,
-                   _("Can't create user desktop file %s"), display_name);
+                   _("Can’t create user desktop file %s"), display_name);
       g_free (display_name);
       g_free (filename);
       g_free (data);
@@ -3677,8 +3781,8 @@ g_desktop_app_info_delete (GAppInfo *appinfo)
 /* Create for commandline {{{2 */
 /**
  * g_app_info_create_from_commandline:
- * @commandline: the commandline to use
- * @application_name: (allow-none): the application name, or %NULL to use @commandline
+ * @commandline: (type filename): the commandline to use
+ * @application_name: (nullable): the application name, or %NULL to use @commandline
  * @flags: flags that can specify details of the created #GAppInfo
  * @error: a #GError location to store the error occurring, %NULL to ignore.
  *
@@ -4380,6 +4484,33 @@ g_desktop_app_info_get_string (GDesktopAppInfo *info,
 }
 
 /**
+ * g_desktop_app_info_get_locale_string:
+ * @info: a #GDesktopAppInfo
+ * @key: the key to look up
+ *
+ * Looks up a localized string value in the keyfile backing @info
+ * translated to the current locale.
+ *
+ * The @key is looked up in the "Desktop Entry" group.
+ *
+ * Returns: (nullable): a newly allocated string, or %NULL if the key
+ *     is not found
+ *
+ * Since: 2.56
+ */
+char *
+g_desktop_app_info_get_locale_string (GDesktopAppInfo *info,
+                                      const char      *key)
+{
+  g_return_val_if_fail (G_IS_DESKTOP_APP_INFO (info), NULL);
+  g_return_val_if_fail (key != NULL && *key != '\0', NULL);
+
+  return g_key_file_get_locale_string (info->keyfile,
+                                       G_KEY_FILE_DESKTOP_GROUP,
+                                       key, NULL, NULL);
+}
+
+/**
  * g_desktop_app_info_get_boolean:
  * @info: a #GDesktopAppInfo
  * @key: the key to look up
@@ -4509,7 +4640,7 @@ g_desktop_app_info_get_action_name (GDesktopAppInfo *info,
  * @info: a #GDesktopAppInfo
  * @action_name: the name of the action as from
  *   g_desktop_app_info_list_actions()
- * @launch_context: (allow-none): a #GAppLaunchContext
+ * @launch_context: (nullable): a #GAppLaunchContext
  *
  * Activates the named application action.
  *
@@ -4565,7 +4696,10 @@ g_desktop_app_info_launch_action (GDesktopAppInfo   *info,
 
       if (exec_line)
         g_desktop_app_info_launch_uris_with_spawn (info, session_bus, exec_line, NULL, launch_context,
-                                                   _SPAWN_FLAGS_DEFAULT, NULL, NULL, NULL, NULL, NULL);
+                                                   _SPAWN_FLAGS_DEFAULT, NULL, NULL, NULL, NULL,
+                                                   -1, -1, -1, NULL);
+
+      g_free (exec_line);
     }
 
   if (session_bus != NULL)

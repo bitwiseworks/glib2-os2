@@ -4,7 +4,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -34,13 +34,14 @@
 #include "garray.h"
 
 #include "gbytes.h"
+#include "ghash.h"
 #include "gslice.h"
 #include "gmem.h"
 #include "gtestutils.h"
 #include "gthread.h"
 #include "gmessages.h"
 #include "gqsort.h"
-
+#include "grefcount.h"
 
 /**
  * SECTION:arrays
@@ -105,7 +106,7 @@ struct _GRealArray
   guint   elt_size;
   guint   zero_terminated : 1;
   guint   clear : 1;
-  gint    ref_count;
+  gatomicrefcount ref_count;
   GDestroyNotify clear_func;
 };
 
@@ -138,9 +139,9 @@ struct _GRealArray
     g_array_elt_zero ((array), (array)->len, 1);                        \
 }G_STMT_END
 
-static guint g_nearest_pow        (gint        num) G_GNUC_CONST;
+static guint g_nearest_pow        (guint       num) G_GNUC_CONST;
 static void  g_array_maybe_expand (GRealArray *array,
-                                   gint        len);
+                                   guint       len);
 
 /**
  * g_array_new:
@@ -198,8 +199,9 @@ g_array_sized_new (gboolean zero_terminated,
   array->zero_terminated = (zero_terminated ? 1 : 0);
   array->clear           = (clear ? 1 : 0);
   array->elt_size        = elt_size;
-  array->ref_count       = 1;
   array->clear_func      = NULL;
+
+  g_atomic_ref_count_init (&array->ref_count);
 
   if (array->zero_terminated || reserved_size != 0)
     {
@@ -219,7 +221,8 @@ g_array_sized_new (gboolean zero_terminated,
  *
  * The @clear_func will be called when an element in the array
  * data segment is removed and when the array is freed and data
- * segment is deallocated as well.
+ * segment is deallocated as well. @clear_func will be passed a
+ * pointer to the element to clear, rather than the element itself.
  *
  * Note that in contrast with other uses of #GDestroyNotify
  * functions, @clear_func is expected to clear the contents of
@@ -243,7 +246,7 @@ g_array_set_clear_func (GArray         *array,
  * @array: A #GArray
  *
  * Atomically increments the reference count of @array by one.
- * This function is MT-safe and may be called from any thread.
+ * This function is thread-safe and may be called from any thread.
  *
  * Returns: The passed in #GArray
  *
@@ -255,7 +258,7 @@ g_array_ref (GArray *array)
   GRealArray *rarray = (GRealArray*) array;
   g_return_val_if_fail (array, NULL);
 
-  g_atomic_int_inc (&rarray->ref_count);
+  g_atomic_ref_count_inc (&rarray->ref_count);
 
   return array;
 }
@@ -274,7 +277,7 @@ static gchar *array_free (GRealArray *, ArrayFreeFlags);
  *
  * Atomically decrements the reference count of @array by one. If the
  * reference count drops to 0, all memory allocated by the array is
- * released. This function is MT-safe and may be called from any
+ * released. This function is thread-safe and may be called from any
  * thread.
  *
  * Since: 2.22
@@ -285,7 +288,7 @@ g_array_unref (GArray *array)
   GRealArray *rarray = (GRealArray*) array;
   g_return_if_fail (array);
 
-  if (g_atomic_int_dec_and_test (&rarray->ref_count))
+  if (g_atomic_ref_count_dec (&rarray->ref_count))
     array_free (rarray, FREE_SEGMENT);
 }
 
@@ -325,6 +328,10 @@ g_array_get_element_size (GArray *array)
  * If array elements contain dynamically-allocated memory, they should
  * be freed separately.
  *
+ * This function is not thread-safe. If using a #GArray from multiple
+ * threads, use only the atomic g_array_ref() and g_array_unref()
+ * functions.
+ *
  * Returns: the element data if @free_segment is %FALSE, otherwise
  *     %NULL. The element data should be freed using g_free().
  */
@@ -340,7 +347,7 @@ g_array_free (GArray   *farray,
   flags = (free_segment ? FREE_SEGMENT : 0);
 
   /* if others are holding a reference, preserve the wrapper but do free/return the data */
-  if (!g_atomic_int_dec_and_test (&array->ref_count))
+  if (!g_atomic_ref_count_dec (&array->ref_count))
     flags |= PRESERVE_WRAPPER;
 
   return array_free (array, flags);
@@ -385,7 +392,7 @@ array_free (GRealArray     *array,
 /**
  * g_array_append_vals:
  * @array: a #GArray
- * @data: a pointer to the elements to append to the end of the array
+ * @data: (not nullable): a pointer to the elements to append to the end of the array
  * @len: the number of elements to append
  *
  * Adds @len elements onto the end of the array.
@@ -415,6 +422,9 @@ g_array_append_vals (GArray       *farray,
 
   g_return_val_if_fail (array, NULL);
 
+  if (len == 0)
+    return farray;
+
   g_array_maybe_expand (array, len);
 
   memcpy (g_array_elt_pos (array, array->len), data, 
@@ -430,10 +440,13 @@ g_array_append_vals (GArray       *farray,
 /**
  * g_array_prepend_vals:
  * @array: a #GArray
- * @data: a pointer to the elements to prepend to the start of the array
- * @len: the number of elements to prepend
+ * @data: (nullable): a pointer to the elements to prepend to the start of the array
+ * @len: the number of elements to prepend, which may be zero
  *
  * Adds @len elements onto the start of the array.
+ *
+ * @data may be %NULL if (and only if) @len is zero. If @len is zero, this
+ * function is a no-op.
  *
  * This operation is slower than g_array_append_vals() since the
  * existing elements in the array have to be moved to make space for
@@ -468,6 +481,9 @@ g_array_prepend_vals (GArray        *farray,
 
   g_return_val_if_fail (array, NULL);
 
+  if (len == 0)
+    return farray;
+
   g_array_maybe_expand (array, len);
 
   memmove (g_array_elt_pos (array, len), g_array_elt_pos (array, 0),
@@ -486,10 +502,18 @@ g_array_prepend_vals (GArray        *farray,
  * g_array_insert_vals:
  * @array: a #GArray
  * @index_: the index to place the elements at
- * @data: a pointer to the elements to insert
+ * @data: (nullable): a pointer to the elements to insert
  * @len: the number of elements to insert
  *
  * Inserts @len elements into a #GArray at the given index.
+ *
+ * If @index_ is greater than the array’s current length, the array is expanded.
+ * The elements between the old end of the array and the newly inserted elements
+ * will be initialised to zero if the array was configured to clear elements;
+ * otherwise their values will be undefined.
+ *
+ * @data may be %NULL if (and only if) @len is zero. If @len is zero, this
+ * function is a no-op.
  *
  * Returns: the #GArray
  */
@@ -516,6 +540,17 @@ g_array_insert_vals (GArray        *farray,
   GRealArray *array = (GRealArray*) farray;
 
   g_return_val_if_fail (array, NULL);
+
+  if (len == 0)
+    return farray;
+
+  /* Is the index off the end of the array, and hence do we need to over-allocate
+   * and clear some elements? */
+  if (index_ >= array->len)
+    {
+      g_array_maybe_expand (array, index_ - array->len + len);
+      return g_array_append_vals (g_array_set_size (farray, index_), data, len);
+    }
 
   g_array_maybe_expand (array, len);
 
@@ -666,7 +701,7 @@ g_array_remove_range (GArray *farray,
   GRealArray *array = (GRealArray*) farray;
 
   g_return_val_if_fail (array, NULL);
-  g_return_val_if_fail (index_ < array->len, NULL);
+  g_return_val_if_fail (index_ <= array->len, NULL);
   g_return_val_if_fail (index_ + length <= array->len, NULL);
 
   if (array->clear_func != NULL)
@@ -754,7 +789,7 @@ g_array_sort_with_data (GArray           *farray,
  * such power does not fit in a guint
  */
 static guint
-g_nearest_pow (gint num)
+g_nearest_pow (guint num)
 {
   guint n = 1;
 
@@ -766,10 +801,16 @@ g_nearest_pow (gint num)
 
 static void
 g_array_maybe_expand (GRealArray *array,
-                      gint        len)
+                      guint       len)
 {
-  guint want_alloc = g_array_elt_len (array, array->len + len + 
-                                      array->zero_terminated);
+  guint want_alloc;
+
+  /* Detect potential overflow */
+  if G_UNLIKELY ((G_MAXUINT - array->len) < len)
+    g_error ("adding %u to array would overflow", len);
+
+  want_alloc = g_array_elt_len (array, array->len + len +
+                                array->zero_terminated);
 
   if (want_alloc > array->alloc)
     {
@@ -848,7 +889,7 @@ struct _GRealPtrArray
   gpointer       *pdata;
   guint           len;
   guint           alloc;
-  gint            ref_count;
+  gatomicrefcount ref_count;
   GDestroyNotify  element_free_func;
 };
 
@@ -902,8 +943,9 @@ g_ptr_array_sized_new (guint reserved_size)
   array->pdata = NULL;
   array->len = 0;
   array->alloc = 0;
-  array->ref_count = 1;
   array->element_free_func = NULL;
+
+  g_atomic_ref_count_init (&array->ref_count);
 
   if (reserved_size != 0)
     g_ptr_array_maybe_expand (array, reserved_size);
@@ -913,7 +955,7 @@ g_ptr_array_sized_new (guint reserved_size)
 
 /**
  * g_ptr_array_new_with_free_func:
- * @element_free_func: (allow-none): A function to free elements with
+ * @element_free_func: (nullable): A function to free elements with
  *     destroy @array or %NULL
  *
  * Creates a new #GPtrArray with a reference count of 1 and use
@@ -939,7 +981,7 @@ g_ptr_array_new_with_free_func (GDestroyNotify element_free_func)
 /**
  * g_ptr_array_new_full:
  * @reserved_size: number of pointers preallocated
- * @element_free_func: (allow-none): A function to free elements with
+ * @element_free_func: (nullable): A function to free elements with
  *     destroy @array or %NULL
  *
  * Creates a new #GPtrArray with @reserved_size pointers preallocated
@@ -969,7 +1011,7 @@ g_ptr_array_new_full (guint          reserved_size,
 /**
  * g_ptr_array_set_free_func:
  * @array: A #GPtrArray
- * @element_free_func: (allow-none): A function to free elements with
+ * @element_free_func: (nullable): A function to free elements with
  *     destroy @array or %NULL
  *
  * Sets a function for freeing each element when @array is destroyed
@@ -1007,7 +1049,7 @@ g_ptr_array_ref (GPtrArray *array)
 
   g_return_val_if_fail (array, NULL);
 
-  g_atomic_int_inc (&rarray->ref_count);
+  g_atomic_ref_count_inc (&rarray->ref_count);
 
   return array;
 }
@@ -1021,7 +1063,7 @@ static gpointer *ptr_array_free (GPtrArray *, ArrayFreeFlags);
  * Atomically decrements the reference count of @array by one. If the
  * reference count drops to 0, the effect is the same as calling
  * g_ptr_array_free() with @free_segment set to %TRUE. This function
- * is MT-safe and may be called from any thread.
+ * is thread-safe and may be called from any thread.
  *
  * Since: 2.22
  */
@@ -1032,7 +1074,7 @@ g_ptr_array_unref (GPtrArray *array)
 
   g_return_if_fail (array);
 
-  if (g_atomic_int_dec_and_test (&rarray->ref_count))
+  if (g_atomic_ref_count_dec (&rarray->ref_count))
     ptr_array_free (array, FREE_SEGMENT);
 }
 
@@ -1052,6 +1094,10 @@ g_ptr_array_unref (GPtrArray *array)
  * be freed separately if @free_seg is %TRUE and no #GDestroyNotify
  * function has been set for @array.
  *
+ * This function is not thread-safe. If using a #GPtrArray from multiple
+ * threads, use only the atomic g_ptr_array_ref() and g_ptr_array_unref()
+ * functions.
+ *
  * Returns: the pointer array if @free_seg is %FALSE, otherwise %NULL.
  *     The pointer array should be freed using g_free().
  */
@@ -1069,7 +1115,7 @@ g_ptr_array_free (GPtrArray *array,
   /* if others are holding a reference, preserve the wrapper but
    * do free/return the data
    */
-  if (!g_atomic_int_dec_and_test (&rarray->ref_count))
+  if (!g_atomic_ref_count_dec (&rarray->ref_count))
     flags |= PRESERVE_WRAPPER;
 
   return ptr_array_free (array, flags);
@@ -1084,9 +1130,21 @@ ptr_array_free (GPtrArray      *array,
 
   if (flags & FREE_SEGMENT)
     {
+      /* Data here is stolen and freed manually. It is an
+       * error to attempt to access the array data (including
+       * mutating the array bounds) during destruction).
+       *
+       * https://bugzilla.gnome.org/show_bug.cgi?id=769064
+       */
+      gpointer *stolen_pdata = g_steal_pointer (&rarray->pdata);
       if (rarray->element_free_func != NULL)
-        g_ptr_array_foreach (array, (GFunc) rarray->element_free_func, NULL);
-      g_free (rarray->pdata);
+        {
+          gsize i;
+          for (i = 0; i < rarray->len; ++i)
+            rarray->element_free_func (stolen_pdata[i]);
+        }
+
+      g_free (stolen_pdata);
       segment = NULL;
     }
   else
@@ -1110,6 +1168,10 @@ static void
 g_ptr_array_maybe_expand (GRealPtrArray *array,
                           gint           len)
 {
+  /* Detect potential overflow */
+  if G_UNLIKELY ((G_MAXUINT - array->len) < len)
+    g_error ("adding %u to array would overflow", len);
+
   if ((array->len + len) > array->alloc)
     {
       guint old_alloc = array->alloc;
@@ -1137,26 +1199,64 @@ g_ptr_array_set_size  (GPtrArray *array,
                        gint       length)
 {
   GRealPtrArray *rarray = (GRealPtrArray *)array;
+  guint length_unsigned;
 
   g_return_if_fail (rarray);
+  g_return_if_fail (rarray->len == 0 || (rarray->len != 0 && rarray->pdata != NULL));
+  g_return_if_fail (length >= 0);
 
-  if (length > rarray->len)
+  length_unsigned = (guint) length;
+
+  if (length_unsigned > rarray->len)
     {
-      int i;
-      g_ptr_array_maybe_expand (rarray, (length - rarray->len));
+      guint i;
+      g_ptr_array_maybe_expand (rarray, (length_unsigned - rarray->len));
       /* This is not 
        *     memset (array->pdata + array->len, 0,
-       *            sizeof (gpointer) * (length - array->len));
+       *            sizeof (gpointer) * (length_unsigned - array->len));
        * to make it really portable. Remember (void*)NULL needn't be
        * bitwise zero. It of course is silly not to use memset (..,0,..).
        */
-      for (i = rarray->len; i < length; i++)
+      for (i = rarray->len; i < length_unsigned; i++)
         rarray->pdata[i] = NULL;
     }
-  else if (length < rarray->len)
-    g_ptr_array_remove_range (array, length, rarray->len - length);
+  else if (length_unsigned < rarray->len)
+    g_ptr_array_remove_range (array, length_unsigned, rarray->len - length_unsigned);
 
-  rarray->len = length;
+  rarray->len = length_unsigned;
+}
+
+static gpointer
+ptr_array_remove_index (GPtrArray *array,
+                        guint      index_,
+                        gboolean   fast,
+                        gboolean   free_element)
+{
+  GRealPtrArray *rarray = (GRealPtrArray *) array;
+  gpointer result;
+
+  g_return_val_if_fail (rarray, NULL);
+  g_return_val_if_fail (rarray->len == 0 || (rarray->len != 0 && rarray->pdata != NULL), NULL);
+
+  g_return_val_if_fail (index_ < rarray->len, NULL);
+
+  result = rarray->pdata[index_];
+
+  if (rarray->element_free_func != NULL && free_element)
+    rarray->element_free_func (rarray->pdata[index_]);
+
+  if (index_ != rarray->len - 1 && !fast)
+    memmove (rarray->pdata + index_, rarray->pdata + index_ + 1,
+             sizeof (gpointer) * (rarray->len - index_ - 1));
+  else if (index_ != rarray->len - 1)
+    rarray->pdata[index_] = rarray->pdata[rarray->len - 1];
+
+  rarray->len -= 1;
+
+  if (G_UNLIKELY (g_mem_gc_friendly))
+    rarray->pdata[rarray->len] = NULL;
+
+  return result;
 }
 
 /**
@@ -1167,36 +1267,16 @@ g_ptr_array_set_size  (GPtrArray *array,
  * Removes the pointer at the given index from the pointer array.
  * The following elements are moved down one place. If @array has
  * a non-%NULL #GDestroyNotify function it is called for the removed
- * element.
+ * element. If so, the return value from this function will potentially point
+ * to freed memory (depending on the #GDestroyNotify implementation).
  *
- * Returns: the pointer which was removed
+ * Returns: (nullable): the pointer which was removed
  */
 gpointer
 g_ptr_array_remove_index (GPtrArray *array,
                           guint      index_)
 {
-  GRealPtrArray *rarray = (GRealPtrArray *)array;
-  gpointer result;
-
-  g_return_val_if_fail (rarray, NULL);
-
-  g_return_val_if_fail (index_ < rarray->len, NULL);
-
-  result = rarray->pdata[index_];
-  
-  if (rarray->element_free_func != NULL)
-    rarray->element_free_func (rarray->pdata[index_]);
-
-  if (index_ != rarray->len - 1)
-    memmove (rarray->pdata + index_, rarray->pdata + index_ + 1,
-             sizeof (gpointer) * (rarray->len - index_ - 1));
-  
-  rarray->len -= 1;
-
-  if (G_UNLIKELY (g_mem_gc_friendly))
-    rarray->pdata[rarray->len] = NULL;
-
-  return result;
+  return ptr_array_remove_index (array, index_, FALSE, TRUE);
 }
 
 /**
@@ -1208,35 +1288,59 @@ g_ptr_array_remove_index (GPtrArray *array,
  * The last element in the array is used to fill in the space, so
  * this function does not preserve the order of the array. But it
  * is faster than g_ptr_array_remove_index(). If @array has a non-%NULL
- * #GDestroyNotify function it is called for the removed element.
+ * #GDestroyNotify function it is called for the removed element. If so, the
+ * return value from this function will potentially point to freed memory
+ * (depending on the #GDestroyNotify implementation).
  *
- * Returns: the pointer which was removed
+ * Returns: (nullable): the pointer which was removed
  */
 gpointer
 g_ptr_array_remove_index_fast (GPtrArray *array,
                                guint      index_)
 {
-  GRealPtrArray *rarray = (GRealPtrArray *)array;
-  gpointer result;
+  return ptr_array_remove_index (array, index_, TRUE, TRUE);
+}
 
-  g_return_val_if_fail (rarray, NULL);
+/**
+ * g_ptr_array_steal_index:
+ * @array: a #GPtrArray
+ * @index_: the index of the pointer to steal
+ *
+ * Removes the pointer at the given index from the pointer array.
+ * The following elements are moved down one place. The #GDestroyNotify for
+ * @array is *not* called on the removed element; ownership is transferred to
+ * the caller of this function.
+ *
+ * Returns: (transfer full) (nullable): the pointer which was removed
+ * Since: 2.58
+ */
+gpointer
+g_ptr_array_steal_index (GPtrArray *array,
+                         guint      index_)
+{
+  return ptr_array_remove_index (array, index_, FALSE, FALSE);
+}
 
-  g_return_val_if_fail (index_ < rarray->len, NULL);
-
-  result = rarray->pdata[index_];
-
-  if (rarray->element_free_func != NULL)
-    rarray->element_free_func (rarray->pdata[index_]);
-
-  if (index_ != rarray->len - 1)
-    rarray->pdata[index_] = rarray->pdata[rarray->len - 1];
-
-  rarray->len -= 1;
-
-  if (G_UNLIKELY (g_mem_gc_friendly))
-    rarray->pdata[rarray->len] = NULL;
-
-  return result;
+/**
+ * g_ptr_array_steal_index_fast:
+ * @array: a #GPtrArray
+ * @index_: the index of the pointer to steal
+ *
+ * Removes the pointer at the given index from the pointer array.
+ * The last element in the array is used to fill in the space, so
+ * this function does not preserve the order of the array. But it
+ * is faster than g_ptr_array_steal_index(). The #GDestroyNotify for @array is
+ * *not* called on the removed element; ownership is transferred to the caller
+ * of this function.
+ *
+ * Returns: (transfer full) (nullable): the pointer which was removed
+ * Since: 2.58
+ */
+gpointer
+g_ptr_array_steal_index_fast (GPtrArray *array,
+                              guint      index_)
+{
+  return ptr_array_remove_index (array, index_, TRUE, FALSE);
 }
 
 /**
@@ -1263,7 +1367,8 @@ g_ptr_array_remove_range (GPtrArray *array,
   guint n;
 
   g_return_val_if_fail (rarray != NULL, NULL);
-  g_return_val_if_fail (index_ < rarray->len, NULL);
+  g_return_val_if_fail (rarray->len == 0 || (rarray->len != 0 && rarray->pdata != NULL), NULL);
+  g_return_val_if_fail (index_ <= rarray->len, NULL);
   g_return_val_if_fail (index_ + length <= rarray->len, NULL);
 
   if (rarray->element_free_func != NULL)
@@ -1313,6 +1418,7 @@ g_ptr_array_remove (GPtrArray *array,
   guint i;
 
   g_return_val_if_fail (array, FALSE);
+  g_return_val_if_fail (array->len == 0 || (array->len != 0 && array->pdata != NULL), FALSE);
 
   for (i = 0; i < array->len; i += 1)
     {
@@ -1350,6 +1456,7 @@ g_ptr_array_remove_fast (GPtrArray *array,
   guint i;
 
   g_return_val_if_fail (rarray, FALSE);
+  g_return_val_if_fail (rarray->len == 0 || (rarray->len != 0 && rarray->pdata != NULL), FALSE);
 
   for (i = 0; i < rarray->len; i += 1)
     {
@@ -1378,6 +1485,7 @@ g_ptr_array_add (GPtrArray *array,
   GRealPtrArray *rarray = (GRealPtrArray *)array;
 
   g_return_if_fail (rarray);
+  g_return_if_fail (rarray->len == 0 || (rarray->len != 0 && rarray->pdata != NULL));
 
   g_ptr_array_maybe_expand (rarray, 1);
 
@@ -1485,7 +1593,8 @@ g_ptr_array_sort_with_data (GPtrArray        *array,
  * @func: the function to call for each array element
  * @user_data: user data to pass to the function
  * 
- * Calls a function for each element of a #GPtrArray.
+ * Calls a function for each element of a #GPtrArray. @func must not
+ * add elements to or remove elements from the array.
  *
  * Since: 2.4
  */
@@ -1500,6 +1609,81 @@ g_ptr_array_foreach (GPtrArray *array,
 
   for (i = 0; i < array->len; i++)
     (*func) (array->pdata[i], user_data);
+}
+
+/**
+ * g_ptr_array_find: (skip)
+ * @haystack: pointer array to be searched
+ * @needle: pointer to look for
+ * @index_: (optional) (out caller-allocates): return location for the index of
+ *    the element, if found
+ *
+ * Checks whether @needle exists in @haystack. If the element is found, %TRUE is
+ * returned and the element’s index is returned in @index_ (if non-%NULL).
+ * Otherwise, %FALSE is returned and @index_ is undefined. If @needle exists
+ * multiple times in @haystack, the index of the first instance is returned.
+ *
+ * This does pointer comparisons only. If you want to use more complex equality
+ * checks, such as string comparisons, use g_ptr_array_find_with_equal_func().
+ *
+ * Returns: %TRUE if @needle is one of the elements of @haystack
+ * Since: 2.54
+ */
+gboolean
+g_ptr_array_find (GPtrArray     *haystack,
+                  gconstpointer  needle,
+                  guint         *index_)
+{
+  return g_ptr_array_find_with_equal_func (haystack, needle, NULL, index_);
+}
+
+/**
+ * g_ptr_array_find_with_equal_func: (skip)
+ * @haystack: pointer array to be searched
+ * @needle: pointer to look for
+ * @equal_func: (nullable): the function to call for each element, which should
+ *    return %TRUE when the desired element is found; or %NULL to use pointer
+ *    equality
+ * @index_: (optional) (out caller-allocates): return location for the index of
+ *    the element, if found
+ *
+ * Checks whether @needle exists in @haystack, using the given @equal_func.
+ * If the element is found, %TRUE is returned and the element’s index is
+ * returned in @index_ (if non-%NULL). Otherwise, %FALSE is returned and @index_
+ * is undefined. If @needle exists multiple times in @haystack, the index of
+ * the first instance is returned.
+ *
+ * @equal_func is called with the element from the array as its first parameter,
+ * and @needle as its second parameter. If @equal_func is %NULL, pointer
+ * equality is used.
+ *
+ * Returns: %TRUE if @needle is one of the elements of @haystack
+ * Since: 2.54
+ */
+gboolean
+g_ptr_array_find_with_equal_func (GPtrArray     *haystack,
+                                  gconstpointer  needle,
+                                  GEqualFunc     equal_func,
+                                  guint         *index_)
+{
+  guint i;
+
+  g_return_val_if_fail (haystack != NULL, FALSE);
+
+  if (equal_func == NULL)
+    equal_func = g_direct_equal;
+
+  for (i = 0; i < haystack->len; i++)
+    {
+      if (equal_func (g_ptr_array_index (haystack, i), needle))
+        {
+          if (index_ != NULL)
+            *index_ = i;
+          return TRUE;
+        }
+    }
+
+  return FALSE;
 }
 
 /**
@@ -1813,7 +1997,7 @@ g_byte_array_remove_range (GByteArray *array,
                            guint       length)
 {
   g_return_val_if_fail (array, NULL);
-  g_return_val_if_fail (index_ < array->len, NULL);
+  g_return_val_if_fail (index_ <= array->len, NULL);
   g_return_val_if_fail (index_ + length <= array->len, NULL);
 
   return (GByteArray *)g_array_remove_range ((GArray *)array, index_, length);

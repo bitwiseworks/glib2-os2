@@ -75,7 +75,7 @@ static void g_dbus_daemon_iface_init (_GFreedesktopDBusIface *iface);
 #define g_dbus_daemon_get_type _g_dbus_daemon_get_type
 G_DEFINE_TYPE_WITH_CODE (GDBusDaemon, g_dbus_daemon, _G_TYPE_FREEDESKTOP_DBUS_SKELETON,
 			 G_IMPLEMENT_INTERFACE (G_TYPE_INITABLE, initable_iface_init)
-			 G_IMPLEMENT_INTERFACE (_G_TYPE_FREEDESKTOP_DBUS, g_dbus_daemon_iface_init));
+			 G_IMPLEMENT_INTERFACE (_G_TYPE_FREEDESKTOP_DBUS, g_dbus_daemon_iface_init))
 
 typedef struct {
   GDBusDaemon *daemon;
@@ -204,7 +204,7 @@ name_lookup (GDBusDaemon *daemon, const char *str)
 }
 
 static gboolean
-is_key (const char *key_start, const char *key_end, char *value)
+is_key (const char *key_start, const char *key_end, const char *value)
 {
   gsize len = strlen (value);
 
@@ -1247,8 +1247,8 @@ handle_remove_match (_GFreedesktopDBus *object,
       else
 	_g_freedesktop_dbus_complete_remove_match (object, invocation);
     }
-
-  match_free (match);
+  if (match)    
+    match_free (match);
 
   return TRUE;
 }
@@ -1463,7 +1463,7 @@ filter_function (GDBusConnection *connection,
 		 gpointer         user_data)
 {
   Client *client = user_data;
-  char *types[] = {"invalid", "method_call", "method_return", "error", "signal" };
+  const char *types[] = {"invalid", "method_call", "method_return", "error", "signal" };
 
   if (0)
     g_printerr ("%s%s %s %d(%d) sender: %s destination: %s %s %s.%s\n",

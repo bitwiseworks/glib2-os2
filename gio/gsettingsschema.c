@@ -5,7 +5,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the licence, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -27,6 +27,7 @@
 #include <glibintl.h>
 #include <locale.h>
 #include <string.h>
+#include <stdlib.h>
 
 /**
  * SECTION:gsettingsschema
@@ -68,7 +69,7 @@
  *   ...
  *
  *   plugin->schema_source =
- *     g_settings_new_schema_source_from_directory (dir,
+ *     g_settings_schema_source_new_from_directory (dir,
  *       g_settings_schema_source_get_default (), FALSE, NULL);
  *
  *   ...
@@ -230,7 +231,7 @@ g_settings_schema_source_unref (GSettingsSchemaSource *source)
 
       if (source->parent)
         g_settings_schema_source_unref (source->parent);
-      gvdb_table_unref (source->table);
+      gvdb_table_free (source->table);
       g_free (source->directory);
 
       if (source->text_tables)
@@ -246,8 +247,8 @@ g_settings_schema_source_unref (GSettingsSchemaSource *source)
 
 /**
  * g_settings_schema_source_new_from_directory:
- * @directory: the filename of a directory
- * @parent: (allow-none): a #GSettingsSchemaSource, or %NULL
+ * @directory: (type filename): the filename of a directory
+ * @parent: (nullable): a #GSettingsSchemaSource, or %NULL
  * @trusted: %TRUE, if the directory is trusted
  * @error: a pointer to a #GError pointer set to %NULL, or %NULL
  *
@@ -265,6 +266,9 @@ g_settings_schema_source_unref (GSettingsSchemaSource *source)
  * in crashes or inconsistent behaviour in the case of a corrupted file.
  * Generally, you should set @trusted to %TRUE for files installed by the
  * system and to %FALSE for files in the home directory.
+ *
+ * In either case, an empty file or some types of corruption in the file will
+ * result in %G_FILE_ERROR_INVAL being returned.
  *
  * If @parent is non-%NULL then there are two effects.
  *
@@ -322,6 +326,14 @@ try_prepend_dir (const gchar *directory)
 }
 
 static void
+try_prepend_data_dir (const gchar *directory)
+{
+  gchar *dirname = g_build_filename (directory, "glib-2.0", "schemas", NULL);
+  try_prepend_dir (dirname);
+  g_free (dirname);
+}
+
+static void
 initialise_schema_sources (void)
 {
   static gsize initialised;
@@ -340,13 +352,9 @@ initialise_schema_sources (void)
       for (i = 0; dirs[i]; i++);
 
       while (i--)
-        {
-          gchar *dirname;
+        try_prepend_data_dir (dirs[i]);
 
-          dirname = g_build_filename (dirs[i], "glib-2.0", "schemas", NULL);
-          try_prepend_dir (dirname);
-          g_free (dirname);
-        }
+      try_prepend_data_dir (g_get_user_data_dir ());
 
       if ((path = g_getenv ("GSETTINGS_SCHEMA_DIR")) != NULL)
         try_prepend_dir (path);
@@ -372,11 +380,11 @@ initialise_schema_sources (void)
  * lookups performed against the default source should probably be done
  * recursively.
  *
- * Returns: (transfer none): the default schema source
+ * Returns: (transfer none) (nullable): the default schema source
  *
  * Since: 2.32
  **/
- GSettingsSchemaSource *
+GSettingsSchemaSource *
 g_settings_schema_source_get_default (void)
 {
   initialise_schema_sources ();
@@ -627,7 +635,7 @@ end_element (GMarkupParseContext *context,
 
           normalised = normalise_whitespace (info->string->str);
 
-          if (gettext_domain)
+          if (gettext_domain && normalised[0])
             {
               gchar *translated;
 
@@ -781,20 +789,23 @@ g_settings_schema_source_list_schemas (GSettingsSchemaSource   *source,
 
       for (i = 0; list[i]; i++)
         {
-          if (!g_hash_table_lookup (single, list[i]) &&
-              !g_hash_table_lookup (reloc, list[i]))
+          if (!g_hash_table_contains (single, list[i]) &&
+              !g_hash_table_contains (reloc, list[i]))
             {
+              gchar *schema;
               GvdbTable *table;
+
+              schema = g_strdup (list[i]);
 
               table = gvdb_table_get_table (s->table, list[i]);
               g_assert (table != NULL);
 
               if (gvdb_table_has_value (table, ".path"))
-                g_hash_table_insert (single, g_strdup (list[i]), NULL);
+                g_hash_table_add (single, schema);
               else
-                g_hash_table_insert (reloc, g_strdup (list[i]), NULL);
+                g_hash_table_add (reloc, schema);
 
-              gvdb_table_unref (table);
+              gvdb_table_free (table);
             }
         }
 
@@ -843,7 +854,7 @@ ensure_schema_lists (void)
 /**
  * g_settings_list_schemas:
  *
- * <!-- -->
+ * Deprecated.
  *
  * Returns: (element-type utf8) (transfer none):  a list of #GSettings
  *   schemas that are available.  The list must not be modified or
@@ -867,7 +878,7 @@ g_settings_list_schemas (void)
 /**
  * g_settings_list_relocatable_schemas:
  *
- * <!-- -->
+ * Deprecated.
  *
  * Returns: (element-type utf8) (transfer none): a list of relocatable
  *   #GSettings schemas that are available.  The list must not be
@@ -920,7 +931,7 @@ g_settings_schema_unref (GSettingsSchema *schema)
         g_settings_schema_unref (schema->extends);
 
       g_settings_schema_source_unref (schema->source);
-      gvdb_table_unref (schema->table);
+      gvdb_table_free (schema->table);
       g_free (schema->items);
       g_free (schema->id);
 
@@ -950,7 +961,7 @@ g_settings_schema_get_value (GSettingsSchema *schema,
 {
   GSettingsSchema *s = schema;
   GVariantIter *iter;
-  GVariant *value;
+  GVariant *value = NULL;
 
   g_return_val_if_fail (schema != NULL, NULL);
 
@@ -1145,7 +1156,7 @@ g_settings_schema_list (GSettingsSchema *schema,
 
             child_table = NULL;
 
-            for (source = schema_sources; source; source = source->parent)
+            for (source = schema->source; source; source = source->parent)
               if ((child_table = gvdb_table_get_table (source->table, g_variant_get_string (child_schema, NULL))))
                 break;
 
@@ -1180,7 +1191,7 @@ g_settings_schema_list (GSettingsSchema *schema,
                   g_hash_table_iter_remove (&iter);
               }
 
-            gvdb_table_unref (child_table);
+            gvdb_table_free (child_table);
           }
 
       /* Now create the list */
@@ -1276,6 +1287,11 @@ g_settings_schema_key_init (GSettingsSchemaKey *key,
           endian_fixup (&key->maximum);
           break;
 
+        case 'd':
+          g_variant_get (data, "@a{sv}", &key->desktop_overrides);
+          endian_fixup (&key->desktop_overrides);
+          break;
+
         default:
           g_warning ("unknown schema extension '%c'", code);
           break;
@@ -1295,6 +1311,9 @@ g_settings_schema_key_clear (GSettingsSchemaKey *key)
 
   if (key->maximum)
     g_variant_unref (key->maximum);
+
+  if (key->desktop_overrides)
+    g_variant_unref (key->desktop_overrides);
 
   g_variant_unref (key->default_value);
 
@@ -1399,6 +1418,35 @@ g_settings_schema_key_get_translated_default (GSettingsSchemaKey *key)
       g_variant_unref (value);
       value = NULL;
     }
+
+  return value;
+}
+
+GVariant *
+g_settings_schema_key_get_per_desktop_default (GSettingsSchemaKey *key)
+{
+  static const gchar * const *current_desktops;
+  GVariant *value = NULL;
+  gint i;
+
+  if (!key->desktop_overrides)
+    return NULL;
+
+  if (g_once_init_enter (&current_desktops))
+    {
+      const gchar *xdg_current_desktop = g_getenv ("XDG_CURRENT_DESKTOP");
+      gchar **tmp;
+
+      if (xdg_current_desktop != NULL && xdg_current_desktop[0] != '\0')
+        tmp = g_strsplit (xdg_current_desktop, G_SEARCHPATH_SEPARATOR_S, -1);
+      else
+        tmp = g_new0 (gchar *, 0 + 1);
+
+      g_once_init_leave (&current_desktops, (const gchar **) tmp);
+    }
+
+  for (i = 0; value == NULL && current_desktops[i] != NULL; i++)
+    value = g_variant_lookup_value (key->desktop_overrides, current_desktops[i], NULL);
 
   return value;
 }
@@ -1690,6 +1738,9 @@ g_settings_schema_key_get_default_value (GSettingsSchemaKey *key)
   g_return_val_if_fail (key, NULL);
 
   value = g_settings_schema_key_get_translated_default (key);
+
+  if (!value)
+    value = g_settings_schema_key_get_per_desktop_default (key);
 
   if (!value)
     value = g_variant_ref (key->default_value);

@@ -4,7 +4,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the licence, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -197,7 +197,8 @@ token_stream_prepare (TokenStream *stream)
       break;
 
     case 'b':
-      if (stream->stream[1] == '\'' || stream->stream[1] == '"')
+      if (stream->stream + 1 != stream->end &&
+          (stream->stream[1] == '\'' || stream->stream[1] == '"'))
         {
           for (end = stream->stream + 2; end != stream->end; end++)
             if (*end == stream->stream[1] || *end == '\0' ||
@@ -209,7 +210,10 @@ token_stream_prepare (TokenStream *stream)
           break;
         }
 
-      else    /* ↓↓↓ */;
+      else
+        {
+          /* ↓↓↓ */
+        }
 
     case 'a': /* 'b' */ case 'c': case 'd': case 'e': case 'f':
     case 'g': case 'h': case 'i': case 'j': case 'k': case 'l':
@@ -237,7 +241,7 @@ token_stream_prepare (TokenStream *stream)
        * Also: ] and > are never in format strings.
        */
       for (end = stream->stream + 1;
-           end != stream->end && *end != ',' &&
+           end != stream->end && *end != '\0' && *end != ',' &&
            *end != ':' && *end != '>' && *end != ']' && !g_ascii_isspace (*end);
            end++)
 
@@ -257,6 +261,9 @@ token_stream_prepare (TokenStream *stream)
   stream->this = stream->stream;
   stream->stream = end;
 
+  /* We must have at least one byte in a token. */
+  g_assert (stream->stream - stream->this >= 1);
+
   return TRUE;
 }
 
@@ -273,7 +280,8 @@ token_stream_peek (TokenStream *stream,
   if (!token_stream_prepare (stream))
     return FALSE;
 
-  return stream->this[0] == first_char;
+  return stream->stream - stream->this >= 1 &&
+         stream->this[0] == first_char;
 }
 
 static gboolean
@@ -284,7 +292,8 @@ token_stream_peek2 (TokenStream *stream,
   if (!token_stream_prepare (stream))
     return FALSE;
 
-  return stream->this[0] == first_char &&
+  return stream->stream - stream->this >= 2 &&
+         stream->this[0] == first_char &&
          stream->this[1] == second_char;
 }
 
@@ -294,7 +303,8 @@ token_stream_is_keyword (TokenStream *stream)
   if (!token_stream_prepare (stream))
     return FALSE;
 
-  return g_ascii_isalpha (stream->this[0]) &&
+  return stream->stream - stream->this >= 2 &&
+         g_ascii_isalpha (stream->this[0]) &&
          g_ascii_isalpha (stream->this[1]);
 }
 
@@ -304,10 +314,11 @@ token_stream_is_numeric (TokenStream *stream)
   if (!token_stream_prepare (stream))
     return FALSE;
 
-  return (g_ascii_isdigit (stream->this[0]) ||
-          stream->this[0] == '-' ||
-          stream->this[0] == '+' ||
-          stream->this[0] == '.');
+  return (stream->stream - stream->this >= 1 &&
+          (g_ascii_isdigit (stream->this[0]) ||
+           stream->this[0] == '-' ||
+           stream->this[0] == '+' ||
+           stream->this[0] == '.'));
 }
 
 static gboolean
@@ -1721,6 +1732,7 @@ bytestring_parse (TokenStream  *stream,
         parser_set_error (error, &ref, NULL,
                           G_VARIANT_PARSE_ERROR_UNTERMINATED_STRING_CONSTANT,
                           "unterminated string constant");
+        g_free (str);
         g_free (token);
         return NULL;
 
@@ -1731,6 +1743,7 @@ bytestring_parse (TokenStream  *stream,
             parser_set_error (error, &ref, NULL,
                               G_VARIANT_PARSE_ERROR_UNTERMINATED_STRING_CONSTANT,
                               "unterminated string constant");
+            g_free (str);
             g_free (token);
             return NULL;
 
@@ -2317,11 +2330,11 @@ parse (TokenStream  *stream,
 
 /**
  * g_variant_parse:
- * @type: (allow-none): a #GVariantType, or %NULL
+ * @type: (nullable): a #GVariantType, or %NULL
  * @text: a string containing a GVariant in text form
- * @limit: (allow-none): a pointer to the end of @text, or %NULL
- * @endptr: (allow-none): a location to store the end pointer, or %NULL
- * @error: (allow-none): a pointer to a %NULL #GError pointer, or %NULL
+ * @limit: (nullable): a pointer to the end of @text, or %NULL
+ * @endptr: (nullable): a location to store the end pointer, or %NULL
+ * @error: (nullable): a pointer to a %NULL #GError pointer, or %NULL
  *
  * Parses a #GVariant from a text representation.
  *
