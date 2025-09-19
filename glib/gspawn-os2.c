@@ -52,6 +52,7 @@ static gint g_execute (const gchar  *file,
 
 static gboolean make_pipe            (gint                  p[2],
                                       GError              **error);
+
 static gboolean fork_exec_with_pipes (gboolean              intermediate_child,
                                       const gchar          *working_directory,
                                       gchar               **argv,
@@ -68,6 +69,25 @@ static gboolean fork_exec_with_pipes (gboolean              intermediate_child,
                                       gint                 *standard_input,
                                       gint                 *standard_output,
                                       gint                 *standard_error,
+                                      GError              **error);
+
+static gboolean fork_exec_with_fds (gboolean              intermediate_child,
+                                      const gchar          *working_directory,
+                                      gchar               **argv,
+                                      gchar               **envp,
+                                      gboolean              close_descriptors,
+                                      gboolean              search_path,
+                                      gboolean              stdout_to_null,
+                                      gboolean              stderr_to_null,
+                                      gboolean              child_inherits_stdin,
+                                      gboolean              file_and_argv_zero,
+                                      GSpawnChildSetupFunc  child_setup,
+                                      gpointer              user_data,
+                                      GPid                 *child_pid,
+                                      gint                 *child_close_fds,
+                                      gint                  stdin_fd,
+                                      gint                  stdout_fd,
+                                      gint                  stderr_fd,
                                       GError              **error);
 
 GQuark
@@ -686,6 +706,99 @@ g_spawn_async_with_pipes (const gchar          *working_directory,
 }
 
 /**
+ * g_spawn_async_with_fds:
+ * @working_directory: (type filename) (nullable): child's current working directory, or %NULL to inherit parent's, in the GLib file name encoding
+ * @argv: (array zero-terminated=1): child's argument vector, in the GLib file name encoding
+ * @envp: (array zero-terminated=1) (nullable): child's environment, or %NULL to inherit parent's, in the GLib file name encoding
+ * @flags: flags from #GSpawnFlags
+ * @child_setup: (scope async) (nullable): function to run in the child just before exec()
+ * @user_data: (closure): user data for @child_setup
+ * @child_pid: (out) (optional): return location for child process ID, or %NULL
+ * @stdin_fd: file descriptor to use for child's stdin, or -1
+ * @stdout_fd: file descriptor to use for child's stdout, or -1
+ * @stderr_fd: file descriptor to use for child's stderr, or -1
+ * @error: return location for error
+ *
+ * Identical to g_spawn_async_with_pipes() but instead of
+ * creating pipes for the stdin/stdout/stderr, you can pass existing
+ * file descriptors into this function through the @stdin_fd,
+ * @stdout_fd and @stderr_fd parameters. The following @flags
+ * also have their behaviour slightly tweaked as a result:
+ *
+ * %G_SPAWN_STDOUT_TO_DEV_NULL means that the child's standard output
+ * will be discarded, instead of going to the same location as the parent's
+ * standard output. If you use this flag, @standard_output must be -1.
+ * %G_SPAWN_STDERR_TO_DEV_NULL means that the child's standard error
+ * will be discarded, instead of going to the same location as the parent's
+ * standard error. If you use this flag, @standard_error must be -1.
+ * %G_SPAWN_CHILD_INHERITS_STDIN means that the child will inherit the parent's
+ * standard input (by default, the child's standard input is attached to
+ * /dev/null). If you use this flag, @standard_input must be -1.
+ *
+ * It is valid to pass the same fd in multiple parameters (e.g. you can pass
+ * a single fd for both stdout and stderr).
+ *
+ * Returns: %TRUE on success, %FALSE if an error was set
+ *
+ * Since: 2.58
+ */
+gboolean
+g_spawn_async_with_fds (const gchar          *working_directory,
+                        gchar               **argv,
+                        gchar               **envp,
+                        GSpawnFlags           flags,
+                        GSpawnChildSetupFunc  child_setup,
+                        gpointer              user_data,
+                        GPid                 *child_pid,
+                        gint                  stdin_fd,
+                        gint                  stdout_fd,
+                        gint                  stderr_fd,
+                        GError              **error)
+{
+  gboolean result;
+  GPid pid = -1;
+
+  g_return_val_if_fail (argv != NULL, FALSE);
+  g_return_val_if_fail (stdout_fd < 0 ||
+                        !(flags & G_SPAWN_STDOUT_TO_DEV_NULL), FALSE);
+  g_return_val_if_fail (stderr_fd < 0 ||
+                        !(flags & G_SPAWN_STDERR_TO_DEV_NULL), FALSE);
+  /* can't inherit stdin if we have an input pipe. */
+  g_return_val_if_fail (stdin_fd < 0 ||
+                        !(flags & G_SPAWN_CHILD_INHERITS_STDIN), FALSE);
+
+  result = fork_exec_with_fds (!(flags & G_SPAWN_DO_NOT_REAP_CHILD),
+                               working_directory,
+                               argv,
+                               envp,
+                               !(flags & G_SPAWN_LEAVE_DESCRIPTORS_OPEN),
+                               (flags & G_SPAWN_SEARCH_PATH) != 0,
+                               (flags & G_SPAWN_STDOUT_TO_DEV_NULL) != 0,
+                               (flags & G_SPAWN_STDERR_TO_DEV_NULL) != 0,
+                               (flags & G_SPAWN_CHILD_INHERITS_STDIN) != 0,
+                               (flags & G_SPAWN_FILE_AND_ARGV_ZERO) != 0,
+                               child_setup,
+                               user_data,
+                               &pid,
+                               NULL,
+                               stdin_fd,
+                               stdout_fd,
+                               stderr_fd,
+                               error);
+  if (child_pid)
+    *child_pid = pid;
+
+  /* start a thread with waitpid() so the return code does not fill up memory
+   * unless G_SPAWN_DO_NOT_REAP_CHILD is given in which case it's a
+   * responsibility of the caller.
+   */
+  if (result && pid > 0 && !(flags & G_SPAWN_DO_NOT_REAP_CHILD))
+    _beginthread (reap_child_thread, NULL, 0x2000, (void *) pid);
+
+  return result;
+}
+
+/**
  * g_spawn_command_line_sync:
  * @command_line: a command line 
  * @standard_output: return location for child output
@@ -1080,6 +1193,60 @@ fork_exec_with_pipes (gboolean              intermediate_child,
   close_and_invalidate (&stdout_pipe[1]);
   close_and_invalidate (&stderr_pipe[0]);
   close_and_invalidate (&stderr_pipe[1]);
+
+  return FALSE;
+}
+
+// this needs a review later on
+static gboolean
+fork_exec_with_fds (gboolean              intermediate_child,
+                      const gchar          *working_directory,
+                      gchar               **argv,
+                      gchar               **envp,
+                      gboolean              close_descriptors,
+                      gboolean              search_path,
+                      gboolean              stdout_to_null,
+                      gboolean              stderr_to_null,
+                      gboolean              child_inherits_stdin,
+                      gboolean              file_and_argv_zero,
+                      GSpawnChildSetupFunc  child_setup,
+                      gpointer              user_data,
+                      GPid                 *child_pid,
+                      gint                 *child_close_fds,
+                      gint                  stdin_fd,
+                      gint                  stdout_fd,
+                      gint                  stderr_fd,
+                      GError              **error)     
+{
+  GPid pid = -1;
+
+  /* Spawn the child
+   */
+  pid = do_exec (stdin_fd,
+                stdout_fd,
+                stderr_fd,
+                working_directory,
+                argv,
+                envp,
+                close_descriptors,
+                search_path,
+                stdout_to_null,
+                stderr_to_null,
+                child_inherits_stdin,
+                file_and_argv_zero,
+                child_setup,
+                user_data,
+                error);
+
+  if (pid <= 0)
+      goto cleanup_and_fail;
+
+  if (child_pid)
+    *child_pid = pid;
+
+  return TRUE;
+
+ cleanup_and_fail:
 
   return FALSE;
 }

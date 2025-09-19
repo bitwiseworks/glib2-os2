@@ -230,9 +230,10 @@ endif
 if G_SPAWN_WIN32
 libglib_2_0_la_SOURCES += gspawn-win32.c
 else
-libglib_2_0_la_SOURCES += gspawn.c
 if OS_OS2
 libglib_2_0_la_SOURCES += gspawn-os2.c
+else
+libglib_2_0_la_SOURCES += gspawn.c
 endif
 endif
 
