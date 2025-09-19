@@ -51,7 +51,7 @@ if ENABLE_TIMELOOP
 installed_test_programs += timeloop-closure
 endif
 
-glib_genmarshal=$(top_builddir)/gobject/glib-genmarshal$(EXEEXT)
+glib_genmarshal=$(top_builddir)/gobject/glib-genmarshal
 
 testmarshal.h: stamp-testmarshal.h
 	@true
