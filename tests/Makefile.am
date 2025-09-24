@@ -109,7 +109,9 @@ libmoduletestplugin_a_la_LDFLAGS += -shortname modtesta -buildlevel '$(BUILDLEVE
 libmoduletestplugin_b_la_LDFLAGS += -shortname modtestb -buildlevel '$(BUILDLEVEL_INFO)'
 module_test_DEPENDENCIES += OS2-symlinks
 OS2-symlinks: libmoduletestplugin_a.la libmoduletestplugin_b.la
+	rm -f .libs/libmoduletestplugin_a.dll
 	ln -s .libs/modtesta.dll .libs/libmoduletestplugin_a.dll
+	rm -f .libs/libmoduletestplugin_b.dll
 	ln -s .libs/modtestb.dll .libs/libmoduletestplugin_b.dll
 endif
 
