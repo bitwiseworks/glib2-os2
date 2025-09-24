@@ -100,9 +100,17 @@ libmoduletestplugin_a_la_SOURCES = libmoduletestplugin_a.c
 libmoduletestplugin_a_la_LDFLAGS = $(G_MODULE_LDFLAGS) -avoid-version -module $(no_undefined)
 libmoduletestplugin_a_la_LIBADD = $(G_MODULE_LIBS) ../gmodule/libgmodule-2.0.la ../glib/libglib-2.0.la
 
+if OS_OS2
+libmoduletestplugin_a_la_LDFLAGS += -shortname modtesta -buildlevel '$(BUILDLEVEL_INFO)'
+endif
+
 libmoduletestplugin_b_la_SOURCES = libmoduletestplugin_b.c
 libmoduletestplugin_b_la_LDFLAGS = $(G_MODULE_LDFLAGS) -avoid-version -module $(no_undefined)
 libmoduletestplugin_b_la_LIBADD = $(G_MODULE_LIBS) ../gmodule/libgmodule-2.0.la ../glib/libglib-2.0.la
+
+if OS_OS2
+libmoduletestplugin_b_la_LDFLAGS += -shortname modtestb -buildlevel '$(BUILDLEVEL_INFO)'
+endif
 
 if !ENABLE_INSTALLED_TESTS
 # see http://lists.gnu.org/archive/html/bug-libtool/2013-05/msg00009.html and gio/tests/Makefile.am
