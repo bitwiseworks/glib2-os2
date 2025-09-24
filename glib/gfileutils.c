@@ -2250,7 +2250,7 @@ g_path_skip_root (const gchar *file_name)
       return (gchar *)file_name;
     }
 
-#if defined(G_OS_WIN32) || defined(G_PLATFROM_OS2)
+#if defined(G_OS_WIN32) || defined(G_PLATFORM_OS2)
   /* Skip X:\ */
   if (g_ascii_isalpha (file_name[0]) &&
       file_name[1] == ':' &&

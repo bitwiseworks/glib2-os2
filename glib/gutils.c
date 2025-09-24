@@ -381,7 +381,7 @@ g_find_program_in_path (const gchar *program)
        * what to search if PATH is unset. POSIX may, dunno.
        */
       
-#ifndef _G_PLATFROM_OS2
+#ifndef _G_PLATFORM_OS2
       path = "/bin:/usr/bin:.";
 #else
       path = "/@unixroot/usr/bin;.";
